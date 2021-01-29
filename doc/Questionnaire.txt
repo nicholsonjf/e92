@@ -8,26 +8,31 @@
 			     Spring 2021
 
 
-Name:				Home/Cellular phone number:
+Name:	James Nicholson			Home/Cellular phone number: (650) 863-2300
 
 
-E-mail:				Work phone number:
+E-mail:	jnicholson@hsph.harvard.edu			Work phone number:
 
 
-Where are you located?  What is your time zone?
+Where are you located? Los Altos, CA  What is your time zone? PST
 
 
-What pronouns would you like us to use when referring to you?
+What pronouns would you like us to use when referring to you? He/Him
 
 
 If it's necessary for us to meet on-line using an app other than Zoom,
 what is your Google Hangouts name and/or your Skype name?  And, which
 do you prefer to use?
 
+N/A
+
 
 Occupation (If an undergraduate student, please specify your major and
 year and at which school; If a graduate student, please specify your
 department, field, and year and at which school).
+
+Occupation: Sr. Web and Application Developer, Harvard Chan School of Public Health
+Graduate Studies: Candidate, Software Engineering Master's Program, Harvard Extension School, year 1
 
 
 Have you taken:
@@ -50,24 +55,41 @@ Have you taken:
 If you have not taken CSCI E-22 (Formerly CSCI E-119) (Data Structures),
 how do you meet the prerequisite?
 
+I've been working as a developer for 4 years. Proficient with Python, Php, Javascript.
+I've completed the below Extension School courses:
+
+E-15 Web Server Frameworks with Laravel/PHP
+E-20 Discrete Mathematics for Computer Science
+E-80 Introduction to Artificial Intelligence with Python
+
 
 Are you currently working toward a degree in a degree program?  If so,
 at what institution, which program, and what degree?
 
+Candidate, Software Engineering Master's Program, Harvard Extension School, year 1
 
 Concurrently with taking this class, are you working full time?  Part time?
 
+Working full time. Sr. Web and Application Developer, Harvard Chan School of Public Health.
 
 Are you taking any other classes concurrently with this one?
 
+E-63 Big Data Analytics
 
 Do you have experience implementing many different data structures
 from scratch?  If yes, please describe.  If not, how do you meet the
 prerequisite?
 
+In my discrete math for computer science class we learned about
+a lot of the mathematical underpinnings of common data structures.
+Graphs, trees, sets, etc. 
+
 
 Do you have experience using Unix?  Do you have experience programming
 using Posix/Linux/Unix system calls?  If yes, please describe.
+
+For work I have to do linux programming using system calls that
+automate the process of building our development environments.
 
 
 Have you already ordered and/or received the NXP/Freescale K70
@@ -75,28 +97,37 @@ development modules TWR-K70F120M-KIT (which includes TWR-K70F120M,
 TWR-SER, TWR-ELEV)?  Note: If the TWR-K70F120M-KIT is not available,
 the individual components should be ordered.
 
+I'm working with a former student (Chris Apple) to buy his old hardware.
+
 
 What additional appropriate course or work experience do you have?
 
-
 What is your math background?
+
+Completed calculus 1 in college and discrete math (mentioned above) last year.
 
 
 What computer languages do you know (please include assembler and
 high-level languages)?  Have you programmed in the C Programming
 Language, C++, or Java?
 
+Python, Php, Javascript
+
 
 What operating systems have you used (e.g. Windows, Mac OS, Linux,
 iOS, Android, etc.)?
 
+Linux, Windows, Mac OS, iOS
 
 What computers have you used (i.e., which machine language instruction
 sets)?
 
+Raspberry Pi
 
 What is your motivation for taking this course?
 
+I want to better understand the architecture of an operating system, and
+have an organized framework in which to gain experience programming in C.
 
 Other comments:
 
