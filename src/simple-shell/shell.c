@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
         char** argval;
         // Iterate over characters in the line buffer and set argct, argval.
         for (int i=0; i<index; i++) {
+            printf("%d\n", i);
             // If previous character is a space.
             if (pctype == 0) {
                 // If current character is also a space.
@@ -43,9 +44,10 @@ int main(int argc, char** argv) {
                 }
                 // If current character is a character.
                 else {
+                    printf("%s\n", "Character after space");
                     // Increment arg count, set arg pointer, set prev char type to character.
                     argct++;
-                    argval[argct] = &linebuf[i];
+                    // argval[argct] = &linebuf[i];
                     pctype = 1;
                 }
             }
@@ -57,6 +59,6 @@ int main(int argc, char** argv) {
                 }
             }
         }
-
+        printf("Number of args: %d\n", argct);
     }
 }
