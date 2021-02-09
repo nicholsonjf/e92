@@ -49,21 +49,59 @@ int main(int argc, char** argv) {
                     pctype = 1;
                 }
             }
+            // If previous character is a character.
             else {
-                // If previous character is a character.
+                // If current character is a space.
                 if (linebuf[i] == 0) {
                     // Set prev char type to space.
                     pctype = 0;
                 }
             }
         }
-        // Argugment start indexes.
+        // Assign arguement start indexes.
         int *arglocs[argct];
+        int *arglens[argct];
+        int arglocct = 0;
+        // Re-initialize previous character type to 0.
+        pctype = 0;
+        for (int i = 0; i < index; i++)
+        {
+            // If previous character is a space.
+            if (pctype == 0)
+            {
+                // If current character is also a space.
+                if (linebuf[i] == 0)
+                {
+                    continue;
+                }
+                // If current character is a character.
+                else
+                {
+                    // Set argument start index.
+                    arglocs[arglocct] = i;
+                    pctype = 1;
+                }
+            }
+            // If previous character is a character.
+            else
+            {
+                // If current character is a space.
+                if (linebuf[i] == 0)
+                {
+                    // Set argument length.
+                    arglens[arglocct] = i - *arglocs[arglocct];
+                    arglocct++;
+                    // Set prev char type to space.
+                    pctype = 0;
+                }
+            }
+        }
         char **argval;
         argval = malloc((argct + 1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
-            argval[i] = malloc((ID_LEN + 1) * sizeof(char));
+            argval[i] = malloc((*arglens[i] + 1) * sizeof(char));
+            //strncpy(argval[i], ???);
         }
             // argval[argct] = &linebuf[i];
             char **argval = malloc(sizeof(*argval) * argct);
