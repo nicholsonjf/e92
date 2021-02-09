@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
                 else
                 {
                     // Set argument start index.
-                    arglocs[arglocct] = i;
+                    arglocs[arglocct] = &i;
                     pctype = 1;
                 }
             }
