@@ -97,14 +97,13 @@ int main(int argc, char** argv) {
             }
         }
         char **argval;
-        argval = malloc((argct + 1) * sizeof(char *));
+        argval = *malloc((argct + 1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
             argval[i] = malloc((*arglens[i] + 1) * sizeof(char));
-            //strncpy(argval[i], ???);
-        }
+            strncpy(argval[i], linebuf[*arglocs[i]], arglens[i]);
             // argval[argct] = &linebuf[i];
-            char **argval = malloc(sizeof(*argval) * argct);
-            printf("Number of args: %d\n", argct);
+        }
+        printf("Number of args: %d\n", argct);
     }
 }
