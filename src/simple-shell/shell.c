@@ -2,7 +2,7 @@
 
 
 int main(int argc, char** argv) {
-    printf("%d %s\n", argc, argv[1]);
+    // printf("%d %s\n", argc, argv[1]);
     while (1) {
         // Is a line guaranteed to be < 256 bytes?
         char linebuf[256];
@@ -32,7 +32,6 @@ int main(int argc, char** argv) {
         char pctype = 0;
         // Argument count.
         int argct = 0;
-        char** argval;
         // Iterate over characters in the line buffer and set argct, argval.
         for (int i=0; i<index; i++) {
             printf("%d\n", i);
@@ -47,7 +46,6 @@ int main(int argc, char** argv) {
                     printf("%s\n", "Character after space");
                     // Increment arg count, set arg pointer, set prev char type to character.
                     argct++;
-                    // argval[argct] = &linebuf[i];
                     pctype = 1;
                 }
             }
@@ -59,6 +57,16 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        printf("Number of args: %d\n", argct);
+        // Argugment start indexes.
+        int *arglocs[argct];
+        char **argval;
+        argval = malloc((argct + 1) * sizeof(char *));
+        for (int i = 0; i < argct; i++)
+        {
+            argval[i] = malloc((ID_LEN + 1) * sizeof(char));
+        }
+            // argval[argct] = &linebuf[i];
+            char **argval = malloc(sizeof(*argval) * argct);
+            printf("Number of args: %d\n", argct);
     }
 }
