@@ -3,7 +3,6 @@
 #include <string.h>
 
 int main(int argc, char** argv) {
-    // printf("%d %s\n", argc, argv[1]);
     while (1) {
         // Is a line guaranteed to be < 256 bytes?
         char linebuf[256];
@@ -24,10 +23,6 @@ int main(int argc, char** argv) {
             }
             index++;
         }
-        // Example for how to set argv.
-        // argv[0] = &linebuf[0]
-        // argv[1] = &linebuf[10]
-
         // Previous character type.
         // 0 = whitespace, 1 = character.
         char pctype = 0;
@@ -35,7 +30,6 @@ int main(int argc, char** argv) {
         int argct = 0;
         // Iterate over characters in the line buffer and set argct, argval.
         for (int i=0; i<index; i++) {
-            printf("%d\n", i);
             // If previous character is a space.
             if (pctype == 0) {
                 // If current character is also a space.
@@ -44,7 +38,6 @@ int main(int argc, char** argv) {
                 }
                 // If current character is a character.
                 else {
-                    printf("%s\n", "Character after space");
                     // Increment arg count, set arg pointer, set prev char type to character.
                     argct++;
                     pctype = 1;
@@ -103,7 +96,8 @@ int main(int argc, char** argv) {
         {
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
+            printf("%s\n", argval[i]);
         }
-        printf("Number of args: %d\n", argct);
+        printf("%s\n", linebuf);
     }
 }
