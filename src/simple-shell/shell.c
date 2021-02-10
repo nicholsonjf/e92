@@ -1,5 +1,6 @@
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char** argv) {
     // printf("%d %s\n", argc, argv[1]);
@@ -58,9 +59,10 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        // Assign arguement start indexes.
-        int *arglocs[argct];
-        int *arglens[argct];
+        // Initialize argument start indexes array.
+        int arglocs[argct];
+        // Initialize argument lengths array.
+        int arglens[argct];
         int arglocct = 0;
         // Re-initialize previous character type to 0.
         pctype = 0;
@@ -78,7 +80,7 @@ int main(int argc, char** argv) {
                 else
                 {
                     // Set argument start index.
-                    arglocs[arglocct] = &i;
+                    arglocs[arglocct] = i;
                     pctype = 1;
                 }
             }
@@ -89,20 +91,18 @@ int main(int argc, char** argv) {
                 if (linebuf[i] == 0)
                 {
                     // Set argument length.
-                    arglens[arglocct] = i - *arglocs[arglocct];
+                    arglens[arglocct] = i - arglocs[arglocct];
                     arglocct++;
                     // Set prev char type to space.
                     pctype = 0;
                 }
             }
         }
-        char **argval;
-        argval = *malloc((argct + 1) * sizeof(char *));
+        char **argval = malloc((argct+1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
-            argval[i] = malloc((*arglens[i] + 1) * sizeof(char));
-            strncpy(argval[i], linebuf[*arglocs[i]], arglens[i]);
-            // argval[argct] = &linebuf[i];
+            argval[i] = malloc((arglens[i] + 1) * sizeof(char));
+            strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
         printf("Number of args: %d\n", argct);
     }
