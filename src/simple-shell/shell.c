@@ -2,6 +2,35 @@
 #include <stdlib.h>
 #include <string.h>
 
+int cmd_date(int argc, char *argv[]);
+int cmd_echo(int argc, char *argv[]);
+int cmd_exit(int argc, char *argv[]);
+int cmd_help(int argc, char *argv[]);
+int cmd_clockdate(int argc, char *argv[]);
+
+struct commandEntry
+{
+    char *name;
+    int (*functionp)(int argc, char *argv[]);
+} commands[] = {{"date", cmd_date},
+                {"echo", cmd_echo},
+                {"exit", cmd_exit},
+                {"help", cmd_help},
+                {"clockdate", cmd_clockdate}};
+
+typedef int (*cmd_pntr)(int argc, char *argv[]);
+cmd_pntr find_cmd(char *arg)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (strcmp(arg, commands[i].name) == 0)
+        {
+            return commands[i].functionp;
+        }
+    }
+    return NULL;
+}
+
 int main(int argc, char** argv) {
     while (1) {
         // Is a line guaranteed to be < 256 bytes?
@@ -103,20 +132,28 @@ int main(int argc, char** argv) {
             // print args.
             printf("%s ", argval[i]);
         }
-        printf("%s", "\n");
-        // print arg lengths.
-        for (int i=0; i<argct; i++) {
-            //printf("%d ", arglens[i]);
+        cmd_pntr shell_cmd = find_cmd( argval[0] );
+        if ( shell_cmd == NULL ) {
+            printf( "Please enter a valid command\n" );
         }
-        // print arg starts.
-        for (int i = 0; i < argct; i++)
-        {
-            //printf("%d ", arglocs[i]);
-        }
-        // print linebuf.
-        for (int i = 0; i < 25; i++)
-        {
-            //printf("%c", linebuf[i]);
+        else {
+            shell_cmd( argct, argval );
         }
     }
+}
+
+int cmd_date(int argc, char *argv[]) {
+    return 0;
+}
+int cmd_echo(int argc, char *argv[]){
+    return 0;
+}
+int cmd_exit(int argc, char *argv[]){
+    return 0;
+}
+int cmd_help(int argc, char *argv[]){
+    return 0;
+}
+int cmd_clockdate(int argc, char *argv[]){
+    return 0;
 }
