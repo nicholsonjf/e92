@@ -7,11 +7,12 @@ int main(int argc, char** argv) {
         // Is a line guaranteed to be < 256 bytes?
         char linebuf[256];
         int index = 0;
-        printf("$");
+        printf("$ ");
         while (1) {
             char c = fgetc(stdin);
             // Stop reading characters if we reach a newline.
             if (c == '\n') {
+                linebuf[index] = 0;
                 break;
             }
             // Set whitespace to the null terminator.
@@ -61,6 +62,7 @@ int main(int argc, char** argv) {
         pctype = 0;
         for (int i = 0; i < index; i++)
         {
+            //printf("%d ", arglocct);
             // If previous character is a space.
             if (pctype == 0)
             {
@@ -85,6 +87,7 @@ int main(int argc, char** argv) {
                 {
                     // Set argument length.
                     arglens[arglocct] = i - arglocs[arglocct];
+                    printf("Arglen/index: %d, %d\n", arglens[arglocct], i);
                     arglocct++;
                     // Set prev char type to space.
                     pctype = 0;
@@ -96,8 +99,22 @@ int main(int argc, char** argv) {
         {
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
-            printf("%s\n", argval[i]);
+            // print args.
+            //printf("%s ", argval[i]);
         }
-        printf("%s\n", linebuf);
+        // print arg lengths.
+        for (int i=0; i<argct; i++) {
+            //printf("%d ", arglens[i]);
+        }
+        // print arg starts.
+        for (int i = 0; i < argct; i++)
+        {
+            //printf("%d ", arglocs[i]);
+        }
+        // print linebuf.
+        for (int i = 0; i < 25; i++)
+        {
+            //printf("%c", linebuf[i]);
+        }
     }
 }
