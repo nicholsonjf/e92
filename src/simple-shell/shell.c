@@ -13,6 +13,7 @@ int main(int argc, char** argv) {
             // Stop reading characters if we reach a newline.
             if (c == '\n') {
                 linebuf[index] = 0;
+                index++;
                 break;
             }
             // Set whitespace to the null terminator.
@@ -83,7 +84,7 @@ int main(int argc, char** argv) {
             else
             {
                 // If current character is a space.
-                if (linebuf[i] == 0)
+                if (linebuf[i] == 0 || linebuf[i] == '\n')
                 {
                     // Set argument length.
                     arglens[arglocct] = i - arglocs[arglocct];
@@ -100,8 +101,9 @@ int main(int argc, char** argv) {
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
             // print args.
-            //printf("%s ", argval[i]);
+            printf("%s ", argval[i]);
         }
+        printf("%s", "\n");
         // print arg lengths.
         for (int i=0; i<argct; i++) {
             //printf("%d ", arglens[i]);
