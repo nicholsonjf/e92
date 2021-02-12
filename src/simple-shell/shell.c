@@ -117,27 +117,32 @@ int main(int argc, char** argv) {
                 {
                     // Set argument length.
                     arglens[arglocct] = i - arglocs[arglocct];
-                    printf("Arglen/index: %d, %d\n", arglens[arglocct], i);
+                    // printf("Arglen/index: %d, %d\n", arglens[arglocct], i);
                     arglocct++;
                     // Set prev char type to space.
                     pctype = 0;
                 }
             }
         }
+        // Allocate and assign argvals
         char **argval = malloc((argct+1) * sizeof(char *));
+        // TODO do we need to add a null terminator to the end of argval?
         for (int i = 0; i < argct; i++)
         {
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
-            // print args.
-            printf("%s ", argval[i]);
         }
         cmd_pntr shell_cmd = find_cmd( argval[0] );
         if ( shell_cmd == NULL ) {
             printf( "Please enter a valid command\n" );
         }
         else {
-            shell_cmd( argct, argval );
+            // Only pass the arguments, not the shell command.
+            char **cmd_args = malloc((argct) * sizeof(char *));
+            for (int i = 0; i < argct-1; i++) {
+                cmd_args[i] = argval[i+1];
+            }
+            shell_cmd( argct-1, cmd_args );
         }
     }
 }
@@ -146,6 +151,17 @@ int cmd_date(int argc, char *argv[]) {
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
+    for (int i = 0; i < argc; i++) {
+        // print args.
+        printf("%s", argv[i]);
+        // Here, i is starting at zero and argc is not zero-indexed
+        if (i < (argc-1)) {
+            printf("%c", ' ');
+        }
+        else {
+            printf("%c", '\n');
+        }
+    }
     return 0;
 }
 int cmd_exit(int argc, char *argv[]){
