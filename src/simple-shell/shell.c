@@ -149,7 +149,7 @@ int cmd_echo(int argc, char *argv[]){
     return 0;
 }
 int cmd_exit(int argc, char *argv[]){
-    return 0;
+    exit(0);
 }
 int cmd_help(int argc, char *argv[]){
     return 0;
