@@ -133,6 +133,7 @@ int main(int argc, char** argv) {
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
+        argval[argct] = NULL;
         cmd_pntr shell_cmd = find_cmd( argval[0] );
         if ( shell_cmd == NULL ) {
             printf( "Please enter a valid command\n" );
