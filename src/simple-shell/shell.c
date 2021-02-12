@@ -3,6 +3,26 @@
 #include <string.h>
 #include <sys/time.h>
 
+struct date
+{
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    int second;
+    int microsecond;
+};
+
+struct date calc_date(time_t tv_sec, suseconds_t tv_usec){
+    struct date myDate;
+    // Calculate year
+    // While tv_sec > num of seconds in year, subtract number of seconds in year (checking for leap each time)
+    // Eventually num of seconds will drop below the num of seconds in current year
+    // To compute month, write a function that takes year, month and gives you number of seconds in month (i.e. if leap year feb is different)
+    return myDate;
+}
+
 int cmd_date(int argc, char *argv[]);
 int cmd_echo(int argc, char *argv[]);
 int cmd_exit(int argc, char *argv[]);
@@ -146,6 +166,8 @@ int main(int argc, char** argv) {
 }
 
 int cmd_date(int argc, char *argv[]) {
+    struct timeval myTime;
+    gettimeofday(&myTime, NULL);
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
@@ -169,6 +191,7 @@ int cmd_help(int argc, char *argv[]){
     return 0;
 }
 int cmd_clockdate(int argc, char *argv[]){
+
     return 0;
 }
 
