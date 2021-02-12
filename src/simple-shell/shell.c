@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 int cmd_date(int argc, char *argv[]);
 int cmd_echo(int argc, char *argv[]);
@@ -138,11 +139,7 @@ int main(int argc, char** argv) {
         }
         else {
             // Only pass the arguments, not the shell command.
-            char **cmd_args = malloc((argct) * sizeof(char *));
-            for (int i = 0; i < argct-1; i++) {
-                cmd_args[i] = argval[i+1];
-            }
-            shell_cmd( argct-1, cmd_args );
+            shell_cmd( argct-1, &argval[1] );
         }
     }
 }
@@ -173,3 +170,5 @@ int cmd_help(int argc, char *argv[]){
 int cmd_clockdate(int argc, char *argv[]){
     return 0;
 }
+
+// TODO Using the debugger
