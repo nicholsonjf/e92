@@ -20,18 +20,17 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec){
     // While tv_sec > num of seconds in year, subtract number of seconds in year (checking for leap each time)
     // Eventually num of seconds will drop below the num of seconds in current year
     // To compute month, write a function that takes year, month and gives you number of seconds in month (i.e. if leap year feb is different)
+    int ep_days = tv_sec / 86400;
+    int ep_days_adj = ep_days - 58;
+    int ep_days_r = tv_sec % 86400;
+
     mydate.year = 1970;
     mydate.month = 0;
+    mydate.hour = ep_days_r / 3600;
+    mydate.minute = (ep_days_r % 3600) / 60;
+    mydate.second = (ep_days_r % 3600) % 60;
     mydate.microsecond = tv_usec;
     return mydate;
-}
-
-int num_days(time_t tv_sec) {
-    return tv_sec / 86400;
-}
-
-int date_rem(time_t tv_sec) {
-    return tv_sec % 86400;
 }
 
 int cmd_date(int argc, char *argv[]);
@@ -179,7 +178,8 @@ int main(int argc, char** argv) {
 int cmd_date(int argc, char *argv[]) {
     struct timeval mytime;
     gettimeofday(&mytime, NULL);
-    printf("%d %d\n", num_days(mytime.tv_sec), date_rem(mytime.tv_sec));
+    struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
+    printf("%d %d %d %d\n", mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
