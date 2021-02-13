@@ -20,11 +20,24 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec){
     // While tv_sec > num of seconds in year, subtract number of seconds in year (checking for leap each time)
     // Eventually num of seconds will drop below the num of seconds in current year
     // To compute month, write a function that takes year, month and gives you number of seconds in month (i.e. if leap year feb is different)
+
+    // Algorithm inspired by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
     int ep_days = tv_sec / 86400;
-    int ep_days_adj = ep_days - 58;
+    // Adjust epic days by number of days from 1970, 01, 01 to 0000, 03, 01
+    int ep_days_adj = ep_days + 719468;
+    // Calculate the era (an era is 400 years, there are 146097 days in 400 years)
+    int era = ep_days_adj / 146097;
+    // Days remaining after calculating the era
+    int day_of_era = ep_days_adj % 146097;
+
+    // Then take the remainder of that by 
+    // Divide the rema
     int ep_days_r = tv_sec % 86400;
 
-    mydate.year = 1970;
+    // 1460 is number of days in 4 years
+    // 36524 is number of days in 100 years
+    int year_of_era = ((day_of_era - (day_of_era / 1460) + (day_of_era / 36524) - (day_of_era / 146096)) / 365);
+    mydate.year = year_of_era + era * 400;
     mydate.month = 0;
     mydate.hour = ep_days_r / 3600;
     mydate.minute = (ep_days_r % 3600) / 60;
@@ -179,7 +192,7 @@ int cmd_date(int argc, char *argv[]) {
     struct timeval mytime;
     gettimeofday(&mytime, NULL);
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
-    printf("%d %d %d %d\n", mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
+    printf("%d %d %d %d %d\n", mydate.year, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
