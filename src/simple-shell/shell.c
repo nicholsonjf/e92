@@ -30,18 +30,22 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec){
     // Days remaining after calculating the era
     int day_of_era = ep_days_adj % 146097;
 
-    // Then take the remainder of that by 
-    // Divide the rema
-    int ep_days_r = tv_sec % 86400;
-
+    // Remaining number of seconds after days are divided out
+    int ep_tod_secs = tv_sec % 86400;
     // 1460 is number of days in 4 years
     // 36524 is number of days in 100 years
+    // 146096 is number of days in 400 years
     int year_of_era = ((day_of_era - (day_of_era / 1460) + (day_of_era / 36524) - (day_of_era / 146096)) / 365);
-    mydate.year = year_of_era + era * 400;
-    mydate.month = 0;
-    mydate.hour = ep_days_r / 3600;
-    mydate.minute = (ep_days_r % 3600) / 60;
-    mydate.second = (ep_days_r % 3600) % 60;
+    int year = year_of_era + era * 400;
+    int doy = day_of_era - (365 * year_of_era + (year_of_era / 4) - (year_of_era / 100));
+    // Month prime
+    int mp = (5 * doy + 2) / 153;
+    mydate.month = mp + (mp < 10 ? 3 : -9);
+    mydate.year = year + (mydate.month <= 2);
+    mydate.day = doy - (153 * mp + 2) / 5 + 1;
+    mydate.hour = ep_tod_secs / 3600;
+    mydate.minute = (ep_tod_secs % 3600) / 60;
+    mydate.second = (ep_tod_secs % 3600) % 60;
     mydate.microsecond = tv_usec;
     return mydate;
 }
@@ -192,7 +196,7 @@ int cmd_date(int argc, char *argv[]) {
     struct timeval mytime;
     gettimeofday(&mytime, NULL);
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
-    printf("%d %d %d %d %d\n", mydate.year, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
+    printf("%d %d %d %d %d %d\n", mydate.year, mydate.month, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
