@@ -14,14 +14,9 @@ struct date
     int microsecond;
 };
 
+// Algorithm inspired by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
 struct date calc_date(time_t tv_sec, suseconds_t tv_usec){
     struct date mydate;
-    // Calculate year
-    // While tv_sec > num of seconds in year, subtract number of seconds in year (checking for leap each time)
-    // Eventually num of seconds will drop below the num of seconds in current year
-    // To compute month, write a function that takes year, month and gives you number of seconds in month (i.e. if leap year feb is different)
-
-    // Algorithm inspired by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
     int ep_days = tv_sec / 86400;
     // Adjust epic days by number of days from 1970, 01, 01 to 0000, 03, 01
     int ep_days_adj = ep_days + 719468;
@@ -194,9 +189,18 @@ int main(int argc, char** argv) {
 
 int cmd_date(int argc, char *argv[]) {
     struct timeval mytime;
-    gettimeofday(&mytime, NULL);
+    if (argc == 0)
+    {
+        gettimeofday(&mytime, NULL);
+    }
+    else {
+        printf("%s\n", argv[0]);
+        mytime.tv_sec = (*argv[0] - '0');
+        mytime.tv_usec = 0;
+    }
+    printf("%ld %d\n", mytime.tv_sec, mytime.tv_usec);
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
-    printf("%d %d %d %d %d %d\n", mydate.year, mydate.month, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
+    printf("Year: %d Month: %d Day: %d Hour: %d Minute: %d Second: %d Micro: %d\n", mydate.year, mydate.month, mydate.day, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
@@ -220,7 +224,14 @@ int cmd_help(int argc, char *argv[]){
     return 0;
 }
 int cmd_clockdate(int argc, char *argv[]){
-
+    for (int i=0; i<strlen(argv[0]); i++) {
+        if (argv[0][i] < '0' || argv[0][i] > '9' )
+        {
+            printf("Please provide a positive numeric value as the first argument\n");
+            return 0;
+        }
+    }
+    cmd_date(1, argv);
     return 0;
 }
 
