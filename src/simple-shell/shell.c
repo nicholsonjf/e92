@@ -109,7 +109,6 @@ char *monthName (int month_i) {
 
 int main(int argc, char** argv) {
     while (1) {
-        // Is a line guaranteed to be < 256 bytes?
         char linebuf[256];
         int index = 0;
         printf("$ ");
@@ -200,10 +199,11 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        // Allocate and assign argvals
+        // Allocate space for argval
         char **argval = malloc((argct+1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
+            // Assign argvals
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
@@ -216,6 +216,14 @@ int main(int argc, char** argv) {
             // Only pass the arguments, not the shell command.
             shell_cmd( argct-1, &argval[1] );
         }
+        // Free argval[i] and argval
+        int i = 0;
+        while (i < argct)
+        {
+            free(argval[i]);
+            ++i;
+        }
+        free(argval);
     }
 }
 
