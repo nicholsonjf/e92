@@ -14,8 +14,29 @@ struct date
     int microsecond;
 };
 
+struct monthMap
+{
+    int month_i;
+    char *month_n;
+} months[] = {
+    {1, "January"},
+    {2, "February"},
+    {3, "March"},
+    {4, "April"},
+    {5, "May"},
+    {6, "June"},
+    {7, "July"},
+    {8, "August"},
+    {9, "September"},
+    {10, "October"},
+    {11, "November"},
+    {12, "December"},
+};
+
 // Algorithm inspired by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
-struct date calc_date(time_t tv_sec, suseconds_t tv_usec){
+struct date
+calc_date(time_t tv_sec, suseconds_t tv_usec)
+{
     struct date mydate;
     int ep_days = tv_sec / 86400;
     // Adjust epic days by number of days from 1970, 01, 01 to 0000, 03, 01
@@ -45,6 +66,7 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec){
     return mydate;
 }
 
+// Shell command function prototypes.
 int cmd_date(int argc, char *argv[]);
 int cmd_echo(int argc, char *argv[]);
 int cmd_exit(int argc, char *argv[]);
@@ -69,6 +91,17 @@ cmd_pntr find_cmd(char *arg)
         if (strcmp(arg, commands[i].name) == 0)
         {
             return commands[i].functionp;
+        }
+    }
+    return NULL;
+}
+
+char *monthName (int month_i) {
+    for (int i = 0; i < 12; i++)
+    {
+        if (months[i].month_i == month_i)
+        {
+            return months[i].month_n;
         }
     }
     return NULL;
@@ -169,7 +202,6 @@ int main(int argc, char** argv) {
         }
         // Allocate and assign argvals
         char **argval = malloc((argct+1) * sizeof(char *));
-        // TODO do we need to add a null terminator to the end of argval?
         for (int i = 0; i < argct; i++)
         {
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
@@ -204,7 +236,7 @@ int cmd_date(int argc, char *argv[]) {
         mytime.tv_usec = 0;
     }
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
-    printf("Year: %d Month: %d Day: %d Hour: %d Minute: %d Second: %d Micro: %d\n", mydate.year, mydate.month, mydate.day, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
+    printf("%d-%s-%d %d:%d:%d-%d\n", mydate.year, monthName(mydate.month), mydate.day, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
@@ -238,5 +270,3 @@ int cmd_clockdate(int argc, char *argv[]){
     cmd_date(1, argv);
     return 0;
 }
-
-// TODO Using the debugger
