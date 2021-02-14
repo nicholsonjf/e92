@@ -194,11 +194,15 @@ int cmd_date(int argc, char *argv[]) {
         gettimeofday(&mytime, NULL);
     }
     else {
-        printf("%s\n", argv[0]);
-        mytime.tv_sec = (*argv[0] - '0');
+        long result = 0;
+        int len = strlen(argv[0]);
+        for (int i = 0; i < len; i++)
+        {
+            result = result * 10 + (argv[0][i] - '0');
+        }
+        mytime.tv_sec = result;
         mytime.tv_usec = 0;
     }
-    printf("%ld %d\n", mytime.tv_sec, mytime.tv_usec);
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
     printf("Year: %d Month: %d Day: %d Hour: %d Minute: %d Second: %d Micro: %d\n", mydate.year, mydate.month, mydate.day, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return 0;
