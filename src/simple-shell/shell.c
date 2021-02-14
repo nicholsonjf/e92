@@ -266,6 +266,20 @@ int cmd_exit(int argc, char *argv[]){
     exit(0);
 }
 int cmd_help(int argc, char *argv[]){
+    char *my_string = "Available Commands:\n"
+                      "\n"
+                      "     exit -- exit from the shell(i.e., cause the shell to terminate).\n"
+                      "\n"
+                      "     echo -- output each of the arguments to stdout.\n"
+                      "\n"
+                      "     help -- output to stdout a brief description of the commands accepted by the shell\n"
+                      "\n"
+                      "     date -- outputs to stdout the current date and time in the format: January 23, 2014 15:57:07.123456.\n"
+                      "\n"
+                      "clockdate -- takes a single positive integral number as its required argument.\n"
+                      "             This number represents the number of seconds since the Unix Epoch. This provided\n"
+                      "             Epoch time will be printed to stdout in the same format described in the date command.\n";
+    printf("%s", my_string);
     return 0;
 }
 int cmd_clockdate(int argc, char *argv[]){
