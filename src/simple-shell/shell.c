@@ -244,7 +244,8 @@ int cmd_date(int argc, char *argv[]) {
         mytime.tv_usec = 0;
     }
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
-    printf("%d-%s-%d %d:%d:%d-%d\n", mydate.year, monthName(mydate.month), mydate.day, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
+    // Format: "January 23, 2014 15:57:07.123456"
+    printf("%s %02d, %d %d:%02d:%02d.%d\n", monthName(mydate.month), mydate.day, mydate.year, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return 0;
 }
 int cmd_echo(int argc, char *argv[]){
