@@ -309,12 +309,19 @@ int cmd_echo(int argc, char *argv[])
 
 int cmd_exit(int argc, char *argv[])
 {
-    exit(0);
-    return E_SUCCESS;
+    if (argc > 0)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    exit(E_SUCCESS);
 }
 
 int cmd_help(int argc, char *argv[])
 {
+    if (argc > 0)
+    {
+        return E_TOO_MANY_ARGS;
+    }
     char *my_string = "Available Commands:\n"
                       "\n"
                       "     exit -- exit from the shell(i.e., cause the shell to terminate).\n"
