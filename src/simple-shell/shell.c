@@ -13,8 +13,6 @@ enum error_t
     E_ARG_TYPE = 4
 };
 
-//typedef enum error_t cmd_err;
-
 struct error_d
 {
     int code;
@@ -80,7 +78,6 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec)
     int era = ep_days_adj / 146097;
     // Days remaining after calculating the era
     int day_of_era = ep_days_adj % 146097;
-
     // Remaining number of seconds after days are divided out
     int ep_tod_secs = tv_sec % 86400;
     // 1460 is number of days in 4 years
@@ -266,29 +263,25 @@ int main(int argc, char** argv) {
     }
 }
 
-int cmd_date(int argc, char *argv[]) {
-    struct timeval mytime;
-    if (argc == 0)
-    {
-        gettimeofday(&mytime, NULL);
-    }
-    else if ( argc > 1 ) {
-        return E_TOO_MANY_ARGS;
-    }
-    else {
-        long result = 0;
-        int len = strlen(argv[0]);
-        for (int i = 0; i < len; i++)
-        {
-            result = result * 10 + (argv[0][i] - '0');
-        }
-        mytime.tv_sec = result;
-        mytime.tv_usec = 0;
-    }
+int fmt_date(struct timeval mytime)
+{
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
     // Format: "January 23, 2014 15:57:07.123456"
     printf("%s %02d, %d %d:%02d:%02d.%d\n", monthName(mydate.month), mydate.day, mydate.year, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
     return E_SUCCESS;
+}
+
+int cmd_date(int argc, char *argv[]) {
+    if (argc > 0)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    else {
+        struct timeval mytime;
+        gettimeofday(&mytime, NULL);
+        fmt_date(mytime);
+        return E_SUCCESS;
+    }
 }
 
 int cmd_echo(int argc, char *argv[])
@@ -352,6 +345,16 @@ int cmd_clockdate(int argc, char *argv[])
             return E_ARG_TYPE;
         }
     }
-    cmd_date(1, argv);
+    // Convert char epoch to long
+    long result = 0;
+    int len = strlen(argv[0]);
+    for (int i = 0; i < len; i++)
+    {
+        result = result * 10 + (argv[0][i] - '0');
+    }
+    struct timeval mytime;
+    mytime.tv_sec = result;
+    mytime.tv_usec = 0;
+    fmt_date(mytime);
     return E_SUCCESS;
 }
