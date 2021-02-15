@@ -1,0 +1,37 @@
+1. (5 Points) Multiprogramming.  What is multiprogramming?  (Also in
+   Tanenbaum 3/e 1.1, Tanenbaum 2/e 1.2).  In additon, give at least
+   two reasons for having multiprogramming.
+
+   Answer:
+   Multiprogramming is a feature of 3rd generation operating systems
+   like the OS/360 that partitions the main memory to store multiple
+   jobs simultaneously. This way, as soon as the OS was finished
+   processing one job it could immediately start on one of the jobs
+   in memory. One benefit of this was for commericial settings where
+   I/O wait time took up to 90% of the CPU's time. With multiprogramming
+   the CPU could use this time to process jobs in memory. Another benefit
+   of this feature is that it was more efficient for the operator. Rather
+   than needing to wait for the current job to be finished before feeding
+   in another, the operator could feed in other jobs into memory as soon
+   as the programmer brought it down (so long as the memory wasn't full).
+
+2. (5 Points) Protected kernel mode operations.  Tanenbaum 4/e 1.12
+   (Tanenbaum 3/e 1.7, Tanenbaum 2/e 1.8).  In addition, for each
+   subsection a-d, describe what problems would be caused by allowing
+   the instruction to run when not in kernel mode.
+
+3. (5 Points) Priority inversion problem with priority scheduling
+   vs. round-robin scheduling.  Tanenbaum 4/e 2.26 (Tanenbaum 3/e
+   2.20, Tanenbaum 2/e 2.26)
+
+4. (5 Points) Implementing semaphores using a disable interrupts
+   instruction.  Tanenbaum 4/e 2.31 (Tanenbaum 3/e 2.25, Tanenbaum 2/e
+   2.23).  You must include pseudo-code for your solution.
+
+5. (10 Points) Implementing counting semaphores using binary
+   semaphores.  Tanenbaum 4/e 2.32 (Tanenbaum 3/e 2.26, Tanenbaum 2/e
+   2.24).  You must include pseudo-code for your solution.  By
+   "ordinary machine instructions," we mean all facilities that are
+   available through the C Programming Language, for example.  Your
+   solution should use binary semaphores wherever mutual exclusion is
+   needed.
