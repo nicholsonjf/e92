@@ -3,6 +3,42 @@
 #include <string.h>
 #include <sys/time.h>
 
+// Error code setup informed by https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
+enum error_t
+{
+    E_SUCCESS = 0,
+    E_NOT_ENOUGH_ARGS = 1,
+    E_TOO_MANY_ARGS = 2,
+    E_CMD_NOT_FND = 3,
+    E_ARG_TYPE = 4
+};
+
+//typedef enum error_t cmd_err;
+
+struct error_d
+{
+    int code;
+    char *message;
+} error_ds[] = {
+    {E_SUCCESS, "No error"},
+    {E_NOT_ENOUGH_ARGS, "Not enough arguments provided"},
+    {E_TOO_MANY_ARGS, "Too many arguments provided"},
+    {E_CMD_NOT_FND, "Please enter a valid command"},
+    {E_ARG_TYPE, "Wrong argument type. Run the 'help' command for information about command arguments"}
+    };
+
+int print_err (int error_c)
+{
+    for (int i = 0; i <= 4; i++)
+    {
+        if (error_c == error_ds[i].code)
+        {
+            printf("ERROR: %s\n", error_ds[i].message);
+        }
+    }
+    return 0;
+}
+
 struct date
 {
     int year;
@@ -33,9 +69,8 @@ struct monthMap
     {12, "December"},
 };
 
-// Algorithm inspired by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
-struct date
-calc_date(time_t tv_sec, suseconds_t tv_usec)
+// Algorithm informed by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
+struct date calc_date(time_t tv_sec, suseconds_t tv_usec)
 {
     struct date mydate;
     int ep_days = tv_sec / 86400;
@@ -210,11 +245,15 @@ int main(int argc, char** argv) {
         argval[argct] = NULL;
         cmd_pntr shell_cmd = find_cmd( argval[0] );
         if ( shell_cmd == NULL ) {
-            printf( "Please enter a valid command\n" );
+            print_err(E_CMD_NOT_FND);
         }
         else {
             // Only pass the arguments, not the shell command.
-            shell_cmd( argct-1, &argval[1] );
+            int cmd_c = shell_cmd(argct - 1, &argval[1]);
+            // If the command returns a non-zero error code, print the error message.
+            if (cmd_c > 0) {
+                print_err(cmd_c);
+            }
         }
         // Free argval[i] and argval
         int i = 0;
@@ -233,6 +272,9 @@ int cmd_date(int argc, char *argv[]) {
     {
         gettimeofday(&mytime, NULL);
     }
+    else if ( argc > 1 ) {
+        return E_TOO_MANY_ARGS;
+    }
     else {
         long result = 0;
         int len = strlen(argv[0]);
@@ -246,9 +288,11 @@ int cmd_date(int argc, char *argv[]) {
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
     // Format: "January 23, 2014 15:57:07.123456"
     printf("%s %02d, %d %d:%02d:%02d.%d\n", monthName(mydate.month), mydate.day, mydate.year, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
-    return 0;
+    return E_SUCCESS;
 }
-int cmd_echo(int argc, char *argv[]){
+
+int cmd_echo(int argc, char *argv[])
+{
     for (int i = 0; i < argc; i++) {
         // print args.
         printf("%s", argv[i]);
@@ -260,12 +304,17 @@ int cmd_echo(int argc, char *argv[]){
             printf("%c", '\n');
         }
     }
-    return 0;
+    return E_SUCCESS;
 }
-int cmd_exit(int argc, char *argv[]){
+
+int cmd_exit(int argc, char *argv[])
+{
     exit(0);
+    return E_SUCCESS;
 }
-int cmd_help(int argc, char *argv[]){
+
+int cmd_help(int argc, char *argv[])
+{
     char *my_string = "Available Commands:\n"
                       "\n"
                       "     exit -- exit from the shell(i.e., cause the shell to terminate).\n"
@@ -280,16 +329,22 @@ int cmd_help(int argc, char *argv[]){
                       "             This number represents the number of seconds since the Unix Epoch. This provided\n"
                       "             Epoch time will be printed to stdout in the same format described in the date command.\n";
     printf("%s", my_string);
-    return 0;
+    return E_SUCCESS;
 }
-int cmd_clockdate(int argc, char *argv[]){
+int cmd_clockdate(int argc, char *argv[])
+{
+    if (argc == 0) {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 1) {
+        return E_TOO_MANY_ARGS;
+    }
     for (int i=0; i<strlen(argv[0]); i++) {
         if (argv[0][i] < '0' || argv[0][i] > '9' )
         {
-            printf("Please provide a positive numeric value as the first argument\n");
-            return 0;
+            return E_ARG_TYPE;
         }
     }
     cmd_date(1, argv);
-    return 0;
+    return E_SUCCESS;
 }
