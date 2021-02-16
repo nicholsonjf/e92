@@ -91,9 +91,12 @@
    solution should use binary semaphores wherever mutual exclusion is
    needed.
 
-   int count = 5;
+   // Let count be the number of threads trying to use a shared resource
+   int count = 5; 
    int count_mutex 1;
    int section_mutex = 0;
+
+   // Let down() and up() be functions used to increment or decrement binary semaphores
 
    P(int count) {
         down(count_mutex);
