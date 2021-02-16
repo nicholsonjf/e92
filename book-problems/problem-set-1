@@ -21,10 +21,6 @@
    subsection a-d, describe what problems would be caused by allowing
    the instruction to run when not in kernel mode.
 
-   *I wasn't sure what 1.12 refers to in the question, so I assumed it
-   refers to question #12 in chapter #1, and the multiple choices it offers,
-   a-d*
-
    Which of the following instructions should be allowed only in kernel mode?
    (a) Disable all interrupts.
    (b) Read the time-of-day clock.
@@ -61,16 +57,15 @@
    instruction.  Tanenbaum 4/e 2.31 (Tanenbaum 3/e 2.25, Tanenbaum 2/e
    2.23).  You must include pseudo-code for your solution.
 
-   // Semaphore shared by two processes that can both call P and V
-   int S = 0;
+   int s = 0;
 
-   P(S)
+   P(s)
    {
        while (1) {
            disableInterrupts();
-           if (S>0)
+           if (s>0)
            {
-               S--;
+               s--;
                enableInterrupts();
                return;
            }
@@ -80,10 +75,10 @@
        }
    }
 
-    V(S)
+    V(s)
     {
         disableInterrupts();
-        S++;
+        s++;
         enableInterrupts();
     }
 
@@ -95,3 +90,31 @@
    available through the C Programming Language, for example.  Your
    solution should use binary semaphores wherever mutual exclusion is
    needed.
+
+   int count = 5;
+   int count_mutex 1;
+   int section_mutex = 0;
+
+   P(int count) {
+        down(count_mutex);
+        count--;
+        if (count <= 0) {
+            down(section_mutex);
+            up(count_mutex);
+        }
+        else {
+            up(count_mutex);
+        }
+    }
+
+   V(int count) {
+        down(count_mutex);
+        count++;
+        if (count > 0) {
+            up(section_mutex);
+            up(count_mutex);
+        }
+        else {
+            up(count_mutex);
+        }
+    }
