@@ -14,11 +14,38 @@
    than needing to wait for the current job to be finished before feeding
    in another, the operator could feed in other jobs into memory as soon
    as the programmer brought it down (so long as the memory wasn't full).
+   As a result, CPU utilization is increased.
 
 2. (5 Points) Protected kernel mode operations.  Tanenbaum 4/e 1.12
    (Tanenbaum 3/e 1.7, Tanenbaum 2/e 1.8).  In addition, for each
    subsection a-d, describe what problems would be caused by allowing
    the instruction to run when not in kernel mode.
+
+   *I wasn't sure what 1.12 refers to in the question, so I assumed it
+   refers to question #12 in chapter #1, and the multiple choices it offers,
+   a-d*
+
+   Which of the following instructions should be allowed only in kernel mode?
+   (a) Disable all interrupts.
+   (b) Read the time-of-day clock.
+   (c) Set the time-of-day clock.
+   (d) Change the memory map.
+
+   Answer:
+   Main: (a), (c) and (d) should only be allowed in kernel mode.
+   
+   a. If a user process was allowed to disable interrupts, it's possible they
+   never re-enable them, and then "there goes your system." (Tanenbaum)
+
+   b. No problems would occur from reading the time-of-day clock in a user process.
+
+   c. On a time sharing computer, if a user were able to set the TOD clock they
+   could set the clock to an earlier time to increase the amount of time their
+   job gets to run without paying more.
+
+   d. If a user process could rewrite the memory map it could inadvertantly map
+   a memory address being used by another process to itself and data could be lost.
+
 
 3. (5 Points) Priority inversion problem with priority scheduling
    vs. round-robin scheduling.  Tanenbaum 4/e 2.26 (Tanenbaum 3/e
