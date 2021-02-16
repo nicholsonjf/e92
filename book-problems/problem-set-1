@@ -51,6 +51,12 @@
    vs. round-robin scheduling.  Tanenbaum 4/e 2.26 (Tanenbaum 3/e
    2.20, Tanenbaum 2/e 2.26)
 
+   Answer:
+   The priority inversion problem described with processes H and L would not
+   occur if round robin scheduling was used. L would get a finite periodic slice of
+   CPU time and thus would eventually leave it's critical region, allowing H
+   to stop busy waiting and to enter its critical region.
+
 4. (5 Points) Implementing semaphores using a disable interrupts
    instruction.  Tanenbaum 4/e 2.31 (Tanenbaum 3/e 2.25, Tanenbaum 2/e
    2.23).  You must include pseudo-code for your solution.
