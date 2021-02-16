@@ -231,6 +231,10 @@ int main(int argc, char** argv) {
                 }
             }
         }
+        // If there are no args (i.e. user pressed enter or space enter) continue before mallocing
+        if (argct < 1) {
+            continue;
+        }
         // Allocate space for argval
         char **argval = malloc((argct+1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
