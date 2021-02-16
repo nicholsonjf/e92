@@ -61,6 +61,33 @@
    instruction.  Tanenbaum 4/e 2.31 (Tanenbaum 3/e 2.25, Tanenbaum 2/e
    2.23).  You must include pseudo-code for your solution.
 
+   // Semaphore shared by two processes that can both call P and V
+   int S = 0;
+
+   P(S)
+   {
+       while (1) {
+           disableInterrupts();
+           if (S>0)
+           {
+               S--;
+               enableInterrupts();
+               return;
+           }
+           else {
+               enableInterrupts();
+           }
+       }
+   }
+
+    V(S)
+    {
+        disableInterrupts();
+        S++;
+        enableInterrupts();
+    }
+
+
 5. (10 Points) Implementing counting semaphores using binary
    semaphores.  Tanenbaum 4/e 2.32 (Tanenbaum 3/e 2.26, Tanenbaum 2/e
    2.24).  You must include pseudo-code for your solution.  By
