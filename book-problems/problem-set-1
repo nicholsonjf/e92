@@ -1,0 +1,123 @@
+1. (5 Points) Multiprogramming.  What is multiprogramming?  (Also in
+   Tanenbaum 3/e 1.1, Tanenbaum 2/e 1.2).  In additon, give at least
+   two reasons for having multiprogramming.
+
+   Answer:
+   Multiprogramming is a feature of 3rd generation operating systems
+   like the OS/360 that partitions the main memory to store multiple
+   jobs simultaneously. This way, as soon as the OS was finished
+   processing one job it could immediately start on one of the jobs
+   in memory. One benefit of this was for commericial settings where
+   I/O wait time took up to 90% of the CPU's time. With multiprogramming
+   the CPU could use this time to process jobs in memory. Another benefit
+   of this feature is that it was more efficient for the operator. Rather
+   than needing to wait for the current job to be finished before feeding
+   in another, the operator could feed in other jobs into memory as soon
+   as the programmer brought it down (so long as the memory wasn't full).
+   As a result, CPU utilization is increased.
+
+2. (5 Points) Protected kernel mode operations.  Tanenbaum 4/e 1.12
+   (Tanenbaum 3/e 1.7, Tanenbaum 2/e 1.8).  In addition, for each
+   subsection a-d, describe what problems would be caused by allowing
+   the instruction to run when not in kernel mode.
+
+   Which of the following instructions should be allowed only in kernel mode?
+   (a) Disable all interrupts.
+   (b) Read the time-of-day clock.
+   (c) Set the time-of-day clock.
+   (d) Change the memory map.
+
+   Answer:
+   Main: (a), (c) and (d) should only be allowed in kernel mode.
+   
+   a. If a user process was allowed to disable interrupts, it's possible they
+   never re-enable them, and then "there goes your system." (Tanenbaum)
+
+   b. No problems would occur from reading the time-of-day clock in a user process.
+
+   c. On a time sharing computer, if a user were able to set the TOD clock they
+   could set the clock to an earlier time to increase the amount of time their
+   job gets to run without paying more.
+
+   d. If a user process could rewrite the memory map it could inadvertantly map
+   a memory address being used by another process to itself and data could be lost.
+
+
+3. (5 Points) Priority inversion problem with priority scheduling
+   vs. round-robin scheduling.  Tanenbaum 4/e 2.26 (Tanenbaum 3/e
+   2.20, Tanenbaum 2/e 2.26)
+
+   Answer:
+   The priority inversion problem described with processes H and L would not
+   occur if round robin scheduling was used. L would get a finite periodic slice of
+   CPU time and thus would eventually leave it's critical region, allowing H
+   to stop busy waiting and to enter its critical region.
+
+4. (5 Points) Implementing semaphores using a disable interrupts
+   instruction.  Tanenbaum 4/e 2.31 (Tanenbaum 3/e 2.25, Tanenbaum 2/e
+   2.23).  You must include pseudo-code for your solution.
+
+   int s = 0;
+
+   P(s)
+   {
+       while (1) {
+           disableInterrupts();
+           if (s>0)
+           {
+               s--;
+               enableInterrupts();
+               return;
+           }
+           else {
+               enableInterrupts();
+           }
+       }
+   }
+
+    V(s)
+    {
+        disableInterrupts();
+        s++;
+        enableInterrupts();
+    }
+
+
+5. (10 Points) Implementing counting semaphores using binary
+   semaphores.  Tanenbaum 4/e 2.32 (Tanenbaum 3/e 2.26, Tanenbaum 2/e
+   2.24).  You must include pseudo-code for your solution.  By
+   "ordinary machine instructions," we mean all facilities that are
+   available through the C Programming Language, for example.  Your
+   solution should use binary semaphores wherever mutual exclusion is
+   needed.
+
+   // Let count be the number of threads trying to use a shared resource
+   int count = 5; 
+   int count_mutex 1;
+   int section_mutex = 0;
+
+   // Let down() and up() be functions used to increment or decrement binary semaphores
+
+   P(int count) {
+        down(count_mutex);
+        count--;
+        if (count <= 0) {
+            down(section_mutex);
+            up(count_mutex);
+        }
+        else {
+            up(count_mutex);
+        }
+    }
+
+   V(int count) {
+        down(count_mutex);
+        count++;
+        if (count > 0) {
+            up(section_mutex);
+            up(count_mutex);
+        }
+        else {
+            up(count_mutex);
+        }
+    }
