@@ -23,7 +23,7 @@ static void malloc_init(void) {
     void *memory = malloc(aspacesize);
     mymem = (struct mem_region*)memory;
     mymem->free = 1;
-    mymem->size = aspacesize;
+    mymem->size = aspacesize - sizeof(struct mem_region);
     mymem->pid = 0;
     malloc_initd = 1;
     endmymem = memory + aspacesize;
@@ -35,8 +35,15 @@ void *myMalloc(uint32_t size) {
     }
     struct mem_region *current = mymem;
     while (current < endmymem) {
-        
+        if (current->free == 1 && current->size >= size) {
+            void *mp = current->data + sizeof(dword) - ((uintptr_t)current->data & (sizeof(dword) - 1));
+        }
     }
+
+/*
+********** Code from previous approach below, for reference only
+********** To be deleted in future commit
+*/
 
 struct node {
     // Make unsigned
