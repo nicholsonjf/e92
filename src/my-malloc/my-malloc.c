@@ -1,11 +1,49 @@
+#include <stdint.h>
 
 static int malloc_initd = 0;
 
 static const int mmagic = 0xdead;
 
+// Create typedef for size of dword
+typedef uint64_t dword; 
+
+struct mem_region
+{
+    uint32_t free : 1;
+    uint32_t size : 31;
+    uint8_t pid;
+    uint8_t data[0];
+};
+
+static struct mem_region *mymem;
+static struct mem_region *endmymem;
+
+static void malloc_init(void) {
+    uint32_t aspacesize = 128 * (1 << 20);
+    void *memory = malloc(aspacesize);
+    mymem = (struct mem_region*)memory;
+    mymem->free = 1;
+    mymem->size = aspacesize;
+    mymem->pid = 0;
+    malloc_initd = 1;
+    endmymem = memory + aspacesize;
+}
+
+void *myMalloc(uint32_t size) {
+    if (malloc_initd == 0) {
+        malloc_init();
+    }
+    struct mem_region *current = mymem;
+    while (current < endmymem) {
+        
+    }
+
 struct node {
+    // Make unsigned
     int size;
+    // Get rid of this. Always go through entire chain of used/free blocks.
     int magic;
+    // 
     void *p;
     struct node *next;
 };
