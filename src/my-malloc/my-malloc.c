@@ -26,6 +26,8 @@ static void malloc_init(void) {
     mymem->size = aspacesize - sizeof(struct mem_region);
     mymem->pid = 0;
     malloc_initd = 1;
+    // So we we can say "while current < endmymem..."
+    // In pointer arithmatic, "endmymem" is 128 * (1 << 20) addresses ahead of "memory"
     endmymem = memory + aspacesize;
 }
 
