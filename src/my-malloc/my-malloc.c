@@ -5,15 +5,34 @@ static int malloc_initd = 0;
 static const int mmagic = 0xdead;
 
 // Create typedef for size of dword
-typedef uint64_t dword; 
+typedef uint64_t dword;
+
+struct pcb
+{
+    int pid; 
+};
+
+// Call myMalloc in main to allocate 
+static struct pcb *currentPCB; 
 
 struct mem_region
 {
     uint32_t free : 1;
     uint32_t size : 31;
-    uint8_t pid;
+    uint32_t pid;
     uint8_t data[0];
 };
+
+static void initial_pcb(void) {
+    // Check malloc returns non-zero
+    // Check return ffor all system call
+    currentPCB = malloc(sizeof(struct pcb));
+    currentPCB->pid = 0;
+}
+
+static int get_pcb(void) {
+    return &currentPCB->pid;
+}
 
 static struct mem_region *mymem;
 static struct mem_region *endmymem;
@@ -21,10 +40,11 @@ static struct mem_region *endmymem;
 static void malloc_init(void) {
     uint32_t aspacesize = 128 * (1 << 20);
     void *memory = malloc(aspacesize);
+    void *pid = malloc(sizeof(struct pcb));
     mymem = (struct mem_region*)memory;
     mymem->free = 1;
     mymem->size = aspacesize - sizeof(struct mem_region);
-    mymem->pid = 0;
+    mymem->pid = get_pcb();
     malloc_initd = 1;
     // So we we can say "while current < endmymem..."
     // In pointer arithmatic, "endmymem" is 128 * (1 << 20) addresses ahead of "memory"
