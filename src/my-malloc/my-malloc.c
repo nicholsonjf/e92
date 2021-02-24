@@ -66,6 +66,7 @@ void *myMalloc(uint32_t size) {
             if (best == NULL || current < best)
             {
                 best = current;
+                break;
             }
         }
     }
@@ -86,7 +87,7 @@ int myFreeErrorCode(void *ptr);
 int main(void)
 {
     void *mm = myMalloc(1234);
-    printf("%p", &mm);
+    printf("%p\n", (void *) &mm);
 }
 
 
