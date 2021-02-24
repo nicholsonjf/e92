@@ -1,9 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static int malloc_initd = 0;
-
-static const int mmagic = 0xdead;
 
 // Create typedef for size of dword
 typedef uint64_t dword;
@@ -24,21 +23,22 @@ struct mem_region
     uint8_t data[0];
 };
 
-static void initial_pcb(void) {
+static void pcb_init(void) {
     // Check malloc returns non-zero
-    // Check return ffor all system call
+    // Check return for all system call
     currentPCB = malloc(sizeof(struct pcb));
     currentPCB->pid = 0;
 }
 
 static int get_pcb(void) {
-    return &currentPCB->pid;
+    return currentPCB->pid;
 }
 
 static struct mem_region *mymem;
 static struct mem_region *endmymem;
 
 static void malloc_init(void) {
+    pcb_init();
     uint32_t aspacesize = 128 * (1 << 20);
     void *memory = malloc(aspacesize);
     mymem = (struct mem_region*)memory;
@@ -61,7 +61,8 @@ void *myMalloc(uint32_t size) {
         // If we're giving them a pointer to the closest double word boundary that is on or
         // after current->data don't we need to make sure size is lte current->size +
         // distance to next double word boundary?
-        if (current->free == 1 && current->size >= size) {
+        if (current->free == 1 && current->size >= size + (sizeof(dword) - 1))
+        {
             if (best == NULL || current < best)
             {
                 best = current;
@@ -84,6 +85,8 @@ int myFreeErrorCode(void *ptr);
 
 int main(void)
 {
+    void *mm = myMalloc(1234);
+    printf("%p", &mm);
 }
 
 
