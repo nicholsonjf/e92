@@ -63,7 +63,7 @@ void *myMalloc(uint32_t size) {
         // distance to next double word boundary?
         if (current->free == 1 && current->size >= size + (sizeof(dword) - 1))
         {
-            if (best == NULL || current < best)
+            if (best == NULL || current->size < best->size)
             {
                 best = current;
                 break;
@@ -74,8 +74,22 @@ void *myMalloc(uint32_t size) {
         return NULL;
     }
     // Don't fully understand how this math works.
+    // TODO look at with Jon
     void *mp = best->data + sizeof(dword) - ((uintptr_t)best->data & (sizeof(dword) - 1));
+    best->free = 0;
     // Need to split mp if best->size is gt size
+    // The below math guarantees that if we split
+    // the new_b->size will be gte 1 byte taking
+    // into account overhead and padding.
+    if (best->size >= size + sizeof(struct mem_region) + 8) {
+        void *newloc = best->data + size;
+        struct mem_region *new_b = (struct mem_region *)newloc;
+        new_b->free = 1;
+        new_b->size = best->size - size;
+        new_b->pid = get_pcb();
+        best->size = size;
+        printf("%p\n", (void *)&newloc);
+    }
     return mp;
 }
 
@@ -87,7 +101,7 @@ int myFreeErrorCode(void *ptr);
 int main(void)
 {
     void *mm = myMalloc(1234);
-    printf("%p\n", (void *) &mm);
+    printf("%p\n", (void *)&mm);
 }
 
 
