@@ -51,44 +51,53 @@ static void malloc_init(void) {
     endmymem = memory + aspacesize;
 }
 
+static int qword_boundary(int size)
+{
+    if ((size & (sizeof(dword) - 1)) == 0)
+    {
+        return size;
+    }
+    return size - (size & (sizeof(dword) - 1)) + sizeof(dword);
+}
+
 void *myMalloc(uint32_t size) {
     if (malloc_initd == 0) {
         malloc_init();
     }
+    size = qword_boundary(size);
     struct mem_region *best = NULL;
     struct mem_region *current = mymem;
     while (current < endmymem) {
         // If we're giving them a pointer to the closest double word boundary that is on or
         // after current->data don't we need to make sure size is lte current->size +
         // distance to next double word boundary?
-        if (current->free == 1 && current->size >= size + (sizeof(dword) - 1))
+        if (current->free == 1 && current->size >= size)
         {
             if (best == NULL || current->size < best->size)
             {
                 best = current;
-                break;
             }
         }
+        current = (void *)current + current->size + sizeof(struct mem_region);
     }
     if (best == NULL) {
         return NULL;
     }
-    // Don't fully understand how this math works.
-    // TODO look at with Jon
-    void *mp = best->data + sizeof(dword) - ((uintptr_t)best->data & (sizeof(dword) - 1));
+    // Might have to use qword_boundary but probably not.
+    void *mp = best->data;
     best->free = 0;
     // Need to split mp if best->size is gt size
     // The below math guarantees that if we split
     // the new_b->size will be gte 1 byte taking
     // into account overhead and padding.
-    if (best->size >= size + sizeof(struct mem_region) + 8) {
+    if (best->size > size + sizeof(struct mem_region)) {
         void *newloc = best->data + size;
         struct mem_region *new_b = (struct mem_region *)newloc;
         new_b->free = 1;
-        new_b->size = best->size - size;
+        new_b->size = best->size - size - sizeof(struct mem_region);
         new_b->pid = get_pcb();
         best->size = size;
-        printf("%p\n", (void *)&newloc);
+        printf("Address: %p, Size: %d\n", newloc, new_b->size);
     }
     return mp;
 }
@@ -101,7 +110,9 @@ int myFreeErrorCode(void *ptr);
 int main(void)
 {
     void *mm = myMalloc(1234);
-    printf("%p\n", (void *)&mm);
+    printf("First: %p\n", mm);
+    mm = myMalloc(89898);
+    printf("Second: %p\n", mm);
 }
 
 
