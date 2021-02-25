@@ -2,6 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+* Implementation Notes
+*
+* struct mem_region->size does not include sizeof(struct mem_region).
+* Additionally, mem_region->size is rounded up to the nearest double word boundary.
+* Thus, the location of the next mem_region is: mem_region->data + mem_region->size.
+**/
+
 static int malloc_initd = 0;
 
 // Create typedef for size of dword
@@ -78,7 +86,8 @@ void *myMalloc(uint32_t size) {
                 best = current;
             }
         }
-        current = (void *)current + current->size + sizeof(struct mem_region);
+        // TODO can you cast a struct member to void*?
+        current = (void *)current->data + current->size;
     }
     if (best == NULL) {
         return NULL;
@@ -103,7 +112,21 @@ void *myMalloc(uint32_t size) {
 }
 
 
-void myFree(void *ptr);
+void myFree(void *ptr) {
+    if (ptr == NULL) {
+        return;
+    }
+    struct mem_region *current = mymem;
+    while (current < endmymem)
+    {
+        if (current == ptr && current->free == 0) {
+            current->free = 1;
+            // TODO merge adjacent free blocks.
+        }
+        // TODO can you cast a struct member to void*?
+        current = (void *)current->data + current->size;
+    }
+}
 
 int myFreeErrorCode(void *ptr);
 
@@ -111,8 +134,11 @@ int main(void)
 {
     void *mm = myMalloc(1234);
     printf("First: %p\n", mm);
-    mm = myMalloc(89898);
-    printf("Second: %p\n", mm);
+    void *nn = myMalloc(89898);
+    printf("Second: %p\n", nn);
+    myFree(mm);
+    void *kk = myMalloc(1234);
+    printf("Third: %p\n", kk);
 }
 
 
