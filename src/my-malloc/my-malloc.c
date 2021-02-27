@@ -86,8 +86,7 @@ void *myMalloc(uint32_t size) {
                 best = current;
             }
         }
-        // TODO can you cast a struct member to void*?
-        current = (void *)current->data + current->size;
+        current = (void *)current + current->size + sizeof(struct mem_region);
     }
     if (best == NULL) {
         return NULL;
@@ -119,12 +118,12 @@ void myFree(void *ptr) {
     struct mem_region *current = mymem;
     while (current < endmymem)
     {
-        if (current == ptr && current->free == 0) {
+        if (current->data == ptr && current->free == 0) {
             current->free = 1;
+            printf("myFree Current Address: %p, Size: %d\n", current, current->size);
             // TODO merge adjacent free blocks.
         }
-        // TODO can you cast a struct member to void*?
-        current = (void *)current->data + current->size;
+        current = (void *)current + current->size + sizeof(struct mem_region);
     }
 }
 
@@ -133,12 +132,12 @@ int myFreeErrorCode(void *ptr);
 int main(void)
 {
     void *mm = myMalloc(1234);
-    printf("First: %p\n", mm);
+    printf("mm Address: %p\n", mm);
     void *nn = myMalloc(89898);
-    printf("Second: %p\n", nn);
+    printf("nn Address: %p\n", nn);
     myFree(mm);
     void *kk = myMalloc(1234);
-    printf("Third: %p\n", kk);
+    printf("kk Address: %p\n", kk);
 }
 
 
