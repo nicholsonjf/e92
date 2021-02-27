@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-// TODO split into two files
 // TODO create ample documentation per instructions in PS
 // TODO Explain why you chose best fit alg
 
@@ -138,10 +137,26 @@ int myFreeErrorCode(void *ptr) {
     return E_ADDR_NOT_ALLOCATED;
 }
 
-void myFree(void *ptr){
+
+void myFree(void *ptr) {
     int rv = myFreeErrorCode(ptr);
     printf("myFree Return Value: %d\n", rv);
 }
 
-
-
+void memoryMap(void) {
+    struct mem_region *current = mymem;
+    printf("%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
+    while (current < endmymem)
+    {
+        char **free;
+        if (current->free == 0){
+            char *false = "false";
+            free = &false;
+        } else {
+            char *true = "true";
+            free = &true;
+        }
+        printf("%12p%5d%7s%12d\n", current, current->pid, *free, current->size);
+        current = (void *)current + current->size + sizeof(struct mem_region);
+    }
+}

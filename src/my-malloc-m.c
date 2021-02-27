@@ -12,4 +12,5 @@ int main(void)
     myFree(mm);
     void *kk = myMalloc(1234);
     printf("kk Address: %p\n", kk);
+    memoryMap();
 }
