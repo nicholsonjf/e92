@@ -1,9 +1,13 @@
+#include "my-malloc.h"
+#include "my-malloc-m.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 // TODO split into two files
 // TODO create ample documentation per instructions in PS
 // TODO Explain why you chose best fit alg
+
+struct pcb *currentPCB;
 
 enum error_t
 {
@@ -24,14 +28,6 @@ static int malloc_initd = 0;
 
 // Create typedef for size of Dword
 typedef uint64_t Dword;
-
-struct pcb
-{
-    int pid; 
-};
-
-// Call myMalloc in main to allocate 
-static struct pcb *currentPCB; 
 
 struct mem_region
 {
@@ -145,18 +141,6 @@ int myFreeErrorCode(void *ptr) {
 void myFree(void *ptr){
     int rv = myFreeErrorCode(ptr);
     printf("myFree Return Value: %d\n", rv);
-}
-
-int main(void)
-{
-    void *mm = myMalloc(1234);
-    printf("mm Address: %p\n", mm);
-    void *nn = myMalloc(89898);
-    printf("nn Address: %p\n", nn);
-    currentPCB->pid = 1;
-    myFree(mm);
-    void *kk = myMalloc(1234);
-    printf("kk Address: %p\n", kk);
 }
 
 
