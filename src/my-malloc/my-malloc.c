@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+// TODO split into two files
+// TODO create ample documentation per instructions in PS
+// TODO Explain why you chose best fit alg
 
 enum error_t
 {
@@ -19,8 +22,8 @@ enum error_t
 
 static int malloc_initd = 0;
 
-// Create typedef for size of dword
-typedef uint64_t dword;
+// Create typedef for size of Dword
+typedef uint64_t Dword;
 
 struct pcb
 {
@@ -68,11 +71,11 @@ static void malloc_init(void) {
 
 static int qword_boundary(int size)
 {
-    if ((size & (sizeof(dword) - 1)) == 0)
+    if ((size & (sizeof(Dword) - 1)) == 0)
     {
         return size;
     }
-    return size - (size & (sizeof(dword) - 1)) + sizeof(dword);
+    return size - (size & (sizeof(Dword) - 1)) + sizeof(Dword);
 }
 
 void *myMalloc(uint32_t size) {
