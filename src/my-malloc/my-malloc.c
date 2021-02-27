@@ -2,6 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+enum error_t
+{
+    E_SUCCESS = 0,
+    E_ADDR_NOT_ALLOCATED = 1,
+    E_WRONG_PID = 2,
+};
+
 /**
 * Implementation Notes
 *
@@ -111,23 +118,31 @@ void *myMalloc(uint32_t size) {
 }
 
 
-void myFree(void *ptr) {
+int myFreeErrorCode(void *ptr) {
     if (ptr == NULL) {
-        return;
+        return E_ADDR_NOT_ALLOCATED;
     }
     struct mem_region *current = mymem;
     while (current < endmymem)
     {
         if (current->data == ptr && current->free == 0) {
+            if (current->pid != get_pcb()) {
+                return E_WRONG_PID;
+            }
             current->free = 1;
             printf("myFree Current Address: %p, Size: %d\n", current, current->size);
             // TODO merge adjacent free blocks.
+            return E_SUCCESS;
         }
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
+    return E_ADDR_NOT_ALLOCATED;
 }
 
-int myFreeErrorCode(void *ptr);
+void myFree(void *ptr){
+    int rv = myFreeErrorCode(ptr);
+    printf("myFree Return Value: %d\n", rv);
+}
 
 int main(void)
 {
@@ -135,6 +150,7 @@ int main(void)
     printf("mm Address: %p\n", mm);
     void *nn = myMalloc(89898);
     printf("nn Address: %p\n", nn);
+    currentPCB->pid = 1;
     myFree(mm);
     void *kk = myMalloc(1234);
     printf("kk Address: %p\n", kk);
