@@ -104,6 +104,7 @@ int cmd_echo(int argc, char *argv[]);
 int cmd_exit(int argc, char *argv[]);
 int cmd_help(int argc, char *argv[]);
 int cmd_clockdate(int argc, char *argv[]);
+int mmalloc(int argc, char *argv[]);
 
 struct commandEntry
 {
@@ -113,12 +114,16 @@ struct commandEntry
                 {"echo", cmd_echo},
                 {"exit", cmd_exit},
                 {"help", cmd_help},
-                {"clockdate", cmd_clockdate}};
+                {"clockdate", cmd_clockdate},
+                {"malloc", mmalloc}};
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
+
+// For now, when a new command is added you have to increment the value
+// of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 6; i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -335,6 +340,7 @@ int cmd_help(int argc, char *argv[])
     printf("%s", my_string);
     return E_SUCCESS;
 }
+
 int cmd_clockdate(int argc, char *argv[])
 {
     if (argc == 0) {
@@ -361,4 +367,37 @@ int cmd_clockdate(int argc, char *argv[])
     mytime.tv_usec = 0;
     fmt_date(mytime);
     return E_SUCCESS;
+}
+
+int is_octal(char *str);
+
+    int mmalloc(int argc, char *argv[])
+{
+    if (argc == 0)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 1)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    if (is_octal(argv[0])) {
+        printf("%s\n", "Octal");
+    }
+    return E_SUCCESS;
+}
+
+int is_octal(char *str) {
+    if (str[0] != '0' || strlen(str) < 2)
+    {
+        return 0;
+    }
+    for (int i = 1; i < strlen(str); i++)
+    {
+        if (str[i] < '0' || str[i] > '7')
+        {
+            return 0;
+        }
+    }
+    return 1;
 }

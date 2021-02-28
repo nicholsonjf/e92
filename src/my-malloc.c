@@ -143,6 +143,13 @@ void myFree(void *ptr) {
     printf("myFree Return Value: %d\n", rv);
 }
 
+/**
+// TODO
+run a succession of memory allocation and deallocation requests with calls
+to memoryMap after each call to a memory management routine,
+demonstrate that your memory allocation algorithm is allocating memory
+from an appropriate free memory region.
+**/
 void memoryMap(void) {
     struct mem_region *current = mymem;
     printf("%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
