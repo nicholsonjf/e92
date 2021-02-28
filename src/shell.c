@@ -1,19 +1,10 @@
+#include "my-malloc.h"
+#include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 #include <errno.h>
-
-
-// Error code setup informed by https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
-enum error_t
-{
-    E_SUCCESS = 0,
-    E_NOT_ENOUGH_ARGS = 1,
-    E_TOO_MANY_ARGS = 2,
-    E_CMD_NOT_FND = 3,
-    E_ARG_TYPE = 4
-};
 
 struct error_d
 {
@@ -24,10 +15,12 @@ struct error_d
     {E_NOT_ENOUGH_ARGS, "Not enough arguments provided"},
     {E_TOO_MANY_ARGS, "Too many arguments provided"},
     {E_CMD_NOT_FND, "Please enter a valid command"},
-    {E_ARG_TYPE, "Wrong argument type. Run the 'help' command for information about command arguments"}
-    };
+    {E_ARG_TYPE, "Wrong argument type. Run the 'help' command for information about command arguments"},
+    {E_WRONG_PID, "The PID of the current process does not match the PID of provided address"},
+    {E_ADDR_NOT_ALLOCATED, "The address provided does not match a previously allocated address"},
+    {E_MALLOC, "Unable to allocate the requested memory"}};
 
-int print_err (int error_c)
+int print_err(int error_c)
 {
     for (int i = 0; i <= 4; i++)
     {
@@ -135,7 +128,8 @@ cmd_pntr find_cmd(char *arg)
     return NULL;
 }
 
-char *monthName (int month_i) {
+char *monthName(int month_i)
+{
     for (int i = 0; i < 12; i++)
     {
         if (months[i].month_i == month_i)
@@ -146,24 +140,30 @@ char *monthName (int month_i) {
     return NULL;
 }
 
-int main(int argc, char** argv) {
-    while (1) {
+int main(int argc, char **argv)
+{
+    while (1)
+    {
         char linebuf[256];
         int index = 0;
         printf("$ ");
-        while (1) {
+        while (1)
+        {
             char c = fgetc(stdin);
             // Stop reading characters if we reach a newline.
-            if (c == '\n') {
+            if (c == '\n')
+            {
                 linebuf[index] = 0;
                 index++;
                 break;
             }
             // Set whitespace to the null terminator.
-            if (c == ' ' || c == '\t') {
+            if (c == ' ' || c == '\t')
+            {
                 linebuf[index] = 0;
             }
-            else {
+            else
+            {
                 linebuf[index] = c;
             }
             index++;
@@ -174,24 +174,30 @@ int main(int argc, char** argv) {
         // Argument count.
         int argct = 0;
         // Iterate over characters in the line buffer and set argct, argval.
-        for (int i=0; i<index; i++) {
+        for (int i = 0; i < index; i++)
+        {
             // If previous character is a space.
-            if (pctype == 0) {
+            if (pctype == 0)
+            {
                 // If current character is also a space.
-                if (linebuf[i] == 0) {
+                if (linebuf[i] == 0)
+                {
                     continue;
                 }
                 // If current character is a character.
-                else {
+                else
+                {
                     // Increment arg count, set arg pointer, set prev char type to character.
                     argct++;
                     pctype = 1;
                 }
             }
             // If previous character is a character.
-            else {
+            else
+            {
                 // If current character is a space.
-                if (linebuf[i] == 0) {
+                if (linebuf[i] == 0)
+                {
                     // Set prev char type to space.
                     pctype = 0;
                 }
@@ -239,11 +245,12 @@ int main(int argc, char** argv) {
             }
         }
         // If there are no args (i.e. user pressed enter or space enter) continue before mallocing
-        if (argct < 1) {
+        if (argct < 1)
+        {
             continue;
         }
         // Allocate space for argval
-        char **argval = malloc((argct+1) * sizeof(char *));
+        char **argval = malloc((argct + 1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
             // Assign argvals
@@ -251,15 +258,18 @@ int main(int argc, char** argv) {
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
         argval[argct] = NULL;
-        cmd_pntr shell_cmd = find_cmd( argval[0] );
-        if ( shell_cmd == NULL ) {
+        cmd_pntr shell_cmd = find_cmd(argval[0]);
+        if (shell_cmd == NULL)
+        {
             print_err(E_CMD_NOT_FND);
         }
-        else {
+        else
+        {
             // Only pass the arguments, not the shell command.
             int cmd_c = shell_cmd(argct - 1, &argval[1]);
             // If the command returns a non-zero error code, print the error message.
-            if (cmd_c > 0) {
+            if (cmd_c > 0)
+            {
                 print_err(cmd_c);
             }
         }
@@ -282,12 +292,14 @@ int fmt_date(struct timeval mytime)
     return E_SUCCESS;
 }
 
-int cmd_date(int argc, char *argv[]) {
+int cmd_date(int argc, char *argv[])
+{
     if (argc > 0)
     {
         return E_TOO_MANY_ARGS;
     }
-    else {
+    else
+    {
         struct timeval mytime;
         gettimeofday(&mytime, NULL);
         fmt_date(mytime);
@@ -297,14 +309,17 @@ int cmd_date(int argc, char *argv[]) {
 
 int cmd_echo(int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++)
+    {
         // print args.
         printf("%s", argv[i]);
         // Here, i is starting at zero and argc is not zero-indexed
-        if (i < (argc-1)) {
+        if (i < (argc - 1))
+        {
             printf("%c", ' ');
         }
-        else {
+        else
+        {
             printf("%c", '\n');
         }
     }
@@ -320,6 +335,7 @@ int cmd_exit(int argc, char *argv[])
     exit(E_SUCCESS);
 }
 
+//TODO add malloc, free, memchk, memset, memorymap
 int cmd_help(int argc, char *argv[])
 {
     if (argc > 0)
@@ -345,14 +361,17 @@ int cmd_help(int argc, char *argv[])
 
 int cmd_clockdate(int argc, char *argv[])
 {
-    if (argc == 0) {
+    if (argc == 0)
+    {
         return E_NOT_ENOUGH_ARGS;
     }
-    else if (argc > 1) {
+    else if (argc > 1)
+    {
         return E_TOO_MANY_ARGS;
     }
-    for (int i=0; i<strlen(argv[0]); i++) {
-        if (argv[0][i] < '0' || argv[0][i] > '9' )
+    for (int i = 0; i < strlen(argv[0]); i++)
+    {
+        if (argv[0][i] < '0' || argv[0][i] > '9')
         {
             return E_ARG_TYPE;
         }
@@ -371,7 +390,7 @@ int cmd_clockdate(int argc, char *argv[])
     return E_SUCCESS;
 }
 
-int mmalloc(int argc, char *argv[])
+int cmd_malloc(int argc, char *argv[])
 {
     if (argc == 0)
     {
@@ -381,10 +400,28 @@ int mmalloc(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    errno = 0;
-    long bytes = strtol(argv[0], NULL, 0);
-    if (errno != 0) {
+    int bytes = strtob(argv[0]);
+    if (bytes < 0)
+    {
         return E_ARG_TYPE;
+    }
+    void *p = myMalloc(bytes);
+    if (p == NULL)
+    {
+        return E_MALLOC;
+    }
+    fprintf(stdout, "%p", p);
+    return E_SUCCESS;
+}
+
+// Returns -1 if there was an error
+int strtob(char *str)
+{
+    errno = 0;
+    long bytes = strtol(str, NULL, 0);
+    if (errno != 0)
+    {
+        return -1;
     }
     return bytes;
 }

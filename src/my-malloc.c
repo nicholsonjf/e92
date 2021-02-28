@@ -1,19 +1,15 @@
 #include "my-malloc.h"
-#include "my-malloc-m.h"
+#include "pcb.h"
+#include "shell.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+
 // TODO create ample documentation per instructions in PS
 // TODO Explain why you chose best fit alg
 
 struct pcb *currentPCB;
-
-enum error_t
-{
-    E_SUCCESS = 0,
-    E_ADDR_NOT_ALLOCATED = 1,
-    E_WRONG_PID = 2,
-};
 
 /**
 * Implementation Notes
@@ -110,7 +106,6 @@ void *myMalloc(uint32_t size) {
         new_b->size = best->size - size - sizeof(struct mem_region);
         new_b->pid = get_pcb();
         best->size = size;
-        printf("Address: %p, Size: %d\n", newloc, new_b->size);
     }
     return mp;
 }
