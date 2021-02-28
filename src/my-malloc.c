@@ -112,9 +112,14 @@ void *myMalloc(uint32_t size) {
 
 
 int myFreeErrorCode(void *ptr) {
+    if (malloc_initd == 0)
+    {
+        malloc_init();
+    }
     if (ptr == NULL) {
         return E_ADDR_NOT_ALLOCATED;
     }
+    struct mem_region *previous = NULL;
     struct mem_region *current = mymem;
     while (current < endmymem)
     {
@@ -124,9 +129,18 @@ int myFreeErrorCode(void *ptr) {
             }
             current->free = 1;
             printf("myFree Current Address: %p, Size: %d\n", current, current->size);
-            // TODO merge adjacent free blocks.
+            if (previous != NULL && previous->free == 1) {
+                previous->size = previous->size + current->size + sizeof(struct mem_region);
+                current = previous;
+            }
+            struct mem_region *next = (void *)current + current->size + sizeof(struct mem_region);
+            if (next < endmymem && next->free == 1) {
+                current->size = current->size + next->size + sizeof(struct mem_region);
+            }
+
             return E_SUCCESS;
         }
+        previous = current;
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
     return E_ADDR_NOT_ALLOCATED;
@@ -146,6 +160,10 @@ demonstrate that your memory allocation algorithm is allocating memory
 from an appropriate free memory region.
 **/
 void memoryMap(void) {
+    if (malloc_initd == 0)
+    {
+        malloc_init();
+    }
     struct mem_region *current = mymem;
     printf("%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
     while (current < endmymem)
