@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <errno.h>
 
 // Error code setup informed by https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
 enum error_t
@@ -400,4 +401,30 @@ int is_octal(char *str) {
         }
     }
     return 1;
+}
+
+int oct_to_dec(int octal)
+{
+    int decimal = 0, i = 0;
+
+    while (octal != 0)
+    {
+        decimal += (octal % 10) * pow(8, i);
+        ++i;
+        octal /= 10;
+    }
+
+    i = 1;
+
+    return decimal;
+}
+
+int str_to_int(char *str){
+    int result = 0;
+    int len = strlen(str);
+    for (int i = 0; i < len; i++)
+    {
+        result = result * 10 + (str[i] - '0');
+    }
+    return result;
 }
