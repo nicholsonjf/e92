@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <errno.h>
 
+
 // Error code setup informed by https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
 enum error_t
 {
@@ -370,9 +371,7 @@ int cmd_clockdate(int argc, char *argv[])
     return E_SUCCESS;
 }
 
-int is_octal(char *str);
-
-    int mmalloc(int argc, char *argv[])
+int mmalloc(int argc, char *argv[])
 {
     if (argc == 0)
     {
@@ -382,49 +381,10 @@ int is_octal(char *str);
     {
         return E_TOO_MANY_ARGS;
     }
-    if (is_octal(argv[0])) {
-        printf("%s\n", "Octal");
+    errno = 0;
+    long bytes = strtol(argv[0], NULL, 0);
+    if (errno != 0) {
+        return E_ARG_TYPE;
     }
-    return E_SUCCESS;
-}
-
-int is_octal(char *str) {
-    if (str[0] != '0' || strlen(str) < 2)
-    {
-        return 0;
-    }
-    for (int i = 1; i < strlen(str); i++)
-    {
-        if (str[i] < '0' || str[i] > '7')
-        {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-int oct_to_dec(int octal)
-{
-    int decimal = 0, i = 0;
-
-    while (octal != 0)
-    {
-        decimal += (octal % 10) * pow(8, i);
-        ++i;
-        octal /= 10;
-    }
-
-    i = 1;
-
-    return decimal;
-}
-
-int str_to_int(char *str){
-    int result = 0;
-    int len = strlen(str);
-    for (int i = 0; i < len; i++)
-    {
-        result = result * 10 + (str[i] - '0');
-    }
-    return result;
+    return bytes;
 }
