@@ -1,3 +1,5 @@
+int strtob(char *str);
+
 enum error_t
 {
     E_SUCCESS = 0,

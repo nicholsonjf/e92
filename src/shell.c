@@ -99,7 +99,7 @@ int cmd_echo(int argc, char *argv[]);
 int cmd_exit(int argc, char *argv[]);
 int cmd_help(int argc, char *argv[]);
 int cmd_clockdate(int argc, char *argv[]);
-int mmalloc(int argc, char *argv[]);
+int cmd_malloc(int argc, char *argv[]);
 
 struct commandEntry
 {
@@ -110,7 +110,7 @@ struct commandEntry
                 {"exit", cmd_exit},
                 {"help", cmd_help},
                 {"clockdate", cmd_clockdate},
-                {"malloc", mmalloc}};
+                {"malloc", cmd_malloc}};
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
 
@@ -410,7 +410,7 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_MALLOC;
     }
-    fprintf(stdout, "%p", p);
+    fprintf(stdout, "%p\n", p);
     return E_SUCCESS;
 }
 
