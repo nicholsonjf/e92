@@ -7,6 +7,7 @@ int cmd_clockdate(int argc, char *argv[]);
 int cmd_malloc(int argc, char *argv[]);
 int cmd_free(int argc, char *argv[]);
 int cmd_memory_map(int argc, char *argv[]);
+int cmd_memset(int argc, char *argv[]);
 
 // Shell helper function prototypes.
 unsigned long my_strtoul(char *str);
@@ -23,5 +24,6 @@ enum error_t
     E_WRONG_PID,
     E_MALLOC,
     E_STRTOUL,
+    E_BRANGE_EX,
     E_COUNT
 };

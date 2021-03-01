@@ -165,3 +165,8 @@ void memoryMap(void) {
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
 }
+
+int myMemset(void *p, uint8_t val, uint32_t len)
+{
+    return E_SUCCESS;
+}

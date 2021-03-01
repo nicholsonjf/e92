@@ -19,7 +19,9 @@ struct error_d
     {E_WRONG_PID, "The PID of the current process does not match the PID of provided address"},
     {E_ADDR_NOT_ALLOCATED, "The address provided does not match a previously allocated address"},
     {E_MALLOC, "Unable to allocate the requested memory"},
-    {E_STRTOUL, "The number you provided is out of range, or contains an invalid character"}};
+    {E_STRTOUL, "The number you provided is out of range, or contains an invalid character"},
+    {E_BRANGE_EX, "The value provided exceeds the storage capacity of a byte"}
+    };
 
 void print_err(int error_c)
 {
@@ -107,6 +109,7 @@ struct commandEntry
                 {"malloc", cmd_malloc},
                 {"free", cmd_free},
                 {"memoryMap", cmd_memory_map},
+                {"memset", cmd_memset},
                 };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
@@ -116,7 +119,7 @@ typedef int (*cmd_pntr)(int argc, char *argv[]);
 // of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -469,5 +472,31 @@ int cmd_memory_map(int argc, char *argv[]) {
         return E_TOO_MANY_ARGS;
     }
     memoryMap();
+    return E_SUCCESS;
+}
+
+//TODO any error for this and cmd_malloc need to output to stderr
+int cmd_memset(int argc, char *argv[])
+{
+    if (argc < 3)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 3)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    unsigned long start_addr = my_strtoul(argv[0]);
+    if (start_addr < 0)
+    {
+        return E_STRTOUL;
+    }
+    unsigned long byte_val = my_strtoul(argv[1]);
+    if (byte_val < 0)
+    {
+        return E_STRTOUL;
+    } else if (byte_val > 255) {
+        return E_BRANGE_EX;
+    }
     return E_SUCCESS;
 }
