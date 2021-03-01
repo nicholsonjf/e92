@@ -105,7 +105,8 @@ struct commandEntry
                 {"help", cmd_help},
                 {"clockdate", cmd_clockdate},
                 {"malloc", cmd_malloc},
-                {"free", cmd_free}
+                {"free", cmd_free},
+                {"memoryMap", cmd_memory_map},
                 };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
@@ -115,7 +116,7 @@ typedef int (*cmd_pntr)(int argc, char *argv[]);
 // of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 8; i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -460,4 +461,13 @@ int cmd_free(int argc, char *argv[])
         fprintf(stdout, "Memory address %p successfully freed\n", p);
     }
     return free_status;
+}
+
+int cmd_memory_map(int argc, char *argv[]) {
+    if (argc > 0)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    memoryMap();
+    return E_SUCCESS;
 }
