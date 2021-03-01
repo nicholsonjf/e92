@@ -28,11 +28,10 @@ void print_err(int error_c)
         if (error_c == error_ds[i].code)
         {
             fprintf(stdout, "ERROR: %s\n", error_ds[i].message);
-            break;
-        } else {
-            fprintf(stdout, "ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
+            return;
         }
     }
+    fprintf(stdout, "ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
 }
 
 struct date
@@ -447,7 +446,6 @@ int cmd_free(int argc, char *argv[])
         return E_TOO_MANY_ARGS;
     }
     unsigned long addr = my_strtoul(argv[0]);
-    fprintf(stdout, "Result of my_strtoul (decimal): %lu\n", addr);
     if (addr < 0)
     {
         return E_STRTOUL;
@@ -455,15 +453,11 @@ int cmd_free(int argc, char *argv[])
     // Subtract the size of struct mem_region which is where the allocated region would start
     // Then cast to the type myFreeErrorCode is expecting.
     unsigned long block_start = addr - sizeof(struct mem_region);
-    fprintf(stdout, "Size of struct mem_region: %lu\n", sizeof(struct mem_region));
-    fprintf(stdout, "Free request - overhead (decimal): %lu\n", block_start);
-    void *p = (void *)block_start;
-    fprintf(stdout, "Free request - overhead: %p\n", p);
+    void *p = (void *)addr;
     int free_status = myFreeErrorCode(p);
     if (free_status == 0)
     {
         fprintf(stdout, "Memory address %p successfully freed\n", p);
     }
-    memoryMap();
     return free_status;
 }
