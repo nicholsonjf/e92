@@ -66,4 +66,8 @@ void merge_test(void) {
 
 int main(void)
 {
+    long addr = 555555555140735700910175;
+    if (sizeof(addr))
+    fprintf(stdout, "%lu\n", sizeof(addr));
+    //fprintf(stdout, "%p\n", (void *)addr);
 }

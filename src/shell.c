@@ -18,18 +18,21 @@ struct error_d
     {E_ARG_TYPE, "Wrong argument type. Run the 'help' command for information about command arguments"},
     {E_WRONG_PID, "The PID of the current process does not match the PID of provided address"},
     {E_ADDR_NOT_ALLOCATED, "The address provided does not match a previously allocated address"},
-    {E_MALLOC, "Unable to allocate the requested memory"}};
+    {E_MALLOC, "Unable to allocate the requested memory"},
+    {E_STRTOUL, "The number you provided is out of range, or contains an invalid character"}};
 
-int print_err(int error_c)
+void print_err(int error_c)
 {
-    for (int i = 0; i <= 4; i++)
+    for (int i = 0; i <= E_COUNT; i++)
     {
         if (error_c == error_ds[i].code)
         {
-            printf("ERROR: %s\n", error_ds[i].message);
+            fprintf(stdout, "ERROR: %s\n", error_ds[i].message);
+            break;
+        } else {
+            fprintf(stdout, "ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
         }
     }
-    return 0;
 }
 
 struct date
@@ -93,14 +96,6 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec)
     return mydate;
 }
 
-// Shell command function prototypes.
-int cmd_date(int argc, char *argv[]);
-int cmd_echo(int argc, char *argv[]);
-int cmd_exit(int argc, char *argv[]);
-int cmd_help(int argc, char *argv[]);
-int cmd_clockdate(int argc, char *argv[]);
-int cmd_malloc(int argc, char *argv[]);
-
 struct commandEntry
 {
     char *name;
@@ -110,15 +105,18 @@ struct commandEntry
                 {"exit", cmd_exit},
                 {"help", cmd_help},
                 {"clockdate", cmd_clockdate},
-                {"malloc", cmd_malloc}};
+                {"malloc", cmd_malloc},
+                {"free", cmd_free}
+                };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
 
+//TODO fix this
 // For now, when a new command is added you have to increment the value
 // of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 7; i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -335,7 +333,7 @@ int cmd_exit(int argc, char *argv[])
     exit(E_SUCCESS);
 }
 
-//TODO add malloc, free, memchk, memset, memorymap
+//TODO add free, memchk, memset, memorymap
 int cmd_help(int argc, char *argv[])
 {
     if (argc > 0)
@@ -354,7 +352,16 @@ int cmd_help(int argc, char *argv[])
                       "\n"
                       "clockdate -- takes a single positive integral number as its required argument.\n"
                       "             This number represents the number of seconds since the Unix Epoch. This provided\n"
-                      "             Epoch time will be printed to stdout in the same format described in the date command.\n";
+                      "             Epoch time will be printed to stdout in the same format described in the date command.\n"
+                      "\n"
+                      "   malloc -- accepts a single argument which is the number of bytes of memory to be allocated.\n"
+                      "             The number of bytes can be specified either as a decimal integer constant (of arbitrary\n"
+                      "             length), an octal integer constant (indicated by a prefix of 0 not followed by x or\n"
+                      "             X followed by an arbitrary length octal constant), or as a hexadecimal number (indicated\n"
+                      "             by a prefix of 0x or 0X followed by an arbitrary length hexadecimal constant).  The\n"
+                      "             alphabetic hexadecimal digits can be specified in either upper or lower case.\n"
+                      "\n"
+                      ;
     printf("%s", my_string);
     return E_SUCCESS;
 }
@@ -390,6 +397,7 @@ int cmd_clockdate(int argc, char *argv[])
     return E_SUCCESS;
 }
 
+//TODO Need to check each digit is in hex range
 int cmd_malloc(int argc, char *argv[])
 {
     if (argc == 0)
@@ -400,11 +408,13 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    int bytes = strtob(argv[0]);
+    long bytes = my_strtoul(argv[0]);
     if (bytes < 0)
     {
-        return E_ARG_TYPE;
+        return E_STRTOUL;
     }
+    // Cast to the type myMalloc is expecting.
+    uint32_t c_bytes = (uint32_t)bytes;
     void *p = myMalloc(bytes);
     if (p == NULL)
     {
@@ -415,13 +425,45 @@ int cmd_malloc(int argc, char *argv[])
 }
 
 // Returns -1 if there was an error
-int strtob(char *str)
+unsigned long my_strtoul(char *str)
 {
     errno = 0;
-    long bytes = strtol(str, NULL, 0);
+    unsigned long bytes = strtoul(str, NULL, 0);
     if (errno != 0)
     {
         return -1;
     }
     return bytes;
+}
+
+int cmd_free(int argc, char *argv[])
+{
+    if (argc == 0)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 1)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    unsigned long addr = my_strtoul(argv[0]);
+    fprintf(stdout, "Result of my_strtoul (decimal): %lu\n", addr);
+    if (addr < 0)
+    {
+        return E_STRTOUL;
+    }
+    // Subtract the size of struct mem_region which is where the allocated region would start
+    // Then cast to the type myFreeErrorCode is expecting.
+    unsigned long block_start = addr - sizeof(struct mem_region);
+    fprintf(stdout, "Size of struct mem_region: %lu\n", sizeof(struct mem_region));
+    fprintf(stdout, "Free request - overhead (decimal): %lu\n", block_start);
+    void *p = (void *)block_start;
+    fprintf(stdout, "Free request - overhead: %p\n", p);
+    int free_status = myFreeErrorCode(p);
+    if (free_status == 0)
+    {
+        fprintf(stdout, "Memory address %p successfully freed\n", p);
+    }
+    memoryMap();
+    return free_status;
 }

@@ -24,14 +24,6 @@ static int malloc_initd = 0;
 // Create typedef for size of Dword
 typedef uint64_t Dword;
 
-struct mem_region
-{
-    uint32_t free : 1;
-    uint32_t size : 31;
-    uint32_t pid;
-    uint8_t data[0];
-};
-
 static void pcb_init(void) {
     // Check malloc returns non-zero
     // Check return for all system call
@@ -128,7 +120,6 @@ int myFreeErrorCode(void *ptr) {
                 return E_WRONG_PID;
             }
             current->free = 1;
-            printf("myFree Current Address: %p, Size: %d\n", current, current->size);
             if (previous != NULL && previous->free == 1) {
                 previous->size = previous->size + current->size + sizeof(struct mem_region);
                 current = previous;
@@ -152,13 +143,7 @@ void myFree(void *ptr) {
     printf("myFree Return Value: %d\n", rv);
 }
 
-/**
-// TODO
-run a succession of memory allocation and deallocation requests with calls
-to memoryMap after each call to a memory management routine,
-demonstrate that your memory allocation algorithm is allocating memory
-from an appropriate free memory region.
-**/
+
 void memoryMap(void) {
     if (malloc_initd == 0)
     {
