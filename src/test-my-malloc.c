@@ -64,7 +64,13 @@ void merge_test(void) {
     memoryMap();
 }
 
+void test_mem_chk(void) {
+    void *mm = myMalloc(1234);
+    int ms = myMemset(mm, (uint8_t)89, (long)100);
+    int mc = myMemchk(mm, (uint8_t)89, (long)100);
+}
+
 int main(void)
 {
-    merge_test();
+    test_mem_chk();
 }
