@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <errno.h>
 
+// Maps error codes to error descriptions.
 struct error_d
 {
     int code;
@@ -23,6 +24,7 @@ struct error_d
     {E_BRANGE_EX, "The value provided exceeds the storage capacity of a byte"},
     {E_ADDR_SPC, "The range of addresses specified is not within the current address space"}};
 
+// Convenience functiom to print error codes.
 void print_err(int error_c)
 {
     for (int i = 0; i <= E_COUNT; i++)
@@ -412,6 +414,7 @@ int cmd_clockdate(int argc, char *argv[])
     fmt_date(mytime);
     return E_SUCCESS;
 }
+
 
 int cmd_malloc(int argc, char *argv[])
 {

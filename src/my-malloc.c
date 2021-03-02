@@ -7,13 +7,16 @@
 #include <string.h>
 #include <errno.h>
 
-// TODO create ample documentation per instructions in PS
-// TODO Explain why you chose best fit alg
 
 struct pcb *currentPCB;
 
 /**
 * Implementation Notes
+* 
+* I chose the best fit algorithm because it made intuitive sense to me, and
+* seeming relatively straight-forward to implement. Since I've never implemented
+* and of the memory allocation algorithms before, I wanted to choose one that I
+* could wrap my head around and wasn't overly complex to implement.
 *
 * struct mem_region->size does not include sizeof(struct mem_region).
 * Additionally, mem_region->size is rounded up to the nearest double word boundary.
@@ -150,7 +153,8 @@ void memoryMap(void) {
         malloc_init();
     }
     struct mem_region *current = mymem;
-    printf("%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
+    fprintf(stdout, "\n");
+    fprintf(stdout, "%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
     while (current < endmymem)
     {
         char **free;
@@ -161,9 +165,10 @@ void memoryMap(void) {
             char *true = "true";
             free = &true;
         }
-        printf("%12p%5d%7s%12d\n", current, current->pid, *free, current->size);
+        fprintf(stdout, "%12p%5d%7s%12d\n", current->data, current->pid, *free, current->size);
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
+    fprintf(stdout, "\n");
 }
 
 int myMemset(void *p, uint8_t val, long len)
