@@ -141,7 +141,6 @@ int myFreeErrorCode(void *ptr) {
 
 void myFree(void *ptr) {
     int rv = myFreeErrorCode(ptr);
-    printf("myFree Return Value: %d\n", rv);
 }
 
 
@@ -194,6 +193,7 @@ int myMemchk(void *p, uint8_t val, long len)
     {
         return E_ADDR_NOT_ALLOCATED;
     }
+    int chkstatus = 0;
     struct mem_region *current = mymem;
     while (current < endmymem)
     {
@@ -201,15 +201,25 @@ int myMemchk(void *p, uint8_t val, long len)
         long start_addr = (long)p;
         if ((void *)current->data <= p && (void *)(start_addr + len) <= (void *)(current->data + current->size))
         {
+            chkstatus = 1;
             long current_byte = start_addr;
             while (current_byte < start_addr + len)
             {
                 unsigned char byte = *((unsigned char *)current_byte);
+                if ((uint8_t)byte != val) {
+                    chkstatus = 0;
+                    break;
+                }
                 current_byte++;
             }
-            return E_SUCCESS;
+            break;
         }
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
-    return E_ADDR_SPC;
+    if (chkstatus == 0) {
+        fprintf(stdout, "%s\n", "memchk failed");
+    } else {
+        fprintf(stdout, "%s\n", "memchk succeeded");
+    }
+    return E_SUCCESS;
 }

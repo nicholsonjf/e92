@@ -29,11 +29,11 @@ void print_err(int error_c)
     {
         if (error_c == error_ds[i].code)
         {
-            fprintf(stdout, "ERROR: %s\n", error_ds[i].message);
+            fprintf(stderr, "ERROR: %s\n", error_ds[i].message);
             return;
         }
     }
-    fprintf(stdout, "ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
+    fprintf(stderr, "ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
 }
 
 struct date
