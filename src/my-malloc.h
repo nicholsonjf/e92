@@ -1,5 +1,8 @@
 #include <stdlib.h>
 
+extern struct mem_region *mymem;
+extern struct mem_region *endmymem;
+
 struct mem_region
 {
     uint32_t free : 1;

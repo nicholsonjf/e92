@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 
 // TODO create ample documentation per instructions in PS
@@ -31,12 +32,12 @@ static void pcb_init(void) {
     currentPCB->pid = 0;
 }
 
+struct mem_region *mymem;
+struct mem_region *endmymem;
+
 static int get_pcb(void) {
     return currentPCB->pid;
 }
-
-static struct mem_region *mymem;
-static struct mem_region *endmymem;
 
 static void malloc_init(void) {
     pcb_init();
@@ -106,7 +107,7 @@ void *myMalloc(uint32_t size) {
 int myFreeErrorCode(void *ptr) {
     if (malloc_initd == 0)
     {
-        malloc_init();
+        return E_ADDR_NOT_ALLOCATED;
     }
     if (ptr == NULL) {
         return E_ADDR_NOT_ALLOCATED;
@@ -168,5 +169,21 @@ void memoryMap(void) {
 
 int myMemset(void *p, uint8_t val, uint32_t len)
 {
-    return E_SUCCESS;
+    if (malloc_initd == 0)
+    {
+        return E_ADDR_NOT_ALLOCATED;
+    }
+    struct mem_region *current = mymem;
+    while (current < endmymem)
+    {
+        // Convert start pointer to an unsigned long so we can do integer math.
+        unsigned long start_addr = my_strtoul(p);
+        if ((void*)current->data <= p && (void*)(start_addr + len) <= (void*)(current->data + current->size))
+        {
+            memset(p, val, len);
+            return E_SUCCESS;
+        }
+        current = (void *)current + current->size + sizeof(struct mem_region);
+    }
+    return E_ADDR_SPC;
 }

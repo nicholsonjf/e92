@@ -25,5 +25,6 @@ enum error_t
     E_MALLOC,
     E_STRTOUL,
     E_BRANGE_EX,
+    E_ADDR_SPC,
     E_COUNT
 };

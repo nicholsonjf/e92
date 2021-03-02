@@ -20,8 +20,8 @@ struct error_d
     {E_ADDR_NOT_ALLOCATED, "The address provided does not match a previously allocated address"},
     {E_MALLOC, "Unable to allocate the requested memory"},
     {E_STRTOUL, "The number you provided is out of range, or contains an invalid character"},
-    {E_BRANGE_EX, "The value provided exceeds the storage capacity of a byte"}
-    };
+    {E_BRANGE_EX, "The value provided exceeds the storage capacity of a byte"},
+    {E_ADDR_SPC, "The range of addresses specified is not within the current address space"}};
 
 void print_err(int error_c)
 {
@@ -238,7 +238,6 @@ int main(int argc, char **argv)
                 {
                     // Set argument length.
                     arglens[arglocct] = i - arglocs[arglocct];
-                    // printf("Arglen/index: %d, %d\n", arglens[arglocct], i);
                     arglocct++;
                     // Set prev char type to space.
                     pctype = 0;
@@ -411,7 +410,7 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long bytes = my_strtoul(argv[0]);
+    unsigned long bytes = my_strtoul(argv[0]);
     if (bytes < 0)
     {
         return E_STRTOUL;
@@ -491,12 +490,31 @@ int cmd_memset(int argc, char *argv[])
     {
         return E_STRTOUL;
     }
+    void *start_p = (void *)start_p;
     unsigned long byte_val = my_strtoul(argv[1]);
     if (byte_val < 0)
     {
         return E_STRTOUL;
+    }
+    if (byte_val < 0)
+    {
+        return E_STRTOUL;
     } else if (byte_val > 255) {
+        char *a = "a";
+        unsigned long tb = strtoul(a, NULL, 0);
+        fprintf(stdout, "%s\n", argv[1]);
+        fprintf(stdout, "%lu\n", tb);
+        fprintf(stdout, "%lu\n", byte_val);
         return E_BRANGE_EX;
     }
-    return E_SUCCESS;
+    unsigned long size = my_strtoul(argv[2]);
+    if (size < 0)
+    {
+        return E_STRTOUL;
+    }
+    if (start_p < (void*)mymem || start_p > (void*)endmymem || (void*)(start_addr + size) > (void*)endmymem)
+    {
+        return E_ADDR_SPC;
+    }
+    return myMemset(start_p, byte_val, size);
 }
