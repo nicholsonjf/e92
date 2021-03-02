@@ -15,4 +15,5 @@ void *myMalloc(uint32_t size);
 void myFree(void *ptr);
 void memoryMap(void);
 int myFreeErrorCode(void *ptr);
-int myMemset(void *p, long val, long len);
+int myMemset(void *p, uint8_t val, long len);
+int myMemchk(void *p, uint8_t val, long len);

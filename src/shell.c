@@ -110,6 +110,7 @@ struct commandEntry
                 {"free", cmd_free},
                 {"memoryMap", cmd_memory_map},
                 {"memset", cmd_memset},
+                {"memchk", cmd_memchk}
                 };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
@@ -119,7 +120,7 @@ typedef int (*cmd_pntr)(int argc, char *argv[]);
 // of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < 10; i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -503,5 +504,39 @@ int cmd_memset(int argc, char *argv[])
     {
         return E_STRTOUL;
     }
-    return myMemset(start_p, byte_val, size);
+    return myMemset(start_p, (uint8_t)byte_val, size);
+}
+
+//TODO any error for this and cmd_malloc need to output to stderr
+int cmd_memchk(int argc, char *argv[])
+{
+    if (argc < 3)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 3)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    long start_addr = my_strtol(argv[0]);
+    if (start_addr < 0)
+    {
+        return E_STRTOUL;
+    }
+    void *start_p = (void *)start_addr;
+    long byte_val = my_strtol(argv[1]);
+    if (byte_val < 0)
+    {
+        return E_STRTOUL;
+    }
+    else if (byte_val > 255)
+    {
+        return E_BRANGE_EX;
+    }
+    long size = my_strtol(argv[2]);
+    if (size < 0)
+    {
+        return E_STRTOUL;
+    }
+    return myMemchk(start_p, (uint8_t)byte_val, size);
 }

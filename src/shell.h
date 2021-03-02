@@ -8,6 +8,7 @@ int cmd_malloc(int argc, char *argv[]);
 int cmd_free(int argc, char *argv[]);
 int cmd_memory_map(int argc, char *argv[]);
 int cmd_memset(int argc, char *argv[]);
+int cmd_memchk(int argc, char *argv[]);
 
 // Shell helper function prototypes.
 long my_strtol(char *str);

@@ -167,11 +167,8 @@ void memoryMap(void) {
     }
 }
 
-int myMemset(void *p, long val, long len)
+int myMemset(void *p, uint8_t val, long len)
 {
-    fprintf(stdout, "%p\n", p);
-    fprintf(stdout, "%ld\n", val);
-    fprintf(stdout, "%ld\n", len);
     if (malloc_initd == 0)
     {
         return E_ADDR_NOT_ALLOCATED;
@@ -180,10 +177,36 @@ int myMemset(void *p, long val, long len)
     while (current < endmymem)
     {
         // Convert start pointer to an unsigned long so we can do integer math.
-        long start_addr = my_strtol(p);
+        long start_addr = (long)p;
         if ((void*)current->data <= p && (void*)(start_addr + len) <= (void*)(current->data + current->size))
         {
             memset(p, val, len);
+            return E_SUCCESS;
+        }
+        current = (void *)current + current->size + sizeof(struct mem_region);
+    }
+    return E_ADDR_SPC;
+}
+
+int myMemchk(void *p, uint8_t val, long len)
+{
+    if (malloc_initd == 0)
+    {
+        return E_ADDR_NOT_ALLOCATED;
+    }
+    struct mem_region *current = mymem;
+    while (current < endmymem)
+    {
+        // Convert start pointer to an unsigned long so we can do integer math.
+        long start_addr = (long)p;
+        if ((void *)current->data <= p && (void *)(start_addr + len) <= (void *)(current->data + current->size))
+        {
+            long current_byte = start_addr;
+            while (current_byte < start_addr + len)
+            {
+                unsigned char byte = *((unsigned char *)current_byte);
+                current_byte++;
+            }
             return E_SUCCESS;
         }
         current = (void *)current + current->size + sizeof(struct mem_region);
