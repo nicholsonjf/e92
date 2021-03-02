@@ -115,8 +115,8 @@ struct commandEntry
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
 
-//TODO fix this
-// For now, when a new command is added you have to increment the value
+
+// When a new command is added you have to increment the value
 // of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
@@ -336,7 +336,6 @@ int cmd_exit(int argc, char *argv[])
     exit(E_SUCCESS);
 }
 
-//TODO add free, memchk, memset, memorymap
 int cmd_help(int argc, char *argv[])
 {
     if (argc > 0)
@@ -364,8 +363,22 @@ int cmd_help(int argc, char *argv[])
                       "             by a prefix of 0x or 0X followed by an arbitrary length hexadecimal constant).  The\n"
                       "             alphabetic hexadecimal digits can be specified in either upper or lower case.\n"
                       "\n"
-                      ;
-    printf("%s", my_string);
+                      "     free -- The free command accepts a single argument which is the address of a region of\n"
+                      "             memory previously allocated using malloc. It accepts the same number formats specified.\n"
+                      "             in the malloc help section: octal, decimal, and hexidecimal.\n"
+                      "\n"
+                      "memorymap -- Outputs the map of both allocated and free memory regions\n"
+                      "\n"
+                      "   memset -- The memset command accepts three arguments. The first is the beginning address of an\n"
+                      "             allocated area of memory, the second is the value to which each byte in the specified\n"
+                      "             memory will be set, and the third is the length(in bytes) of the specified memory. Each\n"
+                      "             of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n"
+                      "\n"
+                      "   memchk -- The memchk command accepts three arguments. The first is the beginning address of an\n"
+                      "             allocated area of memory, the second is the value to which each byte in the specified\n"
+                      "             memory should be checked against, and the third is the length(in bytes) of the specified\n"
+                      "             memory. Each of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n";
+                      printf("%s", my_string);
     return E_SUCCESS;
 }
 
@@ -400,7 +413,6 @@ int cmd_clockdate(int argc, char *argv[])
     return E_SUCCESS;
 }
 
-//TODO Need to check each digit is in hex range
 int cmd_malloc(int argc, char *argv[])
 {
     if (argc == 0)
@@ -475,7 +487,6 @@ int cmd_memory_map(int argc, char *argv[]) {
     return E_SUCCESS;
 }
 
-//TODO any error for this and cmd_malloc need to output to stderr
 int cmd_memset(int argc, char *argv[])
 {
     if (argc < 3)
@@ -507,7 +518,6 @@ int cmd_memset(int argc, char *argv[])
     return myMemset(start_p, (uint8_t)byte_val, size);
 }
 
-//TODO any error for this and cmd_malloc need to output to stderr
 int cmd_memchk(int argc, char *argv[])
 {
     if (argc < 3)
