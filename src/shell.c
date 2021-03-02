@@ -410,7 +410,7 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    unsigned long bytes = my_strtoul(argv[0]);
+    long bytes = my_strtol(argv[0]);
     if (bytes < 0)
     {
         return E_STRTOUL;
@@ -427,10 +427,10 @@ int cmd_malloc(int argc, char *argv[])
 }
 
 // Returns -1 if there was an error
-unsigned long my_strtoul(char *str)
+long my_strtol(char *str)
 {
     errno = 0;
-    unsigned long bytes = strtoul(str, NULL, 0);
+    long bytes = strtol(str, NULL, 0);
     if (errno != 0)
     {
         return -1;
@@ -448,14 +448,14 @@ int cmd_free(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    unsigned long addr = my_strtoul(argv[0]);
+    long addr = my_strtol(argv[0]);
     if (addr < 0)
     {
         return E_STRTOUL;
     }
     // Subtract the size of struct mem_region which is where the allocated region would start
     // Then cast to the type myFreeErrorCode is expecting.
-    unsigned long block_start = addr - sizeof(struct mem_region);
+    long block_start = addr - sizeof(struct mem_region);
     void *p = (void *)addr;
     int free_status = myFreeErrorCode(p);
     if (free_status == 0)
@@ -485,36 +485,23 @@ int cmd_memset(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    unsigned long start_addr = my_strtoul(argv[0]);
+    long start_addr = my_strtol(argv[0]);
     if (start_addr < 0)
     {
         return E_STRTOUL;
     }
-    void *start_p = (void *)start_p;
-    unsigned long byte_val = my_strtoul(argv[1]);
-    if (byte_val < 0)
-    {
-        return E_STRTOUL;
-    }
+    void *start_p = (void *)start_addr;
+    long byte_val = my_strtol(argv[1]);
     if (byte_val < 0)
     {
         return E_STRTOUL;
     } else if (byte_val > 255) {
-        char *a = "a";
-        unsigned long tb = strtoul(a, NULL, 0);
-        fprintf(stdout, "%s\n", argv[1]);
-        fprintf(stdout, "%lu\n", tb);
-        fprintf(stdout, "%lu\n", byte_val);
         return E_BRANGE_EX;
     }
-    unsigned long size = my_strtoul(argv[2]);
+    long size = my_strtol(argv[2]);
     if (size < 0)
     {
         return E_STRTOUL;
-    }
-    if (start_p < (void*)mymem || start_p > (void*)endmymem || (void*)(start_addr + size) > (void*)endmymem)
-    {
-        return E_ADDR_SPC;
     }
     return myMemset(start_p, byte_val, size);
 }

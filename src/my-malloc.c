@@ -167,8 +167,11 @@ void memoryMap(void) {
     }
 }
 
-int myMemset(void *p, uint8_t val, uint32_t len)
+int myMemset(void *p, long val, long len)
 {
+    fprintf(stdout, "%p\n", p);
+    fprintf(stdout, "%ld\n", val);
+    fprintf(stdout, "%ld\n", len);
     if (malloc_initd == 0)
     {
         return E_ADDR_NOT_ALLOCATED;
@@ -177,7 +180,7 @@ int myMemset(void *p, uint8_t val, uint32_t len)
     while (current < endmymem)
     {
         // Convert start pointer to an unsigned long so we can do integer math.
-        unsigned long start_addr = my_strtoul(p);
+        long start_addr = my_strtol(p);
         if ((void*)current->data <= p && (void*)(start_addr + len) <= (void*)(current->data + current->size))
         {
             memset(p, val, len);

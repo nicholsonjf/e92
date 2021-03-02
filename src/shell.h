@@ -10,7 +10,7 @@ int cmd_memory_map(int argc, char *argv[]);
 int cmd_memset(int argc, char *argv[]);
 
 // Shell helper function prototypes.
-unsigned long my_strtoul(char *str);
+long my_strtol(char *str);
 
 // Shell error types.
 enum error_t
