@@ -1,18 +1,12 @@
+#include "my-malloc.h"
+#include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <errno.h>
 
-// Error code setup informed by https://stackoverflow.com/questions/6286874/c-naming-suggestion-for-error-code-enums
-enum error_t
-{
-    E_SUCCESS = 0,
-    E_NOT_ENOUGH_ARGS = 1,
-    E_TOO_MANY_ARGS = 2,
-    E_CMD_NOT_FND = 3,
-    E_ARG_TYPE = 4
-};
-
+// Maps error codes to error descriptions.
 struct error_d
 {
     int code;
@@ -22,19 +16,26 @@ struct error_d
     {E_NOT_ENOUGH_ARGS, "Not enough arguments provided"},
     {E_TOO_MANY_ARGS, "Too many arguments provided"},
     {E_CMD_NOT_FND, "Please enter a valid command"},
-    {E_ARG_TYPE, "Wrong argument type. Run the 'help' command for information about command arguments"}
-    };
+    {E_ARG_TYPE, "Wrong argument type. Run the 'help' command for information about command arguments"},
+    {E_WRONG_PID, "The PID of the current process does not match the PID of provided address"},
+    {E_ADDR_NOT_ALLOCATED, "The address provided does not match a previously allocated address"},
+    {E_MALLOC, "Unable to allocate the requested memory"},
+    {E_STRTOUL, "The number you provided is out of range, or contains an invalid character"},
+    {E_BRANGE_EX, "The value provided exceeds the storage capacity of a byte"},
+    {E_ADDR_SPC, "The range of addresses specified is not within the current address space"}};
 
-int print_err (int error_c)
+// Convenience functiom to print error codes.
+void print_err(int error_c)
 {
-    for (int i = 0; i <= 4; i++)
+    for (int i = 0; i <= E_COUNT; i++)
     {
         if (error_c == error_ds[i].code)
         {
-            printf("ERROR: %s\n", error_ds[i].message);
+            fprintf(stderr, "ERROR: %s\n", error_ds[i].message);
+            return;
         }
     }
-    return 0;
+    fprintf(stderr, "ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
 }
 
 struct date
@@ -98,13 +99,6 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec)
     return mydate;
 }
 
-// Shell command function prototypes.
-int cmd_date(int argc, char *argv[]);
-int cmd_echo(int argc, char *argv[]);
-int cmd_exit(int argc, char *argv[]);
-int cmd_help(int argc, char *argv[]);
-int cmd_clockdate(int argc, char *argv[]);
-
 struct commandEntry
 {
     char *name;
@@ -113,12 +107,22 @@ struct commandEntry
                 {"echo", cmd_echo},
                 {"exit", cmd_exit},
                 {"help", cmd_help},
-                {"clockdate", cmd_clockdate}};
+                {"clockdate", cmd_clockdate},
+                {"malloc", cmd_malloc},
+                {"free", cmd_free},
+                {"memoryMap", cmd_memory_map},
+                {"memset", cmd_memset},
+                {"memchk", cmd_memchk}
+                };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
+
+
+// When a new command is added you have to increment the value
+// of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 10; i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -128,7 +132,8 @@ cmd_pntr find_cmd(char *arg)
     return NULL;
 }
 
-char *monthName (int month_i) {
+char *monthName(int month_i)
+{
     for (int i = 0; i < 12; i++)
     {
         if (months[i].month_i == month_i)
@@ -139,24 +144,30 @@ char *monthName (int month_i) {
     return NULL;
 }
 
-int main(int argc, char** argv) {
-    while (1) {
+int main(int argc, char **argv)
+{
+    while (1)
+    {
         char linebuf[256];
         int index = 0;
         printf("$ ");
-        while (1) {
+        while (1)
+        {
             char c = fgetc(stdin);
             // Stop reading characters if we reach a newline.
-            if (c == '\n') {
+            if (c == '\n')
+            {
                 linebuf[index] = 0;
                 index++;
                 break;
             }
             // Set whitespace to the null terminator.
-            if (c == ' ' || c == '\t') {
+            if (c == ' ' || c == '\t')
+            {
                 linebuf[index] = 0;
             }
-            else {
+            else
+            {
                 linebuf[index] = c;
             }
             index++;
@@ -167,24 +178,30 @@ int main(int argc, char** argv) {
         // Argument count.
         int argct = 0;
         // Iterate over characters in the line buffer and set argct, argval.
-        for (int i=0; i<index; i++) {
+        for (int i = 0; i < index; i++)
+        {
             // If previous character is a space.
-            if (pctype == 0) {
+            if (pctype == 0)
+            {
                 // If current character is also a space.
-                if (linebuf[i] == 0) {
+                if (linebuf[i] == 0)
+                {
                     continue;
                 }
                 // If current character is a character.
-                else {
+                else
+                {
                     // Increment arg count, set arg pointer, set prev char type to character.
                     argct++;
                     pctype = 1;
                 }
             }
             // If previous character is a character.
-            else {
+            else
+            {
                 // If current character is a space.
-                if (linebuf[i] == 0) {
+                if (linebuf[i] == 0)
+                {
                     // Set prev char type to space.
                     pctype = 0;
                 }
@@ -224,7 +241,6 @@ int main(int argc, char** argv) {
                 {
                     // Set argument length.
                     arglens[arglocct] = i - arglocs[arglocct];
-                    // printf("Arglen/index: %d, %d\n", arglens[arglocct], i);
                     arglocct++;
                     // Set prev char type to space.
                     pctype = 0;
@@ -232,11 +248,12 @@ int main(int argc, char** argv) {
             }
         }
         // If there are no args (i.e. user pressed enter or space enter) continue before mallocing
-        if (argct < 1) {
+        if (argct < 1)
+        {
             continue;
         }
         // Allocate space for argval
-        char **argval = malloc((argct+1) * sizeof(char *));
+        char **argval = malloc((argct + 1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
             // Assign argvals
@@ -244,15 +261,18 @@ int main(int argc, char** argv) {
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
         argval[argct] = NULL;
-        cmd_pntr shell_cmd = find_cmd( argval[0] );
-        if ( shell_cmd == NULL ) {
+        cmd_pntr shell_cmd = find_cmd(argval[0]);
+        if (shell_cmd == NULL)
+        {
             print_err(E_CMD_NOT_FND);
         }
-        else {
+        else
+        {
             // Only pass the arguments, not the shell command.
             int cmd_c = shell_cmd(argct - 1, &argval[1]);
             // If the command returns a non-zero error code, print the error message.
-            if (cmd_c > 0) {
+            if (cmd_c > 0)
+            {
                 print_err(cmd_c);
             }
         }
@@ -275,12 +295,14 @@ int fmt_date(struct timeval mytime)
     return E_SUCCESS;
 }
 
-int cmd_date(int argc, char *argv[]) {
+int cmd_date(int argc, char *argv[])
+{
     if (argc > 0)
     {
         return E_TOO_MANY_ARGS;
     }
-    else {
+    else
+    {
         struct timeval mytime;
         gettimeofday(&mytime, NULL);
         fmt_date(mytime);
@@ -290,14 +312,17 @@ int cmd_date(int argc, char *argv[]) {
 
 int cmd_echo(int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++)
+    {
         // print args.
         printf("%s", argv[i]);
         // Here, i is starting at zero and argc is not zero-indexed
-        if (i < (argc-1)) {
+        if (i < (argc - 1))
+        {
             printf("%c", ' ');
         }
-        else {
+        else
+        {
             printf("%c", '\n');
         }
     }
@@ -331,20 +356,47 @@ int cmd_help(int argc, char *argv[])
                       "\n"
                       "clockdate -- takes a single positive integral number as its required argument.\n"
                       "             This number represents the number of seconds since the Unix Epoch. This provided\n"
-                      "             Epoch time will be printed to stdout in the same format described in the date command.\n";
-    printf("%s", my_string);
+                      "             Epoch time will be printed to stdout in the same format described in the date command.\n"
+                      "\n"
+                      "   malloc -- accepts a single argument which is the number of bytes of memory to be allocated.\n"
+                      "             The number of bytes can be specified either as a decimal integer constant (of arbitrary\n"
+                      "             length), an octal integer constant (indicated by a prefix of 0 not followed by x or\n"
+                      "             X followed by an arbitrary length octal constant), or as a hexadecimal number (indicated\n"
+                      "             by a prefix of 0x or 0X followed by an arbitrary length hexadecimal constant).  The\n"
+                      "             alphabetic hexadecimal digits can be specified in either upper or lower case.\n"
+                      "\n"
+                      "     free -- The free command accepts a single argument which is the address of a region of\n"
+                      "             memory previously allocated using malloc. It accepts the same number formats specified.\n"
+                      "             in the malloc help section: octal, decimal, and hexidecimal.\n"
+                      "\n"
+                      "memorymap -- Outputs the map of both allocated and free memory regions\n"
+                      "\n"
+                      "   memset -- The memset command accepts three arguments. The first is the beginning address of an\n"
+                      "             allocated area of memory, the second is the value to which each byte in the specified\n"
+                      "             memory will be set, and the third is the length(in bytes) of the specified memory. Each\n"
+                      "             of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n"
+                      "\n"
+                      "   memchk -- The memchk command accepts three arguments. The first is the beginning address of an\n"
+                      "             allocated area of memory, the second is the value to which each byte in the specified\n"
+                      "             memory should be checked against, and the third is the length(in bytes) of the specified\n"
+                      "             memory. Each of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n";
+                      printf("%s", my_string);
     return E_SUCCESS;
 }
+
 int cmd_clockdate(int argc, char *argv[])
 {
-    if (argc == 0) {
+    if (argc == 0)
+    {
         return E_NOT_ENOUGH_ARGS;
     }
-    else if (argc > 1) {
+    else if (argc > 1)
+    {
         return E_TOO_MANY_ARGS;
     }
-    for (int i=0; i<strlen(argv[0]); i++) {
-        if (argv[0][i] < '0' || argv[0][i] > '9' )
+    for (int i = 0; i < strlen(argv[0]); i++)
+    {
+        if (argv[0][i] < '0' || argv[0][i] > '9')
         {
             return E_ARG_TYPE;
         }
@@ -361,4 +413,143 @@ int cmd_clockdate(int argc, char *argv[])
     mytime.tv_usec = 0;
     fmt_date(mytime);
     return E_SUCCESS;
+}
+
+
+int cmd_malloc(int argc, char *argv[])
+{
+    if (argc == 0)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 1)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    long bytes = my_strtol(argv[0]);
+    if (bytes < 0)
+    {
+        return E_STRTOUL;
+    }
+    // Cast to the type myMalloc is expecting.
+    uint32_t c_bytes = (uint32_t)bytes;
+    void *p = myMalloc(bytes);
+    if (p == NULL)
+    {
+        return E_MALLOC;
+    }
+    fprintf(stdout, "%p\n", p);
+    return E_SUCCESS;
+}
+
+// Returns -1 if there was an error
+long my_strtol(char *str)
+{
+    errno = 0;
+    long bytes = strtol(str, NULL, 0);
+    if (errno != 0)
+    {
+        return -1;
+    }
+    return bytes;
+}
+
+int cmd_free(int argc, char *argv[])
+{
+    if (argc == 0)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 1)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    long addr = my_strtol(argv[0]);
+    if (addr < 0)
+    {
+        return E_STRTOUL;
+    }
+    // Subtract the size of struct mem_region which is where the allocated region would start
+    // Then cast to the type myFreeErrorCode is expecting.
+    long block_start = addr - sizeof(struct mem_region);
+    void *p = (void *)addr;
+    int free_status = myFreeErrorCode(p);
+    if (free_status == 0)
+    {
+        fprintf(stdout, "Memory address %p successfully freed\n", p);
+    }
+    return free_status;
+}
+
+int cmd_memory_map(int argc, char *argv[]) {
+    if (argc > 0)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    memoryMap();
+    return E_SUCCESS;
+}
+
+int cmd_memset(int argc, char *argv[])
+{
+    if (argc < 3)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 3)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    long start_addr = my_strtol(argv[0]);
+    if (start_addr < 0)
+    {
+        return E_STRTOUL;
+    }
+    void *start_p = (void *)start_addr;
+    long byte_val = my_strtol(argv[1]);
+    if (byte_val < 0)
+    {
+        return E_STRTOUL;
+    } else if (byte_val > 255) {
+        return E_BRANGE_EX;
+    }
+    long size = my_strtol(argv[2]);
+    if (size < 0)
+    {
+        return E_STRTOUL;
+    }
+    return myMemset(start_p, (uint8_t)byte_val, size);
+}
+
+int cmd_memchk(int argc, char *argv[])
+{
+    if (argc < 3)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    else if (argc > 3)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    long start_addr = my_strtol(argv[0]);
+    if (start_addr < 0)
+    {
+        return E_STRTOUL;
+    }
+    void *start_p = (void *)start_addr;
+    long byte_val = my_strtol(argv[1]);
+    if (byte_val < 0)
+    {
+        return E_STRTOUL;
+    }
+    else if (byte_val > 255)
+    {
+        return E_BRANGE_EX;
+    }
+    long size = my_strtol(argv[2]);
+    if (size < 0)
+    {
+        return E_STRTOUL;
+    }
+    return myMemchk(start_p, (uint8_t)byte_val, size);
 }
