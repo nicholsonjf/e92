@@ -66,6 +66,9 @@ static int qword_boundary(int size)
 }
 
 void *myMalloc(uint32_t size) {
+    if (size < 1) {
+        return NULL;
+    }
     if (malloc_initd == 0) {
         malloc_init();
     }
