@@ -469,9 +469,6 @@ int cmd_free(int argc, char *argv[])
     {
         return E_STRTOUL;
     }
-    // Subtract the size of struct mem_region which is where the allocated region would start
-    // Then cast to the type myFreeErrorCode is expecting.
-    long block_start = addr - sizeof(struct mem_region);
     void *p = (void *)addr;
     int free_status = myFreeErrorCode(p);
     if (free_status == 0)
