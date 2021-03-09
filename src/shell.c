@@ -1,10 +1,14 @@
 #include "my-malloc.h"
 #include "shell.h"
+#include "uart.h"
+#include "delay.h"
+#include "uartNL.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
+// #include <sys/time.h>
 #include <errno.h>
+#include <stdarg.h>
 
 // Maps error codes to error descriptions.
 struct error_d
@@ -24,18 +28,19 @@ struct error_d
     {E_BRANGE_EX, "The value provided exceeds the storage capacity of a byte"},
     {E_ADDR_SPC, "The range of addresses specified is not within the current address space"}};
 
-// Convenience functiom to print error codes.
+// Convenience function to print error codes.
 void print_err(int error_c)
 {
-    for (int i = 0; i <= E_COUNT; i++)
+	int i;
+    for (i = 0; i <= E_COUNT; i++)
     {
         if (error_c == error_ds[i].code)
         {
-            fprintf(stderr, "ERROR: %s\n", error_ds[i].message);
+            myprintf("ERROR: %s\n", error_ds[i].message);
             return;
         }
     }
-    fprintf(stderr, "ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
+    myprintf("ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
 }
 
 struct date
@@ -68,6 +73,7 @@ struct monthMap
     {12, "December"},
 };
 
+/**
 // Algorithm informed by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
 struct date calc_date(time_t tv_sec, suseconds_t tv_usec)
 {
@@ -98,16 +104,18 @@ struct date calc_date(time_t tv_sec, suseconds_t tv_usec)
     mydate.microsecond = tv_usec;
     return mydate;
 }
+**/
 
 struct commandEntry
 {
     char *name;
     int (*functionp)(int argc, char *argv[]);
-} commands[] = {{"date", cmd_date},
+} commands[] = {
+		//{"date", cmd_date},
                 {"echo", cmd_echo},
                 {"exit", cmd_exit},
                 {"help", cmd_help},
-                {"clockdate", cmd_clockdate},
+                //{"clockdate", cmd_clockdate},
                 {"malloc", cmd_malloc},
                 {"free", cmd_free},
                 {"memoryMap", cmd_memory_map},
@@ -122,7 +130,7 @@ typedef int (*cmd_pntr)(int argc, char *argv[]);
 // of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < sizeof(commands)/sizeof(commands[0]); i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -144,18 +152,71 @@ char *monthName(int month_i)
     return NULL;
 }
 
+#define BUFFER_SIZE_FOR_FORMATTED_OUTPUT 256
+
+void myprintf(char*format, ...){
+  char buffer[BUFFER_SIZE_FOR_FORMATTED_OUTPUT]; // holds the rendered string
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buffer, sizeof(buffer), format, args);
+  va_end(args);
+  uartPutsNL(UART2_BASE_PTR, buffer);
+}
+
+
+void initUART(void){
+	/* On reset (i.e., before calling mcgInit), the processor
+	 * clocking starts in FEI (FLL Engaged Internal) mode.  In FEI
+	 * mode and with default settings (DRST_DRS = 00, DMX32 = 0),
+	 * the MCGFLLCLK, the MCGOUTCLK (MCG (Multipurpose Clock
+	 * Generator) clock), and the Bus (peripheral) clock are all set
+	 * to 640 * IRC.  IRC is the Internal Reference Clock which runs
+	 * at 32 KHz. [See K70 Sub-Family Reference Manual, Rev. 4,
+	 * Section 25.4.1.1, Table 25-22 on labeled page 670 (PDF page
+	 * 677) and MCG Control 4 Register (MCG_C4) Section 25.3.4 on
+	 * labeled page 655 (PDF page 662); See K70 Sub-Family Reference
+	 * Manual, Rev. 2, Section 25.4.1.1, Table 25-22 on page 657 and
+	 * MCG Control 4 Register (MCG_C4) Section 25.3.4 on page 641]
+	 */
+	
+	/* After calling mcgInit, MCGOUTCLK is set to 120 MHz and the Bus
+	 * (peripheral) clock is set to 60 MHz.*/
+
+	/* Table 5-2 on labeled page 225 (PDF page 232) in Rev. 4
+	 * (Table 5-2 on page 221 in Rev. 2) indicates that the clock
+	 * used by UART0 and UART1 is the System clock (i.e., MCGOUTCLK)
+	 * and that the clock used by UART2-5 is the Bus clock. */
+	const int IRC = 32000;					/* Internal Reference Clock */
+	const int FLL_Factor = 640;
+	const int moduleClock = FLL_Factor*IRC;
+	const int KHzInHz = 1000;
+
+	const int baud = 9600;
+	
+	uartInit(UART2_BASE_PTR, moduleClock/KHzInHz, baud);
+}
+
+char mygetchar(void){
+	const unsigned long int delayCount = 0x7ffff;
+	while(!uartGetcharPresent(UART2_BASE_PTR)) {
+	}
+	return uartGetchar(UART2_BASE_PTR);
+}
+
+
 int main(int argc, char **argv)
 {
+	initUART();
     while (1)
     {
         char linebuf[256];
         int index = 0;
-        printf("$ ");
+        myprintf("$ ");
         while (1)
         {
-            char c = fgetc(stdin);
-            // Stop reading characters if we reach a newline.
-            if (c == '\n')
+            char c = mygetchar();
+            // Stop reading characters if the enter key is pressed (carriage return).
+            if (c == '\r')
             {
                 linebuf[index] = 0;
                 index++;
@@ -287,6 +348,7 @@ int main(int argc, char **argv)
     }
 }
 
+/**
 int fmt_date(struct timeval mytime)
 {
     struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
@@ -309,6 +371,7 @@ int cmd_date(int argc, char *argv[])
         return E_SUCCESS;
     }
 }
+**/
 
 int cmd_echo(int argc, char *argv[])
 {
@@ -384,6 +447,7 @@ int cmd_help(int argc, char *argv[])
     return E_SUCCESS;
 }
 
+/**
 int cmd_clockdate(int argc, char *argv[])
 {
     if (argc == 0)
@@ -414,7 +478,7 @@ int cmd_clockdate(int argc, char *argv[])
     fmt_date(mytime);
     return E_SUCCESS;
 }
-
+**/
 
 int cmd_malloc(int argc, char *argv[])
 {
@@ -438,7 +502,7 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_MALLOC;
     }
-    fprintf(stdout, "%p\n", p);
+    myprintf("%p\n", p);
     return E_SUCCESS;
 }
 
@@ -473,7 +537,7 @@ int cmd_free(int argc, char *argv[])
     int free_status = myFreeErrorCode(p);
     if (free_status == 0)
     {
-        fprintf(stdout, "Memory address %p successfully freed\n", p);
+        myprintf("Memory address %p successfully freed\n", p);
     }
     return free_status;
 }

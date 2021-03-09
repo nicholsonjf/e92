@@ -12,6 +12,7 @@ int cmd_memchk(int argc, char *argv[]);
 
 // Shell helper function prototypes.
 long my_strtol(char *str);
+void myprintf(char*format, ...);
 
 // Shell error types.
 enum error_t

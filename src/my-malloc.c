@@ -156,8 +156,8 @@ void memoryMap(void) {
         malloc_init();
     }
     struct mem_region *current = mymem;
-    fprintf(stdout, "\n");
-    fprintf(stdout, "%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
+    myprintf("\n");
+    myprintf("%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
     while (current < endmymem)
     {
         char **free;
@@ -168,10 +168,10 @@ void memoryMap(void) {
             char *true = "true";
             free = &true;
         }
-        fprintf(stdout, "%12p%5d%7s%12d\n", current->data, current->pid, *free, current->size);
+        myprintf("%12p%5d%7s%12d\n", current->data, current->pid, *free, current->size);
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
-    fprintf(stdout, "\n");
+    myprintf("\n");
 }
 
 int myMemset(void *p, uint8_t val, long len)
@@ -225,9 +225,9 @@ int myMemchk(void *p, uint8_t val, long len)
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
     if (chkstatus == 0) {
-        fprintf(stdout, "%s\n", "memchk failed");
+        myprintf("%s\n", "memchk failed");
     } else {
-        fprintf(stdout, "%s\n", "memchk succeeded");
+        myprintf("%s\n", "memchk succeeded");
     }
     return E_SUCCESS;
 }
