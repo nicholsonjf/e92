@@ -126,8 +126,6 @@ struct commandEntry
 typedef int (*cmd_pntr)(int argc, char *argv[]);
 
 
-// When a new command is added you have to increment the value
-// of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
     for (int i = 0; i < sizeof(commands)/sizeof(commands[0]); i++)
@@ -212,27 +210,7 @@ int main(int argc, char **argv)
         char linebuf[256];
         int index = 0;
         myprintf("$ ");
-        while (1)
-        {
-            char c = mygetchar();
-            // Stop reading characters if the enter key is pressed (carriage return).
-            if (c == '\r')
-            {
-                linebuf[index] = 0;
-                index++;
-                break;
-            }
-            // Set whitespace to the null terminator.
-            if (c == ' ' || c == '\t')
-            {
-                linebuf[index] = 0;
-            }
-            else
-            {
-                linebuf[index] = c;
-            }
-            index++;
-        }
+        uartGetline(UART2_BASE_PTR, linebuf, sizeof(linebuf));
         // Previous character type.
         // 0 = whitespace, 1 = character.
         char pctype = 0;
