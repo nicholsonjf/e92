@@ -356,15 +356,15 @@ int cmd_echo(int argc, char *argv[])
     for (int i = 0; i < argc; i++)
     {
         // print args.
-        printf("%s", argv[i]);
+        myprintf("%s", argv[i]);
         // Here, i is starting at zero and argc is not zero-indexed
         if (i < (argc - 1))
         {
-            printf("%c", ' ');
+            myprintf("%c", ' ');
         }
         else
         {
-            printf("%c", '\n');
+            myprintf("%c", '\n');
         }
     }
     return E_SUCCESS;
@@ -421,7 +421,7 @@ int cmd_help(int argc, char *argv[])
                       "             allocated area of memory, the second is the value to which each byte in the specified\n"
                       "             memory should be checked against, and the third is the length(in bytes) of the specified\n"
                       "             memory. Each of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n";
-                      printf("%s", my_string);
+                      myprintf("%s", my_string);
     return E_SUCCESS;
 }
 
