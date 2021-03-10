@@ -1,14 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <stdarg.h>
 #include "my-malloc.h"
 #include "shell.h"
 #include "uart.h"
 #include "delay.h"
 #include "uartNL.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-// #include <sys/time.h>
-#include <errno.h>
-#include <stdarg.h>
+#include "derivative.h"
 
 // Maps error codes to error descriptions.
 struct error_d
@@ -73,49 +73,15 @@ struct monthMap
     {12, "December"},
 };
 
-/**
-// Algorithm informed by http://howardhinnant.github.io/date_algorithms.html#civil_from_days
-struct date calc_date(time_t tv_sec, suseconds_t tv_usec)
-{
-    struct date mydate;
-    int ep_days = tv_sec / 86400;
-    // Adjust epic days by number of days from 1970, 01, 01 to 0000, 03, 01
-    int ep_days_adj = ep_days + 719468;
-    // Calculate the era (an era is 400 years, there are 146097 days in 400 years)
-    int era = ep_days_adj / 146097;
-    // Days remaining after calculating the era
-    int day_of_era = ep_days_adj % 146097;
-    // Remaining number of seconds after days are divided out
-    int ep_tod_secs = tv_sec % 86400;
-    // 1460 is number of days in 4 years
-    // 36524 is number of days in 100 years
-    // 146096 is number of days in 400 years
-    int year_of_era = ((day_of_era - (day_of_era / 1460) + (day_of_era / 36524) - (day_of_era / 146096)) / 365);
-    int year = year_of_era + era * 400;
-    int doy = day_of_era - (365 * year_of_era + (year_of_era / 4) - (year_of_era / 100));
-    // Month prime
-    int mp = (5 * doy + 2) / 153;
-    mydate.month = mp + (mp < 10 ? 3 : -9);
-    mydate.year = year + (mydate.month <= 2);
-    mydate.day = doy - (153 * mp + 2) / 5 + 1;
-    mydate.hour = ep_tod_secs / 3600;
-    mydate.minute = (ep_tod_secs % 3600) / 60;
-    mydate.second = (ep_tod_secs % 3600) % 60;
-    mydate.microsecond = tv_usec;
-    return mydate;
-}
-**/
 
 struct commandEntry
 {
     char *name;
     int (*functionp)(int argc, char *argv[]);
 } commands[] = {
-		//{"date", cmd_date},
                 {"echo", cmd_echo},
                 {"exit", cmd_exit},
                 {"help", cmd_help},
-                //{"clockdate", cmd_clockdate},
                 {"malloc", cmd_malloc},
                 {"free", cmd_free},
                 {"memoryMap", cmd_memory_map},
@@ -150,15 +116,15 @@ char *monthName(int month_i)
     return NULL;
 }
 
-#define BUFFER_SIZE_FOR_FORMATTED_OUTPUT 256
+#define BUFFER_SIZE_FOR_FORMATTED_OUTPUT 4096
 
 void myprintf(char*format, ...){
-  char buffer[BUFFER_SIZE_FOR_FORMATTED_OUTPUT]; // holds the rendered string
-  va_list args;
-  va_start(args, format);
-  vsnprintf(buffer, sizeof(buffer), format, args);
-  va_end(args);
-  uartPutsNL(UART2_BASE_PTR, buffer);
+    char buffer[BUFFER_SIZE_FOR_FORMATTED_OUTPUT]; // holds the rendered string
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+    uartPutsNL(UART2_BASE_PTR, buffer);
 }
 
 
@@ -194,30 +160,33 @@ void initUART(void){
 	uartInit(UART2_BASE_PTR, moduleClock/KHzInHz, baud);
 }
 
-char mygetchar(void){
-	const unsigned long int delayCount = 0x7ffff;
-	while(!uartGetcharPresent(UART2_BASE_PTR)) {
-	}
-	return uartGetchar(UART2_BASE_PTR);
-}
-
+#define BUFFER_SIZE_FOR_SHELL_INPUT 256
 
 int main(int argc, char **argv)
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
     while (1)
     {
-        char linebuf[256];
-        int index = 0;
+        char linebuf[BUFFER_SIZE_FOR_SHELL_INPUT];
         myprintf("$ ");
-        uartGetline(UART2_BASE_PTR, linebuf, sizeof(linebuf));
+        uartGetline(UART2_BASE_PTR, &linebuf[0], BUFFER_SIZE_FOR_SHELL_INPUT);
+        // Iterate over characters in the line buffer and set whitespace to the null terminator.
+        for (int i = 0; i < BUFFER_SIZE_FOR_SHELL_INPUT; i++)
+        {
+        	char c = linebuf[i];
+            if (c == ' ' || c == '\t')
+            {
+                linebuf[i] = 0;
+            }
+        }
         // Previous character type.
         // 0 = whitespace, 1 = character.
         char pctype = 0;
         // Argument count.
         int argct = 0;
         // Iterate over characters in the line buffer and set argct, argval.
-        for (int i = 0; i < index; i++)
+        for (int i = 0; i < BUFFER_SIZE_FOR_SHELL_INPUT; i++)
         {
             // If previous character is a space.
             if (pctype == 0)
@@ -253,9 +222,8 @@ int main(int argc, char **argv)
         int arglocct = 0;
         // Re-initialize previous character type to 0.
         pctype = 0;
-        for (int i = 0; i < index; i++)
+        for (int i = 0; i < BUFFER_SIZE_FOR_SHELL_INPUT; i++)
         {
-            //printf("%d ", arglocct);
             // If previous character is a space.
             if (pctype == 0)
             {
@@ -299,6 +267,7 @@ int main(int argc, char **argv)
             argval[i] = malloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
+        myprintf("%s", &linebuf[0]);
         argval[argct] = NULL;
         cmd_pntr shell_cmd = find_cmd(argval[0]);
         if (shell_cmd == NULL)
@@ -325,31 +294,6 @@ int main(int argc, char **argv)
         free(argval);
     }
 }
-
-/**
-int fmt_date(struct timeval mytime)
-{
-    struct date mydate = calc_date(mytime.tv_sec, mytime.tv_usec);
-    // Format: "January 23, 2014 15:57:07.123456"
-    printf("%s %02d, %d %d:%02d:%02d.%d\n", monthName(mydate.month), mydate.day, mydate.year, mydate.hour, mydate.minute, mydate.second, mydate.microsecond);
-    return E_SUCCESS;
-}
-
-int cmd_date(int argc, char *argv[])
-{
-    if (argc > 0)
-    {
-        return E_TOO_MANY_ARGS;
-    }
-    else
-    {
-        struct timeval mytime;
-        gettimeofday(&mytime, NULL);
-        fmt_date(mytime);
-        return E_SUCCESS;
-    }
-}
-**/
 
 int cmd_echo(int argc, char *argv[])
 {
@@ -424,39 +368,6 @@ int cmd_help(int argc, char *argv[])
                       myprintf("%s", my_string);
     return E_SUCCESS;
 }
-
-/**
-int cmd_clockdate(int argc, char *argv[])
-{
-    if (argc == 0)
-    {
-        return E_NOT_ENOUGH_ARGS;
-    }
-    else if (argc > 1)
-    {
-        return E_TOO_MANY_ARGS;
-    }
-    for (int i = 0; i < strlen(argv[0]); i++)
-    {
-        if (argv[0][i] < '0' || argv[0][i] > '9')
-        {
-            return E_ARG_TYPE;
-        }
-    }
-    // Convert char epoch to long
-    long result = 0;
-    int len = strlen(argv[0]);
-    for (int i = 0; i < len; i++)
-    {
-        result = result * 10 + (argv[0][i] - '0');
-    }
-    struct timeval mytime;
-    mytime.tv_sec = result;
-    mytime.tv_usec = 0;
-    fmt_date(mytime);
-    return E_SUCCESS;
-}
-**/
 
 int cmd_malloc(int argc, char *argv[])
 {
