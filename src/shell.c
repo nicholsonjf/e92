@@ -169,6 +169,7 @@ int main(int argc, char **argv)
     while (1)
     {
         char linebuf[BUFFER_SIZE_FOR_SHELL_INPUT];
+        memset(linebuf, 0, BUFFER_SIZE_FOR_SHELL_INPUT);
         myprintf("$ ");
         uartGetline(UART2_BASE_PTR, &linebuf[0], BUFFER_SIZE_FOR_SHELL_INPUT);
         // Iterate over characters in the line buffer and set whitespace to the null terminator.
@@ -260,14 +261,13 @@ int main(int argc, char **argv)
             continue;
         }
         // Allocate space for argval
-        char **argval = malloc((argct + 1) * sizeof(char *));
+        char **argval = myMalloc((argct + 1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
             // Assign argvals
-            argval[i] = malloc((arglens[i] + 1) * sizeof(char));
+            argval[i] = myMalloc((arglens[i] + 1) * sizeof(char));
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
-        myprintf("%s", &linebuf[0]);
         argval[argct] = NULL;
         cmd_pntr shell_cmd = find_cmd(argval[0]);
         if (shell_cmd == NULL)
@@ -288,10 +288,10 @@ int main(int argc, char **argv)
         int i = 0;
         while (i < argct)
         {
-            free(argval[i]);
+            myFree(argval[i]);
             ++i;
         }
-        free(argval);
+        myFree(argval);
     }
 }
 
