@@ -122,7 +122,7 @@ typedef int (*cmd_pntr)(int argc, char *argv[]);
 // of x in the for loop condition below "i < x"
 cmd_pntr find_cmd(char *arg)
 {
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < sizeof(commands) / sizeof(commands[0]); i++)
     {
         if (strcmp(arg, commands[i].name) == 0)
         {
@@ -149,6 +149,7 @@ int main(int argc, char **argv)
     while (1)
     {
         char linebuf[256];
+        memset(linebuf, 0, 256);
         int index = 0;
         printf("$ ");
         while (1)
@@ -216,7 +217,6 @@ int main(int argc, char **argv)
         pctype = 0;
         for (int i = 0; i < index; i++)
         {
-            //printf("%d ", arglocct);
             // If previous character is a space.
             if (pctype == 0)
             {
@@ -253,11 +253,13 @@ int main(int argc, char **argv)
             continue;
         }
         // Allocate space for argval
-        char **argval = malloc((argct + 1) * sizeof(char *));
+        char **argval = myMalloc((argct + 1) * sizeof(char *));
         for (int i = 0; i < argct; i++)
         {
             // Assign argvals
-            argval[i] = malloc((arglens[i] + 1) * sizeof(char));
+            argval[i] = myMalloc((arglens[i] + 1) * sizeof(char));
+            // Zero out argval[i] plus a NUL terminator
+            myMemset(argval[i], 0, arglens[i] + 1);
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
         argval[argct] = NULL;
@@ -280,10 +282,10 @@ int main(int argc, char **argv)
         int i = 0;
         while (i < argct)
         {
-            free(argval[i]);
+            int freeArg = myFreeErrorCode(argval[i]);
             ++i;
         }
-        free(argval);
+        int freeArgs = myFreeErrorCode(argval);
     }
 }
 
