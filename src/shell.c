@@ -266,6 +266,8 @@ int main(int argc, char **argv)
         {
             // Assign argvals
             argval[i] = myMalloc((arglens[i] + 1) * sizeof(char));
+            // Zero out argval[i] plus a NUL terminator
+            myMemset(argval[i], 0, arglens[i] + 1);
             strncpy(argval[i], &linebuf[arglocs[i]], arglens[i]);
         }
         argval[argct] = NULL;
