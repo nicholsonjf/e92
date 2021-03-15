@@ -1,0 +1,29 @@
+Project plan
+
+~ Port shell to K70 (done)
+
+~ Implement struct stream
+
+~ Add struct stream *streams[32] to struct PCB
+
+~Implement function to add file pointers to pcb.streams
+    -Returns the position of pointer in the array
+    -If the stream is successfully added, success is set to 1.
+    -[int put_stream(int *success)]
+
+~Implement struct file, a representation of plain file
+    -Will have major_id and minor_id members
+        ~Example: "/dev/led/green" major_id=led, minor_id=green
+        ~Example: "files/notes.txt" major_id=fat32, minor_id=first_cluster_number
+
+~Implement fopen (path, mode) shell command
+    -map it to [int cmd_fopen (path, mode)]
+    -cmd_fopen calls [struct file find_by_name (path)]
+        ~If filename starts with "/dev" handle it differently, look for
+        plain file created during init like "/dev/led/blue"
+    -cmd_fopen uses the return value from find_by_name and
+    calls [struct device find_by_device_id (major_id)]
+    -cmd_fopen calls [int get_mode_id(char *mode)] to convert mode string to an int
+    -cmd_fopen calls [file* device.fopen(char *minor_id, int mode)]
+    -cmd_fopen calls put_stream to add the return value from device.fopen to pcb.streams
+    -cmd_fopen returns the value from put_stream (i.e. the "file descriptor") to the user
