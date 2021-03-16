@@ -10,6 +10,7 @@
 #include "uartNL.h"
 #include "derivative.h"
 #include "devinio.h"
+#include "SDHC_FAT32_Files.h"
 
 // Maps error codes to error descriptions.
 struct error_d
@@ -162,8 +163,10 @@ void initUART(void){
 }
 
 void shell_debug(void) {
-    uint32_t FATrca = initFAT();
-    myprintf("microSD RCA: %lu\n", (unsigned long)FATrca);
+    //uint32_t FATrca = initFAT();
+    //myprintf("microSD RCA: %lu\n", (unsigned long)FATrca);
+    int microSDmounted = file_structure_mount();
+    myprintf("MicroSD Mounted: %d\n", microSDmounted);
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256

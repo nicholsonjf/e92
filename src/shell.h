@@ -28,5 +28,6 @@ enum error_t
     E_STRTOUL,
     E_BRANGE_EX,
     E_ADDR_SPC,
+    E_NO_MICRO_SD,
     E_COUNT
 };
