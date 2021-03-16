@@ -9,6 +9,7 @@
 #include "delay.h"
 #include "uartNL.h"
 #include "derivative.h"
+#include "devinio.h"
 
 // Maps error codes to error descriptions.
 struct error_d
@@ -160,12 +161,19 @@ void initUART(void){
 	uartInit(UART2_BASE_PTR, moduleClock/KHzInHz, baud);
 }
 
+void shell_debug(void) {
+    uint32_t FATrca = initFAT();
+    myprintf("microSD RCA: %lu\n", (unsigned long)FATrca);
+}
+
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
 
 int main(int argc, char **argv)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
+    // TODO Remove shell_debug before submitting
+    shell_debug();
     while (1)
     {
         char linebuf[BUFFER_SIZE_FOR_SHELL_INPUT];
