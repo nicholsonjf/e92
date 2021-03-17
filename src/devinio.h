@@ -21,6 +21,11 @@ struct stream
 {
     struct device *major;
     char *minor;
+    directory_sector_number
+    entry_in_sector 0-15
+    position
+    size
+    current_cluster
 };
 
 uint32_t initFAT(void);

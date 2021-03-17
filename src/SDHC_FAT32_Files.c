@@ -2,6 +2,8 @@
 #include "shell.h"
 #include "microSD.h"
 
+int file_structure_mounted;
+
 int file_structure_mount(void) {
     microSDCardDetectConfig();
     int microSDdetected = microSDCardDetectedUsingSwitch();
