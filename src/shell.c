@@ -11,6 +11,7 @@
 #include "derivative.h"
 #include "devinio.h"
 #include "SDHC_FAT32_Files.h"
+#include "breakpoint.h"
 
 // Maps error codes to error descriptions.
 struct error_d
@@ -167,6 +168,12 @@ void shell_debug(void) {
     //myprintf("microSD RCA: %lu\n", (unsigned long)FATrca);
     int microSDmounted = file_structure_mount();
     myprintf("MicroSD Mounted: %d\n", microSDmounted);
+    int set_cwd = dir_set_cwd_to_root();
+    myprintf("Set CWD to root: %d\n", set_cwd);
+    __BKPT();
+    int unmount = file_structure_umount();
+    myprintf("File structure unmounted: %d\n", unmount);
+    __BKPT();
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
