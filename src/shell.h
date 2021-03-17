@@ -29,5 +29,7 @@ enum error_t
     E_BRANGE_EX,
     E_ADDR_SPC,
     E_NO_MICRO_SD,
+    E_FILE_STRUCT_MOUNTED,
+    E_FILE_STRUCT_NOT_MOUNTED,
     E_COUNT
 };
