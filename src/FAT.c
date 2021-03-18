@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
  *
- * Last updated: 10:17 PM 10-Mar-2021
+ * Last updated: 2:14 PM 16-Mar-2021
  */
 
 #include <stdlib.h>
@@ -148,7 +148,8 @@ void write_FAT_entry(uint32_t rca, uint32_t cluster, uint32_t nextCluster) {
 
   if(FAT_DEBUG) {
     snprintf(output_buffer, sizeof(output_buffer),
-	     "The previous FAT entry for cluster %lu is %lu (0x%08lX)\n", cluster,
+	     "The previous FAT entry for cluster %lu is %lu (0x%08lX)\n",
+	     cluster,
 	     FAT_sector[FAT_entry_offset_in_sector],
 	     FAT_sector[FAT_entry_offset_in_sector]);
     CONSOLE_PUTS(output_buffer);
@@ -163,7 +164,7 @@ void write_FAT_entry(uint32_t rca, uint32_t cluster, uint32_t nextCluster) {
   /* write the modified FAT sector to the main FAT in the file system */
   write_FAT(rca, (uint8_t *)FAT_sector, FAT_sector_to_access);
   /* write the modified FAT sector to the copy FAT in the file system */
-  write_FAT(rca, (uint8_t *)FAT_sector+sectors_per_FAT, FAT_sector_to_access);
+  write_FAT(rca, (uint8_t *)FAT_sector, FAT_sector_to_access+sectors_per_FAT);
   return;
 }
 

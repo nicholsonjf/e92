@@ -4,6 +4,7 @@
 #include "bootSector.h"
 #include "breakpoint.h"
 #include "directory.h"
+#include "my-malloc.h"
 
 
 /////// GLOBALS
@@ -61,7 +62,7 @@ int dir_set_cwd_to_root(void) {
 int dir_ls(void) {
     uint32_t fsc = first_sector_of_cluster(cwd);
     uint8_t first_block[512];
-    struct sdhc_card_status *card_status;
+    struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
     sdhc_read_single_block(rca, fsc, card_status, first_block);
     struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)first_block;
     while (1) {
@@ -73,10 +74,11 @@ int dir_ls(void) {
             continue;
         }
         myprintf("%s\n", dir_entry->DIR_Name);
-        dir_entry++;
         __BKPT();
+        dir_entry++;
 
     }
+    myFree(card_status);
     return E_SUCCESS;
 
 }
