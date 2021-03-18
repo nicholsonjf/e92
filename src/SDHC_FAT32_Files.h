@@ -41,7 +41,7 @@ int dir_set_cwd_to_root(void);
  * Display on stdout the cwd's filenames (full == 0) or all directory
  * information (full == 1); implementing full is optional
  */
-int dir_ls(int full);
+int dir_ls(void);
 
 /**
  * Start an iterator at the beginning of the cwd's filenames

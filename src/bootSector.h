@@ -19,8 +19,8 @@
 #include "SDCardReader.h"
 
 /* These #define's enable debugging output */
-#define BS_DEBUG 0
-#define BS_INFORMATIVE_PRINTF 0
+#define BS_DEBUG 1
+#define BS_INFORMATIVE_PRINTF 1
 
 /* Number of bytes per sector */
 extern uint16_t bytes_per_sector;

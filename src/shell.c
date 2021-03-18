@@ -170,10 +170,9 @@ void shell_debug(void) {
     myprintf("MicroSD Mounted: %d\n", microSDmounted);
     int set_cwd = dir_set_cwd_to_root();
     myprintf("Set CWD to root: %d\n", set_cwd);
-    __BKPT();
     int unmount = file_structure_umount();
     myprintf("File structure unmounted: %d\n", unmount);
-    __BKPT();
+    dir_ls();
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
