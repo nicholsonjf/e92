@@ -59,6 +59,7 @@ int dir_set_cwd_to_root(void) {
     return E_SUCCESS;
 }
 
+// Check for long filenames and skip them.
 int dir_ls(void) {
     uint32_t fsc = first_sector_of_cluster(cwd);
     uint8_t first_block[512];
@@ -73,8 +74,11 @@ int dir_ls(void) {
             dir_entry++;
             continue;
         }
+        uint8_t dir_attr_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
+        if ( dir_attr_masked == DIR_ENTRY_ATTR_LONG_NAME) {
+            myprintf("%s\n", "Skippinga long filename");
+        }
         myprintf("%s\n", dir_entry->DIR_Name);
-        __BKPT();
         dir_entry++;
 
     }

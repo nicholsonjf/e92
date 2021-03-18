@@ -27,3 +27,5 @@ Project plan
     -cmd_fopen calls [file* device.fopen(char *minor_id, int mode)]
     -cmd_fopen calls put_stream to add the return value from device.fopen to pcb.streams
     -cmd_fopen returns the value from put_stream (i.e. the "file descriptor") to the user
+
+    ~In dir_l
