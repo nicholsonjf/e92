@@ -90,20 +90,44 @@ int dir_ls(void) {
     return E_SUCCESS;
 }
 
-// Takes a dir_entry_8_3.DIR_Name and copies the user friendly version into friendly_name.
+/**
+ * Takes an 8.3 filename and copies the user friendly version into a user provided pointer address.
+ * Allowed characters are [A-Z,0-9]
+ * Param dir_entry: pointer to a valid FAT32 directory entry
+ * Param friendly_name: pointer to a pointer allocated at least sizeof(uint8_t)*13
+ * Returns: E_SUCCESS if all went well
+ * Error: If an illegal character is encountered at the beginning of the filename the function
+ * returns E_FILE_NAME_INVALID
+ */ 
 int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name) {
     // Enough memory for the short filename (11) + the dot (1) + NULL terminator (1)
     uint8_t *p = myMalloc(sizeof(uint8_t)*13);
     myMemset(p, 0x0, sizeof(p));
+    int endfn;
     if (dir_entry->DIR_Name[0] < 0x41 || dir_entry->DIR_Name[0] > 0x5A) {
         return E_FILE_NAME_INVALID;
     }
+    // Copy filename into p
     for (int i=0; i<7; i++) {
         if (dir_entry->DIR_Name[i] >= 0x41 && dir_entry->DIR_Name[i] <= 0x5A) {
             p[i] = dir_entry->DIR_Name[i];
         }
         else {
-            p[i] = 0x0;
+            // End of the filename
+            // Index of the first non uppercase character, aka where the dot should go
+            endfn = i;
+            break;
+        }
+    }
+    // Check if there's a file extension
+    if (dir_entry->DIR_Name[8] >= 0x41 && dir_entry->DIR_Name[8] <= 0x5A) {
+        // Add the dot separator to p
+        p[endfn] = '.';
+        for (int i=8; i<11; i++) {
+            // Add each extension letter to p
+            if (dir_entry->DIR_Name[i] >= 0x41 && dir_entry->DIR_Name[i] <= 0x5A) {
+                p[++endfn] = dir_entry->DIR_Name[i];
+            }
         }
     }
     *friendly_name = p; 
