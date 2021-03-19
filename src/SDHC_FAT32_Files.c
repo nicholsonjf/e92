@@ -100,9 +100,9 @@ int dir_ls(void) {
  * returns E_FILE_NAME_INVALID
  */ 
 int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name) {
-    // Enough memory for the short filename (11) + the dot (1) + NULL terminator (1)
-    uint8_t *p = myMalloc(sizeof(uint8_t)*13);
-    myMemset(p, 0x0, sizeof(p));
+    // Enough to hold the short filename (11) + the dot (1) + NULL terminator (1)
+    uint8_t p[13];
+    myMemset(&p[0], 0x0, sizeof(p));
     int endfn;
     if (dir_entry->DIR_Name[0] < 0x41 || dir_entry->DIR_Name[0] > 0x5A) {
         return E_FILE_NAME_INVALID;
@@ -130,7 +130,7 @@ int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name)
             }
         }
     }
-    *friendly_name = p; 
+    *friendly_name = &p[0]; 
     return E_SUCCESS;
 }
 
