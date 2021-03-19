@@ -1,3 +1,4 @@
+#include <string.h>
 #include "SDHC_FAT32_Files.h"
 #include "shell.h"
 #include "microSD.h"
@@ -75,9 +76,8 @@ int dir_ls(void) {
             dir_entry++;
             continue;
         }
-        uint8_t dir_attr_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
-        if ( dir_attr_masked == DIR_ENTRY_ATTR_LONG_NAME) {
-            myprintf("%s\n", "*Skipped long filename*");
+        uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
+        if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
             dir_entry++;
             continue;
         }
@@ -132,4 +132,45 @@ int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name)
     }
     *friendly_name = p; 
     return E_SUCCESS;
+}
+
+int dir_find_file(char *filename, uint32_t *firstCluster) {
+    uint32_t fsc = first_sector_of_cluster(cwd);
+    uint8_t first_block[512];
+    struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
+    sdhc_read_single_block(rca, fsc, card_status, first_block);
+    struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)first_block;
+    uint8_t *pfname;
+    while (1) {
+        // End of dir, return error
+        if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
+            return E_FILE_NOT_IN_CWD;
+        }
+        // Entry not used, continue
+        if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
+            dir_entry++;
+            continue;
+        }
+        // Long dir entry, not supported, return error
+        uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
+        if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
+            dir_entry++;
+            continue;
+        }
+        // Entry is a dir, return 
+        uint8_t dir_attr_dir_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_DIRECTORY;
+        if ( dir_attr_dir_masked == DIR_ENTRY_ATTR_DIRECTORY) {
+            return E_FILE_IS_DIRECTORY;
+        }
+        // This is an in-use 8.3 file, check to see if it matches
+        int ffn_result = friendly_file_name(dir_entry, &pfname); // Filename + extension of entry at current point in iteration
+        int fnamecmp  = strncmp((const char*)pfname, (const char*)filename, (size_t)sizeof(filename));
+        if (fnamecmp == 0) {
+            *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+            return E_SUCCESS;
+        }
+        dir_entry++;
+    }
+    myFree(pfname);
+    myFree(card_status);
 }

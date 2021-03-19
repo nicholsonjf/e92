@@ -162,9 +162,14 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen);
 /////// HELPER FUNCTIONS
 
 /**
- * Takes a dir_entry_8_3.DIR_Name and copies the user friendly version into friendly_name.
+ * Takes an 8.3 filename and copies the user friendly version into a user provided pointer address.
+ * Allowed characters are [A-Z,0-9]
+ * Param dir_entry: pointer to a valid FAT32 directory entry
+ * Param friendly_name: pointer to a pointer allocated at least sizeof(uint8_t)*13
+ * Returns: E_SUCCESS if all went well
+ * Error: If an illegal character is encountered at the beginning of the filename the function
+ * returns E_FILE_NAME_INVALID
  */ 
 int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name);
-
 
 #endif /* ifndef _SDHC_FAT32_FILES_H_ */

@@ -173,6 +173,12 @@ void shell_debug(void) {
     int unmount = file_structure_umount();
     myprintf("File structure unmounted: %d\n", unmount);
     dir_ls();
+    uint32_t *firstCluster = myMalloc(sizeof(uint32_t));
+    char *fname = "SYSTEM";
+    int find_file = dir_find_file(fname, firstCluster);
+    if (find_file == E_SUCCESS) {
+        myprintf("File found: %zu\n", firstCluster);
+    }
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
