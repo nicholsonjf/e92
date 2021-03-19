@@ -2,6 +2,7 @@
 #define _SDHC_FAT32_FILES_H_
 
 #include <stdint.h>
+#include "directory.h"
 
 /* All functions return an int which indicates success if 0 and an
    error code otherwise (only some errors are listed) */
@@ -156,5 +157,14 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp);
  * Returns an error code if there is no more space to write the character
  */
 int file_putbuf(file_descriptor descr, char *bufp, int buflen);
+
+
+/////// HELPER FUNCTIONS
+
+/**
+ * Takes a dir_entry_8_3.DIR_Name and copies the user friendly version into friendly_name.
+ */ 
+int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name);
+
 
 #endif /* ifndef _SDHC_FAT32_FILES_H_ */

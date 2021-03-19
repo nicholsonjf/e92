@@ -31,5 +31,6 @@ enum error_t
     E_NO_MICRO_SD,
     E_FILE_STRUCT_MOUNTED,
     E_FILE_STRUCT_NOT_MOUNTED,
+    E_FILE_NAME_INVALID,
     E_COUNT
 };

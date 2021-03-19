@@ -66,6 +66,7 @@ int dir_ls(void) {
     struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
     sdhc_read_single_block(rca, fsc, card_status, first_block);
     struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)first_block;
+    uint8_t *pfname;
     while (1) {
         if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
             return E_SUCCESS;
@@ -76,13 +77,35 @@ int dir_ls(void) {
         }
         uint8_t dir_attr_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
         if ( dir_attr_masked == DIR_ENTRY_ATTR_LONG_NAME) {
-            myprintf("%s\n", "Skippinga long filename");
+            myprintf("%s\n", "*Skipped long filename*");
+            dir_entry++;
+            continue;
         }
-        myprintf("%s\n", dir_entry->DIR_Name);
+        int ffn_result = friendly_file_name(dir_entry, &pfname);
+        myprintf("%s\n", pfname);
         dir_entry++;
-
     }
+    myFree(pfname);
     myFree(card_status);
     return E_SUCCESS;
+}
 
+// Takes a dir_entry_8_3.DIR_Name and copies the user friendly version into friendly_name.
+int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name) {
+    // Enough memory for the short filename (11) + the dot (1) + NULL terminator (1)
+    uint8_t *p = myMalloc(sizeof(uint8_t)*13);
+    myMemset(p, 0x0, sizeof(p));
+    if (dir_entry->DIR_Name[0] < 0x41 || dir_entry->DIR_Name[0] > 0x5A) {
+        return E_FILE_NAME_INVALID;
+    }
+    for (int i=0; i<7; i++) {
+        if (dir_entry->DIR_Name[i] >= 0x41 && dir_entry->DIR_Name[i] <= 0x5A) {
+            p[i] = dir_entry->DIR_Name[i];
+        }
+        else {
+            p[i] = 0x0;
+        }
+    }
+    *friendly_name = p; 
+    return E_SUCCESS;
 }

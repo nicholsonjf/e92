@@ -17,7 +17,7 @@
 #ifndef _UARTNL_H
 #define _UARTNL_H
 
-#include <uart.h>
+#include "uart.h"
 
 #define UARTNL_BACKSPACE_CHAR '\b'
 #define UARTNL_END_OF_INPUT_LINE_CHAR '\r'
