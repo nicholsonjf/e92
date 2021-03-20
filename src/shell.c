@@ -164,14 +164,6 @@ void initUART(void){
 }
 
 void shell_debug(void) {
-    //uint32_t FATrca = initFAT();
-    //myprintf("microSD RCA: %lu\n", (unsigned long)FATrca);
-    int microSDmounted = file_structure_mount();
-    myprintf("MicroSD Mounted: %d\n", microSDmounted);
-    int set_cwd = dir_set_cwd_to_root();
-    myprintf("Set CWD to root: %d\n", set_cwd);
-    int unmount = file_structure_umount();
-    myprintf("File structure unmounted: %d\n", unmount);
     dir_ls();
     uint32_t *firstCluster = myMalloc(sizeof(uint32_t));
     char *fname = "SYSTEM";
@@ -179,6 +171,11 @@ void shell_debug(void) {
     if (find_file == E_SUCCESS) {
         myprintf("File found: %zu\n", firstCluster);
     }
+    int create_file = dir_create_file(fname);
+    if (create_file != E_SUCCESS) {
+        myprintf("File already exists!\n");
+    }
+    myFree(firstCluster);
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
@@ -188,6 +185,7 @@ int main(int argc, char **argv)
     setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
     // TODO Remove shell_debug before submitting
+    initDevIO();
     shell_debug();
     while (1)
     {
@@ -344,6 +342,12 @@ int cmd_exit(int argc, char *argv[])
     if (argc > 0)
     {
         return E_TOO_MANY_ARGS;
+    }
+    if (file_structure_mounted) {
+        int unmount = file_structure_umount();
+        if (unmount != E_SUCCESS) {
+            return unmount;
+        }
     }
     exit(E_SUCCESS);
 }

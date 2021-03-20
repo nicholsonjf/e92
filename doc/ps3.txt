@@ -31,3 +31,48 @@ Project plan
 ~//TODO
     -Refactor "help" shell command
         ~Provide it with unformatted strings and use printf rules to format output
+
+~Ask Jamie about
+    -How much time to budget to finish
+    -Overview of how to implement cache and how long it will take
+
+~Cache
+    -Implement int cache_read_single_block(uint32_t sector_num, uint8_t *data)
+        -Return error code if card not mountd
+    -Whenever you read, read from cache
+        ~If cache doesn't have valid sector
+            -Read sector from disk into cache buffer
+        ~Else, check current cache sector number
+        ~If sector requested is same in cache
+            -Copy data from cache buffer into user provided pointer
+        ~If not the same sector
+            -Check if cache is modified
+                ~If modified, write sector in cache to disk
+                    -Then read requested sector into cache buffer, copy to user provided pointer address
+                ~If not modified, read sector from disk, save in cache buffer, and copy into user pointer address
+
+    -Whenever you write, write to cache
+        -Implement int cache_write_single_block(uint32_t sector_num, uint8_t *data)
+        ~If cache doesn't have valid sector
+            -Copy caller sector to cache buffer
+            -Set the sector number, mark it as valid, mark it as modified
+        ~Else, check sector number of cache
+        ~If sector number writing to is same as sector in cache
+            -Copy caller sector to cache buffer
+            -Mark it as modified
+        ~Else
+            -Check if cache is modified
+                ~If modified, write cache to disk
+                ~Copy caller sector to cache
+                ~Update sector number
+            -Else
+                ~Copy caller sector to cache buffer
+                ~Update sector number
+                ~Mark as modified
+
+    -Implement flush_cache function
+        ~If cache contains sector that is valid and modified
+            -Write sector to disk
+    
+    -Before unmount:
+        ~Call flush_cache

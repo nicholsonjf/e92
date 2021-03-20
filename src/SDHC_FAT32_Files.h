@@ -159,7 +159,22 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp);
 int file_putbuf(file_descriptor descr, char *bufp, int buflen);
 
 
-/////// HELPER FUNCTIONS
+/////// ADDED BY JAMES
+
+/**
+ * Indicates whether the file system is mounted: 0 if false, 1 if true.
+ */
+extern int file_structure_mounted;
+
+/**
+ * Relative Card Address of currently mounted card.
+ */
+extern uint32_t rca;
+
+/**
+ * Cluster number of the current working directory.
+ */
+extern uint32_t cwd;
 
 /**
  * Takes an 8.3 filename and copies the user friendly version into a user provided pointer address.

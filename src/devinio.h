@@ -31,4 +31,6 @@ struct stream
     uint32_t current_cluster;
 };
 
-uint32_t initFAT(void);
+int initDevIO(void);
+
+int initFAT(void);

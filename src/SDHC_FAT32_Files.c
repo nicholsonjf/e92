@@ -11,79 +11,86 @@
 /////// GLOBALS
 
 /**
- * Indicates whether the file system is mounted: 0 if true, 1 if false.
+ * Number of sectors in a cluster.
  */
-int file_structure_mounted;
-
-/**
- * Relative Card Address of currently mounted card.
- */
-uint32_t rca;
-
-/**
- * Cluster number of the current working directory.
- */
-uint32_t cwd;
+uint8_t dir_entries_per_sector;
 
 
 /////// FUNCTIONS
 
 int file_structure_mount(void) {
     if (file_structure_mounted) {
-        __BKPT();
         return E_FILE_STRUCT_MOUNTED;
     }
     microSDCardDetectConfig();
     int microSDdetected = microSDCardDetectedUsingSwitch();
     if (!microSDdetected) {
-        __BKPT();
         return E_NO_MICRO_SD;
     }
     microSDCardDisableCardDetectARMPullDownResistor();
     rca = sdhc_initialize();
     file_structure_mounted = 1;
+    dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
     return E_SUCCESS;
 }
 
 int file_structure_umount(void) {
     if (!file_structure_mounted) {
-        __BKPT();
         return E_FILE_STRUCT_NOT_MOUNTED;
     }
+    // TODO call flush_cache
     sdhc_command_send_set_clr_card_detect_connect(rca);
     file_structure_mounted = 0;
     return E_SUCCESS;
 }
 
 int dir_set_cwd_to_root(void) {
+    if (!file_structure_mounted) {
+        return E_FILE_STRUCT_NOT_MOUNTED;
+    }
     cwd = root_directory_cluster;
     return E_SUCCESS;
 }
 
 // Check for long filenames and skip them.
 int dir_ls(void) {
-    uint32_t fsc = first_sector_of_cluster(cwd);
-    uint8_t first_block[512];
+    // TODO check to see if end of sector, if so increment sector
+    // TODO if end of cluster, check FAT and go to next cluster
+    // TODO redefine scope of allowable characters ~ is alowed
+    // Nothing less than 20
     struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
-    sdhc_read_single_block(rca, fsc, card_status, first_block);
-    struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)first_block;
+    // Pointer to hold the pretty filename
     uint8_t *pfname;
     while (1) {
-        if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
-            return E_SUCCESS;
+        uint32_t sector_num = first_sector_of_cluster(cwd);
+        uint32_t sector_index = 0;
+        while (sector_index < sectors_per_cluster) {
+            uint8_t sector_data[512];
+            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            // TODO check read_status and go to __BKPT if failure
+            struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
+            int entry_index = 0;
+            while (entry_index < dir_entries_per_sector) {
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
+                    return E_SUCCESS;
+                }
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
+                    dir_entry++;
+                    continue;
+                }
+                uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
+                if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
+                    dir_entry++;
+                    continue;
+                }
+                int ffn_result = friendly_file_name(dir_entry, &pfname);
+                myprintf("%s\n", pfname);
+                dir_entry++;
+                entry_index++;
+            }
+            sector_num++;
         }
-        if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
-            dir_entry++;
-            continue;
-        }
-        uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
-        if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
-            dir_entry++;
-            continue;
-        }
-        int ffn_result = friendly_file_name(dir_entry, &pfname);
-        myprintf("%s\n", pfname);
-        dir_entry++;
+        // TODO check FAT to get next cluster and set cwd to that cluster
     }
     myFree(pfname);
     myFree(card_status);
@@ -135,6 +142,7 @@ int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name)
 }
 
 int dir_find_file(char *filename, uint32_t *firstCluster) {
+    //TODO convert user provided filename to UPPERCASE before searching
     uint32_t fsc = first_sector_of_cluster(cwd);
     uint8_t first_block[512];
     struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
@@ -173,4 +181,14 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
     }
     myFree(pfname);
     myFree(card_status);
+}
+
+int dir_create_file(char *filename) {
+    uint32_t *fcluster = myMalloc(sizeof(uint32_t));
+    // Check if it exists (check sector, expand if necessarry)
+    if (dir_find_file(filename, fcluster) == 0) {
+        return E_FILE_EXISTS;
+    }
+    // Then do another pass to find first free entry
+    myFree(fcluster);
 }
