@@ -6,6 +6,7 @@
 #include "breakpoint.h"
 #include "directory.h"
 #include "my-malloc.h"
+#include "FAT.h"
 
 
 /////// GLOBALS
@@ -90,7 +91,9 @@ int dir_ls(void) {
             }
             sector_num++;
         }
-        // TODO check FAT to get next cluster and set cwd to that cluster
+        uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
+        // Set cwd to the current directory's FAT entry and continue iteration
+        cwd = cwdFATentry;
     }
     myFree(pfname);
     myFree(card_status);
