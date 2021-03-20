@@ -7,15 +7,29 @@
 #include "directory.h"
 #include "my-malloc.h"
 #include "FAT.h"
-
+#include "myFAT32driver.h"
 
 /////// GLOBALS
+
+/**
+ * Indicates whether the file system is mounted: 0 if false, 1 if true.
+ */
+int file_structure_mounted;
+
+/**
+ * Relative Card Address of currently mounted card.
+ */
+uint32_t rca;
+
+/**
+ * Cluster number of the current working directory.
+ */
+uint32_t cwd;
 
 /**
  * Number of sectors in a cluster.
  */
 uint8_t dir_entries_per_sector;
-
 
 /////// FUNCTIONS
 
@@ -41,6 +55,7 @@ int file_structure_umount(void) {
     }
     // TODO call flush_cache
     sdhc_command_send_set_clr_card_detect_connect(rca);
+    myFree(card_status);
     file_structure_mounted = 0;
     return E_SUCCESS;
 }
@@ -55,11 +70,8 @@ int dir_set_cwd_to_root(void) {
 
 // Check for long filenames and skip them.
 int dir_ls(void) {
-    // TODO check to see if end of sector, if so increment sector
-    // TODO if end of cluster, check FAT and go to next cluster
     // TODO redefine scope of allowable characters ~ is alowed
     // Nothing less than 20
-    struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
     // Pointer to hold the pretty filename
     uint8_t *pfname;
     while (1) {
@@ -96,7 +108,6 @@ int dir_ls(void) {
         cwd = cwdFATentry;
     }
     myFree(pfname);
-    myFree(card_status);
     return E_SUCCESS;
 }
 
@@ -148,7 +159,6 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
     //TODO convert user provided filename to UPPERCASE before searching
     uint32_t fsc = first_sector_of_cluster(cwd);
     uint8_t first_block[512];
-    struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
     sdhc_read_single_block(rca, fsc, card_status, first_block);
     struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)first_block;
     uint8_t *pfname;
@@ -183,7 +193,6 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
         dir_entry++;
     }
     myFree(pfname);
-    myFree(card_status);
 }
 
 int dir_create_file(char *filename) {

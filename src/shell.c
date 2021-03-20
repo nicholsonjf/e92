@@ -10,8 +10,10 @@
 #include "uartNL.h"
 #include "derivative.h"
 #include "devinio.h"
+#include "myFAT32driver.h"
 #include "SDHC_FAT32_Files.h"
 #include "breakpoint.h"
+
 
 // Maps error codes to error descriptions.
 struct error_d

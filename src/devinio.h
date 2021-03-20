@@ -32,5 +32,3 @@ struct stream
 };
 
 int initDevIO(void);
-
-int initFAT(void);

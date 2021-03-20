@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "directory.h"
+#include "bootSector.h"
 
 /* All functions return an int which indicates success if 0 and an
    error code otherwise (only some errors are listed) */
@@ -166,15 +167,6 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen);
  */
 extern int file_structure_mounted;
 
-/**
- * Relative Card Address of currently mounted card.
- */
-extern uint32_t rca;
-
-/**
- * Cluster number of the current working directory.
- */
-extern uint32_t cwd;
 
 /**
  * Takes an 8.3 filename and copies the user friendly version into a user provided pointer address.
