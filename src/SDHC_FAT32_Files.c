@@ -89,11 +89,13 @@ int dir_ls(void) {
                 }
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
                     dir_entry++;
+                    entry_index++;
                     continue;
                 }
                 uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
                 if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
                     dir_entry++;
+                    entry_index++;
                     continue;
                 }
                 int ffn_result = friendly_file_name(dir_entry, &pfname);
@@ -155,52 +157,72 @@ int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name)
     return E_SUCCESS;
 }
 
+// Check for long filenames and skip them.
 int dir_find_file(char *filename, uint32_t *firstCluster) {
-    //TODO convert user provided filename to UPPERCASE before searching
-    uint32_t fsc = first_sector_of_cluster(cwd);
-    uint8_t first_block[512];
-    sdhc_read_single_block(rca, fsc, card_status, first_block);
-    struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)first_block;
+    // TODO redefine scope of allowable characters ~ is alowed
+    // Nothing less than 20
+    // Pointer to hold the pretty filename
     uint8_t *pfname;
     while (1) {
-        // End of dir, return error
-        if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
-            return E_FILE_NOT_IN_CWD;
+        uint32_t sector_num = first_sector_of_cluster(cwd);
+        uint32_t sector_index = 0;
+        while (sector_index < sectors_per_cluster) {
+            uint8_t sector_data[512];
+            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            // TODO check read_status and go to __BKPT if failure
+            struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
+            int entry_index = 0;
+            while (entry_index < dir_entries_per_sector) {
+                // End of dir, return error
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
+                    return E_FILE_NOT_IN_CWD;
+                }
+                // Entry not used, continue
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // Long dir entry, not supported, return error
+                uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
+                if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // Entry is a dir, return 
+                uint8_t dir_attr_dir_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_DIRECTORY;
+                if ( dir_attr_dir_masked == DIR_ENTRY_ATTR_DIRECTORY) {
+                    return E_FILE_IS_DIRECTORY;
+                }
+                // This is an in-use 8.3 file, check to see if it matches
+                int ffn_result = friendly_file_name(dir_entry, &pfname); // Filename + extension of entry at current point in iteration
+                int fnamecmp  = strncmp((const char*)pfname, (const char*)filename, (size_t)sizeof(filename));
+                if (fnamecmp == 0) {
+                    *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+                    return E_SUCCESS;
+                }
+                dir_entry++;
+                entry_index++;
+            }
+            sector_num++;
         }
-        // Entry not used, continue
-        if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
-            dir_entry++;
-            continue;
-        }
-        // Long dir entry, not supported, return error
-        uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
-        if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
-            dir_entry++;
-            continue;
-        }
-        // Entry is a dir, return 
-        uint8_t dir_attr_dir_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_DIRECTORY;
-        if ( dir_attr_dir_masked == DIR_ENTRY_ATTR_DIRECTORY) {
-            return E_FILE_IS_DIRECTORY;
-        }
-        // This is an in-use 8.3 file, check to see if it matches
-        int ffn_result = friendly_file_name(dir_entry, &pfname); // Filename + extension of entry at current point in iteration
-        int fnamecmp  = strncmp((const char*)pfname, (const char*)filename, (size_t)sizeof(filename));
-        if (fnamecmp == 0) {
-            *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
-            return E_SUCCESS;
-        }
-        dir_entry++;
+        uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
+        // Set cwd to the current directory's FAT entry and continue iteration
+        cwd = cwdFATentry;
     }
     myFree(pfname);
+    return E_SUCCESS;
 }
 
 int dir_create_file(char *filename) {
     uint32_t *fcluster = myMalloc(sizeof(uint32_t));
     // Check if it exists (check sector, expand if necessarry)
-    if (dir_find_file(filename, fcluster) == 0) {
+    int ffr = dir_find_file(filename, fcluster);
+    if (ffr == E_SUCCESS || ffr == E_FILE_IS_DIRECTORY) {
         return E_FILE_EXISTS;
     }
     // Then do another pass to find first free entry
     myFree(fcluster);
+    return E_SUCCESS;
 }
