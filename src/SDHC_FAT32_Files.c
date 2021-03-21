@@ -71,8 +71,6 @@ int dir_set_cwd_to_root(void) {
 
 // Check for long filenames and skip them.
 int dir_ls(void) {
-    // TODO redefine scope of allowable characters ~ is alowed
-    // Nothing less than 20
     // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *pfname;
     while (1) {
@@ -165,8 +163,6 @@ int friendly_file_name(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper **f
 
 // Check for long filenames and skip them.
 int dir_find_file(char *filename, uint32_t *firstCluster) {
-    // TODO redefine scope of allowable characters ~ is alowed
-    // Nothing less than 20
     // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *pfname;
     while (1) {
@@ -234,7 +230,42 @@ int dir_create_file(char *filename) {
     if (ffr == E_SUCCESS || ffr == E_FILE_IS_DIRECTORY) {
         return E_FILE_EXISTS;
     }
-    // Then do another pass to find first free entry
+    // Find first free entry
+    Filename_8_3_Wrapper *pfname;
+    while (1) {
+        uint32_t sector_num = first_sector_of_cluster(cwd);
+        uint32_t sector_index = 0;
+        while (sector_index <= sectors_per_cluster) {
+            uint8_t sector_data[512];
+            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            // TODO check read_status and go to __BKPT if failure
+            struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
+            int entry_index = 0;
+            while (entry_index <= dir_entries_per_sector) {
+                // Unused entry found, create file
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
+                    //TODO
+                }
+                // Last entry in directory found.
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
+                    // But not the last entry in the sector. Set the name and tag the next entry DIR_ENTRY_LAST_AND_UNUSED
+                    if (entry_index != dir_entries_per_sector) {
+                        //TODO
+                    }
+                    // Last entry in directory, and the sector. Set the name and tag the first entry in the
+                    // next sector DIR_ENTRY_LAST_AND_UNUSED
+                    //TODO
+                }
+                dir_entry++;
+                entry_index++;
+            }
+            sector_num++;
+        }
+        uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
+        // Set cwd to the current directory's FAT entry and continue iteration
+        cwd = cwdFATentry;
+    }
+    myFree(pfname);
     myFree(fcluster);
     return E_SUCCESS;
 }
