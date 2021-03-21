@@ -222,8 +222,14 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
 }
 
 int dir_create_file(char *filename) {
+    // Return an error if requested filename uses an invalid character
+    for (int i=0; i<sizeof(filename-1); i++) {
+        if (chr_8_3_valid(filename[i]) != E_SUCCESS) {
+            return E_FILE_NAME_INVALID;
+        }
+    }
     uint32_t *fcluster = myMalloc(sizeof(uint32_t));
-    // Check if it exists (check sector, expand if necessarry)
+    // Check if the filename already exists
     int ffr = dir_find_file(filename, fcluster);
     if (ffr == E_SUCCESS || ffr == E_FILE_IS_DIRECTORY) {
         return E_FILE_EXISTS;
