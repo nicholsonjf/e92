@@ -173,13 +173,22 @@ extern int file_structure_mounted;
 int chr_8_3_valid(uint8_t c);
 
 /**
+ * A wrapper for a dir entry filename
+ */
+typedef struct filename_8_3_wrapper {
+   uint8_t name[9];
+   uint8_t ext[4];
+   uint8_t combined[13];
+} Filename_8_3_Wrapper;
+
+/**
  * Takes an 8.3 filename and copies the user friendly version into a user provided pointer address.
  * Param dir_entry: pointer to a valid FAT32 directory entry
- * Param friendly_name: pointer to a pointer allocated at least sizeof(uint8_t)*13
+ * Param file_name: pointer to a File_8_3_Wrapper
  * Returns: E_SUCCESS if all went well
  * Error: If an illegal character is encountered at the beginning of the filename the function
  * returns E_FILE_NAME_INVALID
  */ 
-int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name);
+int friendly_file_name(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper **file_wrapper);
 
 #endif /* ifndef _SDHC_FAT32_FILES_H_ */

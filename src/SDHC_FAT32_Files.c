@@ -74,7 +74,7 @@ int dir_ls(void) {
     // TODO redefine scope of allowable characters ~ is alowed
     // Nothing less than 20
     // Pointer to hold the pretty filename
-    uint8_t *pfname;
+    Filename_8_3_Wrapper *pfname;
     while (1) {
         uint32_t sector_num = first_sector_of_cluster(cwd);
         uint32_t sector_index = 0;
@@ -100,7 +100,7 @@ int dir_ls(void) {
                     continue;
                 }
                 int ffn_result = friendly_file_name(dir_entry, &pfname);
-                myprintf("%s\n", pfname);
+                myprintf("%s\n", pfname->combined);
                 dir_entry++;
                 entry_index++;
             }
@@ -120,7 +120,7 @@ int chr_8_3_valid(uint8_t c) {
     (c >= 0x2A && c <= 0x2F) ||
     (c >= 0x3A && c <= 0x3F) ||
     (c >= 0x5B && c <= 0x5D) ||
-    (c >= 0x61 && <= 0x7A) ||
+    (c >= 0x61 && c <= 0x7A) ||
     (c == 0x7C)) {
         return E_CHR_INVALID_8_3;
     }
@@ -128,38 +128,36 @@ int chr_8_3_valid(uint8_t c) {
 }
 
 
-int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name) {
+int friendly_file_name(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper **file_wrapper) {
     // Enough to hold the short filename (11) + the dot (1) + NULL terminator (1)
-    uint8_t p[13];
-    myMemset(&p[0], 0x0, sizeof(p));
-    int endfn;
-    if (dir_entry->DIR_Name[0] < 0x41 || dir_entry->DIR_Name[0] > 0x5A) {
+    Filename_8_3_Wrapper fname_wrapper;
+    memset(&fname_wrapper, 0, sizeof(fname_wrapper));
+    int dot_index;
+    // Check if first character in filename is a space ' '
+    if (dir_entry->DIR_Name[0] == 0x20) {
         return E_FILE_NAME_INVALID;
     }
-    // Copy filename into p
+    // Copy filename into fname_wrapper.name and fname_wrapper.combined
     for (int i=0; i<7; i++) {
-        if (dir_entry->DIR_Name[i] >= 0x41 && dir_entry->DIR_Name[i] <= 0x5A) {
-            p[i] = dir_entry->DIR_Name[i];
+        if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
+            fname_wrapper.combined[i] = dir_entry->DIR_Name[i];
+            fname_wrapper.name[i] = dir_entry->DIR_Name[i];
         }
-        else {
-            // End of the filename
-            // Index of the first non uppercase character, aka where the dot should go
-            endfn = i;
-            break;
-        }
+        dot_index = i;
     }
-    // Check if there's a file extension
-    if (dir_entry->DIR_Name[8] >= 0x41 && dir_entry->DIR_Name[8] <= 0x5A) {
-        // Add the dot separator to p
-        p[endfn] = '.';
-        for (int i=8; i<11; i++) {
-            // Add each extension letter to p
-            if (dir_entry->DIR_Name[i] >= 0x41 && dir_entry->DIR_Name[i] <= 0x5A) {
-                p[++endfn] = dir_entry->DIR_Name[i];
+    // Check if there's a file extension and copy it into fname_wrapper.name and fname_wrapper.combined
+    if (chr_8_3_valid(dir_entry->DIR_Name[8]) == E_SUCCESS) {
+        // Put a dot into fname_wrapper.combined
+        fname_wrapper.combined[dot_index] = '.';
+        for (int i=8, j=0, k=dot_index+1; i<11; i++, j++, k++) {
+            // Add each extension letter
+            if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
+                fname_wrapper.ext[j] = dir_entry->DIR_Name[i];
+                fname_wrapper.combined[k] = dir_entry->DIR_Name[i];
             }
         }
     }
-    *friendly_name = &p[0]; 
+    *file_wrapper = &fname_wrapper; 
     return E_SUCCESS;
 }
 
@@ -168,7 +166,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
     // TODO redefine scope of allowable characters ~ is alowed
     // Nothing less than 20
     // Pointer to hold the pretty filename
-    uint8_t *pfname;
+    Filename_8_3_Wrapper *pfname;
     while (1) {
         uint32_t sector_num = first_sector_of_cluster(cwd);
         uint32_t sector_index = 0;
@@ -203,7 +201,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
                 }
                 // This is an in-use 8.3 file, check to see if it matches
                 int ffn_result = friendly_file_name(dir_entry, &pfname); // Filename + extension of entry at current point in iteration
-                int fnamecmp  = strncmp((const char*)pfname, (const char*)filename, (size_t)sizeof(filename));
+                int fnamecmp  = strncmp((const char*)pfname->combined, (const char*)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
                     return E_SUCCESS;
