@@ -167,10 +167,13 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen);
  */
 extern int file_structure_mounted;
 
+/**
+ * Takes a character and determines if it's a valid FAT32 8_3 filename character
+ */
+int chr_8_3_valid(uint8_t c);
 
 /**
  * Takes an 8.3 filename and copies the user friendly version into a user provided pointer address.
- * Allowed characters are [A-Z,0-9]
  * Param dir_entry: pointer to a valid FAT32 directory entry
  * Param friendly_name: pointer to a pointer allocated at least sizeof(uint8_t)*13
  * Returns: E_SUCCESS if all went well

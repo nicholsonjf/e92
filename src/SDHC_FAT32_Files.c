@@ -31,6 +31,7 @@ uint32_t cwd;
  */
 uint8_t dir_entries_per_sector;
 
+
 /////// FUNCTIONS
 
 int file_structure_mount(void) {
@@ -113,15 +114,20 @@ int dir_ls(void) {
     return E_SUCCESS;
 }
 
-/**
- * Takes an 8.3 filename and copies the user friendly version into a user provided pointer address.
- * Allowed characters are [A-Z,0-9]
- * Param dir_entry: pointer to a valid FAT32 directory entry
- * Param friendly_name: pointer to a pointer allocated at least sizeof(uint8_t)*13
- * Returns: E_SUCCESS if all went well
- * Error: If an illegal character is encountered at the beginning of the filename the function
- * returns E_FILE_NAME_INVALID
- */ 
+int chr_8_3_valid(uint8_t c) {
+    if ((c < 0x20) ||
+    (c == 0x22) ||
+    (c >= 0x2A && c <= 0x2F) ||
+    (c >= 0x3A && c <= 0x3F) ||
+    (c >= 0x5B && c <= 0x5D) ||
+    (c >= 0x61 && <= 0x7A) ||
+    (c == 0x7C)) {
+        return E_CHR_INVALID_8_3;
+    }
+    return E_SUCCESS;
+}
+
+
 int friendly_file_name(struct dir_entry_8_3 *dir_entry, uint8_t **friendly_name) {
     // Enough to hold the short filename (11) + the dot (1) + NULL terminator (1)
     uint8_t p[13];
