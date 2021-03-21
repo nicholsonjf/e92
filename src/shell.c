@@ -15,6 +15,52 @@
 #include "breakpoint.h"
 
 
+char *help_text =
+
+"JELL HELP TEXT\n"
+"\n"
+"Help text format:"
+"~[command]~\n"
+"Help text for [command]"
+"\n"
+"~exit~\n"
+"Exit from the shell(i.e., cause the shell to terminate).\n"
+"\n"
+"~echo~\n"
+"Output each of the arguments to stdout.\n"
+"\n"
+"~help~\n"
+"Output to stdout a brief description of the commands accepted by the shell\n"
+"\n"
+"~malloc~\n"
+"Accepts a single argument which is the number of bytes of memory to be allocated.\n"
+"The number of bytes can be specified either as a decimal integer constant (of arbitrary\n"
+"length), an octal integer constant (indicated by a prefix of 0 not followed by x or\n"
+"X followed by an arbitrary length octal constant), or as a hexadecimal number (indicated\n"
+"by a prefix of 0x or 0X followed by an arbitrary length hexadecimal constant).  The\n"
+"alphabetic hexadecimal digits can be specified in either upper or lower case.\n"
+"\n"
+"~free~\n"
+"The free command accepts a single argument which is the address of a region of\n"
+"memory previously allocated using malloc. It accepts the same number formats specified.\n"
+"in the malloc help section: octal, decimal, and hexidecimal.\n"
+"\n"
+"~memorymap~\n"
+"Outputs the map of both allocated and free memory regions\n"
+"\n"
+"~memset~\n"
+"The memset command accepts three arguments. The first is the beginning address of an\n"
+"allocated area of memory, the second is the value to which each byte in the specified\n"
+"memory will be set, and the third is the length(in bytes) of the specified memory. Each\n"
+"of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n"
+"\n"
+"~memchk~\n"
+"The memchk command accepts three arguments. The first is the beginning address of an\n"
+"allocated area of memory, the second is the value to which each byte in the specified\n"
+"memory should be checked against, and the third is the length(in bytes) of the specified\n"
+"memory. Each of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n";
+
+
 // Maps error codes to error descriptions.
 struct error_d
 {
@@ -48,37 +94,6 @@ void print_err(int error_c)
     myprintf("ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
 }
 
-struct date
-{
-    int year;
-    int month;
-    int day;
-    int hour;
-    int minute;
-    int second;
-    int microsecond;
-};
-
-struct monthMap
-{
-    int month_i;
-    char *month_n;
-} months[] = {
-    {1, "January"},
-    {2, "February"},
-    {3, "March"},
-    {4, "April"},
-    {5, "May"},
-    {6, "June"},
-    {7, "July"},
-    {8, "August"},
-    {9, "September"},
-    {10, "October"},
-    {11, "November"},
-    {12, "December"},
-};
-
-
 struct commandEntry
 {
     char *name;
@@ -104,18 +119,6 @@ cmd_pntr find_cmd(char *arg)
         if (strcmp(arg, commands[i].name) == 0)
         {
             return commands[i].functionp;
-        }
-    }
-    return NULL;
-}
-
-char *monthName(int month_i)
-{
-    for (int i = 0; i < 12; i++)
-    {
-        if (months[i].month_i == month_i)
-        {
-            return months[i].month_n;
         }
     }
     return NULL;
@@ -354,43 +357,7 @@ int cmd_help(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    char *my_string = "Available Commands:\n"
-                      "\n"
-                      "     exit -- exit from the shell(i.e., cause the shell to terminate).\n"
-                      "\n"
-                      "     echo -- output each of the arguments to stdout.\n"
-                      "\n"
-                      "     help -- output to stdout a brief description of the commands accepted by the shell\n"
-                      "\n"
-                      "     date -- outputs to stdout the current date and time in the format: January 23, 2014 15:57:07.123456.\n"
-                      "\n"
-                      "clockdate -- takes a single positive integral number as its required argument.\n"
-                      "             This number represents the number of seconds since the Unix Epoch. This provided\n"
-                      "             Epoch time will be printed to stdout in the same format described in the date command.\n"
-                      "\n"
-                      "   malloc -- accepts a single argument which is the number of bytes of memory to be allocated.\n"
-                      "             The number of bytes can be specified either as a decimal integer constant (of arbitrary\n"
-                      "             length), an octal integer constant (indicated by a prefix of 0 not followed by x or\n"
-                      "             X followed by an arbitrary length octal constant), or as a hexadecimal number (indicated\n"
-                      "             by a prefix of 0x or 0X followed by an arbitrary length hexadecimal constant).  The\n"
-                      "             alphabetic hexadecimal digits can be specified in either upper or lower case.\n"
-                      "\n"
-                      "     free -- The free command accepts a single argument which is the address of a region of\n"
-                      "             memory previously allocated using malloc. It accepts the same number formats specified.\n"
-                      "             in the malloc help section: octal, decimal, and hexidecimal.\n"
-                      "\n"
-                      "memorymap -- Outputs the map of both allocated and free memory regions\n"
-                      "\n"
-                      "   memset -- The memset command accepts three arguments. The first is the beginning address of an\n"
-                      "             allocated area of memory, the second is the value to which each byte in the specified\n"
-                      "             memory will be set, and the third is the length(in bytes) of the specified memory. Each\n"
-                      "             of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n"
-                      "\n"
-                      "   memchk -- The memchk command accepts three arguments. The first is the beginning address of an\n"
-                      "             allocated area of memory, the second is the value to which each byte in the specified\n"
-                      "             memory should be checked against, and the third is the length(in bytes) of the specified\n"
-                      "             memory. Each of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n";
-                      myprintf("%s", my_string);
+    myprintf("%s", help_text);
     return E_SUCCESS;
 }
 
