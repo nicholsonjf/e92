@@ -16,8 +16,6 @@ struct device
 {
     int (*fgetc)(char *minor);
     int (*fputc)(char *minor);
-    int (*fopen)(char *minor);
-    int (*fclose)(char *minor);
 };
 
 struct stream
