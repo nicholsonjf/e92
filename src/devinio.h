@@ -12,15 +12,15 @@ enum modes
     O_RDWR
 };
 
-struct device
+typedef struct device
 {
     int (*fgetc)(char *minor);
     int (*fputc)(char *minor);
-};
+} Device;
 
 struct stream
 {
-    struct device *major;
+    struct Device *major;
     char *minor;
     uint32_t directory_sector_number;
     uint8_t uintentry_in_sector; // 0-15

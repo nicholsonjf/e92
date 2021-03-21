@@ -16,12 +16,14 @@
 
 
 char *help_text =
-
-"JELL HELP TEXT\n"
 "\n"
-"Help text format:"
+"**********************\n"
+"*** JELL HELP TEXT ***\n"
+"**********************\n"
+"\n"
+"Help text format:\n"
 "~[command]~\n"
-"Help text for [command]"
+"Help text for [command]\n"
 "\n"
 "~exit~\n"
 "Exit from the shell(i.e., cause the shell to terminate).\n"
@@ -33,32 +35,32 @@ char *help_text =
 "Output to stdout a brief description of the commands accepted by the shell\n"
 "\n"
 "~malloc~\n"
-"Accepts a single argument which is the number of bytes of memory to be allocated.\n"
-"The number of bytes can be specified either as a decimal integer constant (of arbitrary\n"
-"length), an octal integer constant (indicated by a prefix of 0 not followed by x or\n"
-"X followed by an arbitrary length octal constant), or as a hexadecimal number (indicated\n"
-"by a prefix of 0x or 0X followed by an arbitrary length hexadecimal constant).  The\n"
+"Accepts a single argument which is the number of bytes of memory to be allocated."
+"The number of bytes can be specified either as a decimal integer constant (of arbitrary"
+"length), an octal integer constant (indicated by a prefix of 0 not followed by x or"
+"X followed by an arbitrary length octal constant), or as a hexadecimal number (indicated"
+"by a prefix of 0x or 0X followed by an arbitrary length hexadecimal constant).  The"
 "alphabetic hexadecimal digits can be specified in either upper or lower case.\n"
 "\n"
 "~free~\n"
-"The free command accepts a single argument which is the address of a region of\n"
-"memory previously allocated using malloc. It accepts the same number formats specified.\n"
+"The free command accepts a single argument which is the address of a region of"
+"memory previously allocated using malloc. It accepts the same number formats specified."
 "in the malloc help section: octal, decimal, and hexidecimal.\n"
 "\n"
 "~memorymap~\n"
 "Outputs the map of both allocated and free memory regions\n"
 "\n"
 "~memset~\n"
-"The memset command accepts three arguments. The first is the beginning address of an\n"
-"allocated area of memory, the second is the value to which each byte in the specified\n"
-"memory will be set, and the third is the length(in bytes) of the specified memory. Each\n"
-"of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n"
+"The memset command accepts three arguments. The first is the beginning address of an"
+"allocated area of memory, the second is the value to which each byte in the specified"
+"memory will be set, and the third is the length(in bytes) of the specified memory. Each"
+"of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc).\n"
 "\n"
 "~memchk~\n"
-"The memchk command accepts three arguments. The first is the beginning address of an\n"
-"allocated area of memory, the second is the value to which each byte in the specified\n"
-"memory should be checked against, and the third is the length(in bytes) of the specified\n"
-"memory. Each of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc). \n";
+"The memchk command accepts three arguments. The first is the beginning address of an"
+"allocated area of memory, the second is the value to which each byte in the specified"
+"memory should be checked against, and the third is the length(in bytes) of the specified"
+"memory. Each of the three arguments can be provided in octal, decimal, or hexidecimal (see malloc).\n";
 
 
 // Maps error codes to error descriptions.
@@ -171,10 +173,12 @@ void initUART(void){
 void shell_debug(void) {
     dir_ls();
     char *fname = "SYSTEM";
+    /**
     int create_file = dir_create_file(fname);
     if (create_file != E_SUCCESS) {
         myprintf("File already exists!\n");
     }
+    */
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256

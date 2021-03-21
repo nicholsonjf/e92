@@ -5,7 +5,8 @@
  * Author: James Nicholson
  */
 
-#include <stdint.h>
 
-
-int initLED(void);
+extern Device led_green;
+extern Device led_yellow;
+extern Device led_blue;
+extern Device led_orange;

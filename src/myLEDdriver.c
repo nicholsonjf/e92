@@ -7,60 +7,65 @@
 
 #include <stdint.h>
 #include "shell.h"
+#include "devinio.h"
+#include "myLEDdriver.h"
 
-
-static struct driver led_green;
-static struct driver led_yellow;
-static struct driver led_blue;
-static struct driver led_orange;
-
-int led_green_fgetc(void) {
+int led_green_fgetc(char *minor) {
     //TODO
-    return; // value from checking LED
+    return 1; // value from checking LED
 }
 
-int led_green_fputc(void) {
+int led_green_fputc(char *minor) {
     // TODO
-    return E_SUCCESS
+    return E_SUCCESS;
 }
 
-int led_orange_fgetc(void) {
+int led_orange_fgetc(char *minor) {
     //TODO
-    return; // value from checking LED
+    return 1; // value from checking LED
 }
 
-int led_orange_fputc(void) {
+int led_orange_fputc(char *minor) {
     // TODO
-    return E_SUCCESS
+    return E_SUCCESS;
 }
 
-int led_yellow_fgetc(void) {
+int led_yellow_fgetc(char *minor) {
     //TODO
-    return; // value from checking LED
+    return 1; // value from checking LED
 }
 
-int led_yellow_fputc(void) {
+int led_yellow_fputc(char *minor) {
     // TODO
-    return E_SUCCESS
+    return E_SUCCESS;
 }
 
-int led_blue_fgetc(void) {
+int led_blue_fgetc(char *minor) {
     //TODO
-    return; // value from checking LED
+    return 1; // value from checking LED
 }
 
-int led_blue_fputc(void) {
+int led_blue_fputc(char *minor) {
     // TODO
-    return E_SUCCESS
+    return E_SUCCESS;
 }
 
-int initLED(void) {
-    led_green.fgetc = led_green_fgetc;
-    led_green.fputc = led_green_fgetc;
-    led_orange.fgetc = led_orange_fgetc;
-    led_orange.putc = led_orange_fputc;
-    led_yellow.fgetc = led_yellow_fgetc;
-    led_yellow.fputc = led_yellow_fputc;
-    led_blue.fgetc = led_blue_fgetc;
-    led_blue.fputc = led_blue_fputc;
-}
+Device led_yellow = {
+    .fgetc = &led_yellow_fgetc,
+    .fputc = &led_yellow_fputc
+};
+
+Device led_blue = {
+    .fgetc = &led_blue_fgetc,
+    .fputc = &led_blue_fputc
+};
+
+Device led_orange = {
+    .fgetc = &led_orange_fgetc,
+    .fputc = &led_orange_fputc
+};
+
+Device led_green = {
+    .fgetc = &led_green_fgetc,
+    .fputc = &led_green_fputc
+};
