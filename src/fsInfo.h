@@ -19,7 +19,7 @@
 #include "SDCardReader.h"
 
 /* These #define's enable debugging output */
-#define FSI_DEBUG 1
+#define FSI_DEBUG 0
 
 /* Value for FSI_Nxt_Free that indicates it is unknown */
 #define FSI_NXT_FREE_UNKNOWN 0xffffffff
