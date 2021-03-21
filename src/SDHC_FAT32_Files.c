@@ -143,7 +143,9 @@ int friendly_file_name(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper **f
             fname_wrapper.combined[i] = dir_entry->DIR_Name[i];
             fname_wrapper.name[i] = dir_entry->DIR_Name[i];
         }
-        dot_index = i;
+        else {
+            dot_index = i;
+        }
     }
     // Check if there's a file extension and copy it into fname_wrapper.name and fname_wrapper.combined
     if (chr_8_3_valid(dir_entry->DIR_Name[8]) == E_SUCCESS) {
