@@ -159,30 +159,29 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *fil
 }
 
 // filename is assumed to be null terminated
-int create_filename_wrapper(char *filename) {
-    Filename_8_3_Wrapper *file_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
+int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *file_wrapper) {
     // Check if first character in filename is a space ' ' or period '.'
-    if (filename[0] == 0x20 || filename[0 == 0x2E]) {
+    if (filename[0] == 0x20 || filename[0] == 0x2E) {
         return E_FILE_NAME_INVALID;
     }
     int ext = 0;
-    for (int i=0; index<sizeof(filename)-1; i++)
-        if (chr_8_3_valid(filename[index] != E_SUCCESS) {
+    for (int i=0; i<sizeof(filename)-1; i++)
+        if (chr_8_3_valid(filename[i]) != E_SUCCESS) {
             return E_FILE_NAME_INVALID;
         }
         // If character is a period
         if (filename[i] == 0x2E) {
             ext = 1;
-            file_wrapper.combined[i] = 0x2E;
+            file_wrapper->combined[i] = 0x2E;
             continue;
         }
         if (ext == 0) {
-            file_wrapper.combined[i] = filename[i];
-            file_wrapper.name[i] = filename[i];
+            file_wrapper->combined[i] = filename[i];
+            file_wrapper->name[i] = filename[i];
         }
-        if (ext = 1) {
-            file_wrapper.combined[i] = filename[i];
-            file_wrapper.ext[i] = filename[i];
+        if (ext == 1) {
+            file_wrapper->combined[i] = filename[i];
+            file_wrapper->ext[i] = filename[i];
         }
     }
     return E_SUCCESS;
@@ -192,7 +191,6 @@ int create_filename_wrapper(char *filename) {
 int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *dir_entry) {
     // First zero out the entry's DIR_Name
     memset(dir_entry, 0, 11);
-    int dot_index;
     // Copy fname_wrapper.name into dir_entry->DIR_Name
     for (int i=0; i<7; i++) {
         dir_entry->DIR_Name[i] = file_wrapper->name[i];
@@ -299,6 +297,7 @@ int dir_create_file(char *filename) {
                     // Set the file size to zero
                     dir_entry->DIR_FileSize = 0x0;
                     // Set the filename
+                    Filename_8_3_Wrapper *file_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
                 }
                 // Last entry in directory found.
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {

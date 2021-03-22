@@ -189,7 +189,7 @@ typedef struct filename_8_3_wrapper {
  * Error: If an illegal character is detected at the beginning of the filename the function
  * returns E_FILE_NAME_INVALID
  */ 
-int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper **file_wrapper);
+int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *file_wrapper);
 
 /**
  * Takes an *Filename_8_3_Wrapper and  uses it to populate a *dir_entry_8_3->Dir_Name.
@@ -199,6 +199,8 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper **fi
  * Error: If an illegal character is detected in the Filename_8_3_Wrapper the function
  * returns E_FILE_NAME_INVALID
  */ 
-int filename_to_entry(Filename_8_3_Wrapper **file_wrapper, struct dir_entry_8_3 *dir_entry)
+int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *dir_entry)
+
+int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *file_wrapper);
 
 #endif /* ifndef _SDHC_FAT32_FILES_H_ */
