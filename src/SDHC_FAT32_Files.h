@@ -199,7 +199,7 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *fil
  * Error: If an illegal character is detected in the Filename_8_3_Wrapper the function
  * returns E_FILE_NAME_INVALID
  */ 
-int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *dir_entry)
+int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *dir_entry);
 
 int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *file_wrapper);
 
