@@ -5,6 +5,9 @@
  * Author: James Nicholson
  */
 
+#ifndef _MYFAT32DRIVER_H
+#define _MYFAT32DRIVER_H
+
 #include <stdint.h>
 #include "microSD.h"
 
@@ -16,3 +19,5 @@ extern struct sdhc_card_status *card_status;
 
 
 int initFAT(void);
+
+#endif /* ifndef _MYFAT32DRIVER_H */

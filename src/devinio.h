@@ -5,6 +5,9 @@
  * Author: James Nicholson
  */
 
+#ifndef _DEVINIO_H
+#define _DEVINIO_H
+
 enum modes
 {
     O_RDONLY,
@@ -30,3 +33,5 @@ struct stream
 };
 
 int initDevIO(void);
+
+#endif /* ifndef _DEVINIO_H */

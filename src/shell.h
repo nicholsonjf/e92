@@ -1,3 +1,6 @@
+#ifndef _MYSHELL_H
+#define _MYSHELL_H
+
 // Shell command function prototypes.
 int cmd_date(int argc, char *argv[]);
 int cmd_echo(int argc, char *argv[]);
@@ -38,3 +41,5 @@ enum error_t
     E_CHR_INVALID_8_3,
     E_COUNT
 };
+
+#endif /* ifndef _MYSHELL_H */
