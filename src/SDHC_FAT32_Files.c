@@ -97,7 +97,7 @@ int dir_ls(void) {
                     entry_index++;
                     continue;
                 }
-                int ffn_result = friendly_file_name(dir_entry, &pfname);
+                int ffn_result = entry_to_filename(dir_entry, &pfname);
                 myprintf("%s\n", pfname->combined);
                 dir_entry++;
                 entry_index++;
@@ -126,38 +126,82 @@ int chr_8_3_valid(uint8_t c) {
 }
 
 
-int friendly_file_name(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper **file_wrapper) {
-    // Enough to hold the short filename (11) + the dot (1) + NULL terminator (1)
-    Filename_8_3_Wrapper fname_wrapper;
-    memset(&fname_wrapper, 0, sizeof(fname_wrapper));
+int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *file_wrapper) {
+    memset(&file_wrapper, 0, sizeof(file_wrapper));
     int dot_index;
-    // Check if first character in filename is a space ' '
-    if (dir_entry->DIR_Name[0] == 0x20) {
+    // Check if first character in filename is a space ' ' or period '.'
+    if (dir_entry->DIR_Name[0] == 0x20 || dir_entry->DIR_Name[0] == 0x2E) {
         return E_FILE_NAME_INVALID;
     }
-    // Copy filename into fname_wrapper.name and fname_wrapper.combined
+    // Copy filename into file_wrapper.name and file_wrapper.combined
     for (int i=0; i<7; i++) {
         if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
-            fname_wrapper.combined[i] = dir_entry->DIR_Name[i];
-            fname_wrapper.name[i] = dir_entry->DIR_Name[i];
+            file_wrapper.combined[i] = dir_entry->DIR_Name[i];
+            file_wrapper.name[i] = dir_entry->DIR_Name[i];
         }
         else {
             dot_index = i;
         }
     }
-    // Check if there's a file extension and copy it into fname_wrapper.name and fname_wrapper.combined
+    // Check if there's a file extension and copy it into file_wrapper.name and file_wrapper.combined
     if (chr_8_3_valid(dir_entry->DIR_Name[8]) == E_SUCCESS) {
-        // Put a dot into fname_wrapper.combined
-        fname_wrapper.combined[dot_index] = '.';
+        // Put a dot into file_wrapper.combined
+        file_wrapper.combined[dot_index] = '.';
         for (int i=8, j=0, k=dot_index+1; i<11; i++, j++, k++) {
             // Add each extension letter
             if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
-                fname_wrapper.ext[j] = dir_entry->DIR_Name[i];
-                fname_wrapper.combined[k] = dir_entry->DIR_Name[i];
+                file_wrapper.ext[j] = dir_entry->DIR_Name[i];
+                file_wrapper.combined[k] = dir_entry->DIR_Name[i];
             }
         }
     }
-    *file_wrapper = &fname_wrapper; 
+    return E_SUCCESS;
+}
+
+// filename is assumed to be null terminated
+int create_filename_wrapper(char *filename) {
+    Filename_8_3_Wrapper *file_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
+    // Check if first character in filename is a space ' ' or period '.'
+    if (filename[0] == 0x20 || filename[0 == 0x2E]) {
+        return E_FILE_NAME_INVALID;
+    }
+    int ext = 0;
+    for (int i=0; index<sizeof(filename)-1; i++)
+        if (chr_8_3_valid(filename[index] != E_SUCCESS) {
+            return E_FILE_NAME_INVALID;
+        }
+        // If character is a period
+        if (filename[i] == 0x2E) {
+            ext = 1;
+            file_wrapper.combined[i] = 0x2E;
+            continue;
+        }
+        if (ext == 0) {
+            file_wrapper.combined[i] = filename[i];
+            file_wrapper.name[i] = filename[i];
+        }
+        if (ext = 1) {
+            file_wrapper.combined[i] = filename[i];
+            file_wrapper.ext[i] = filename[i];
+        }
+    }
+    return E_SUCCESS;
+}
+
+// Assumes file_wrapper has no invalid characters, because it was created by init_file_wrapper
+int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *dir_entry) {
+    // First zero out the entry's DIR_Name
+    memset(dir_entry, 0, 11);
+    int dot_index;
+    // Copy fname_wrapper.name into dir_entry->DIR_Name
+    for (int i=0; i<7; i++) {
+        dir_entry->DIR_Name[i] = file_wrapper->name[i];
+    }
+    // Copy fname_wrapper.ext into dir_entry->DIR_Name
+    // If there is no extension, zeroes will be copied over which is fine
+    for (int i=8; i<11; i++) {
+        dir_entry->DIR_Name[i] = file_wrapper->name[i];
+    }
     return E_SUCCESS;
 }
 
@@ -171,7 +215,10 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
         while (sector_index < sectors_per_cluster) {
             uint8_t sector_data[512];
             int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
-            // TODO check read_status and go to __BKPT if failure
+            if (read_status != SDHC_SUCCESS) {
+                // Fatal error
+                __BKPT();
+            }
             struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
             int entry_index = 0;
             while (entry_index < dir_entries_per_sector) {
@@ -198,7 +245,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
                     return E_FILE_IS_DIRECTORY;
                 }
                 // This is an in-use 8.3 file, check to see if it matches
-                int ffn_result = friendly_file_name(dir_entry, &pfname); // Filename + extension of entry at current point in iteration
+                int ffn_result = entry_to_filename(dir_entry, &pfname); // Filename + extension of entry at current point in iteration
                 int fnamecmp  = strncmp((const char*)pfname->combined, (const char*)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
@@ -238,13 +285,20 @@ int dir_create_file(char *filename) {
         while (sector_index <= sectors_per_cluster) {
             uint8_t sector_data[512];
             int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
-            // TODO check read_status and go to __BKPT if failure
+            if (read_status != SDHC_SUCCESS) {
+                // Fatal error
+                __BKPT();
+            }
             struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
             int entry_index = 0;
             while (entry_index <= dir_entries_per_sector) {
                 // Unused entry found, create file
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
-                    //TODO
+                    // Clear the entry attribute byte
+                    dir_entry->DIR_Attr = 0x0;
+                    // Set the file size to zero
+                    dir_entry->DIR_FileSize = 0x0;
+                    // Set the filename
                 }
                 // Last entry in directory found.
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
