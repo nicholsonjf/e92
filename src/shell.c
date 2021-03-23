@@ -171,14 +171,12 @@ void initUART(void){
 }
 
 void shell_debug(void) {
-    dir_ls();
-    //char *fname = "SYSTEM";
-    /**
+    char *fname = "JAMES.TXT";
     int create_file = dir_create_file(fname);
     if (create_file != E_SUCCESS) {
-        myprintf("File already exists!\n");
+        myprintf("%d\n", create_file);
     }
-    */
+    dir_ls();
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256

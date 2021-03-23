@@ -278,7 +278,7 @@ int dir_create_file(char *filename) {
     uint32_t *fcluster = myMalloc(sizeof(uint32_t));
     // Check if the filename already exists
     int ffr = dir_find_file(filename, fcluster);
-    if (ffr == E_SUCCESS || ffr == E_FILE_IS_DIRECTORY) {
+    if (ffr == E_SUCCESS) {
         return E_FILE_EXISTS;
     }
     // Malloc space for the filename wrapper
@@ -290,7 +290,7 @@ int dir_create_file(char *filename) {
     // Find first free entry
     while (1) {
         uint32_t sector_num = first_sector_of_cluster(cwd);
-        uint32_t sector_index = 0;
+        uint32_t sector_index = 1;
         while (sector_index <= sectors_per_cluster) {
             uint8_t sector_data[512];
             int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
@@ -299,7 +299,7 @@ int dir_create_file(char *filename) {
                 __BKPT();
             }
             struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
-            int entry_index = 0;
+            int entry_index = 1;
             while (entry_index <= dir_entries_per_sector) {
                 // Unused entry found, create file
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
@@ -310,21 +310,48 @@ int dir_create_file(char *filename) {
                     // Set the filename
                     dir_entry->DIR_Name[0] = *filename_wrapper->name;
                     dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                    return E_SUCCESS;
                 }
                 // Last entry in directory found.
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
-                    // But not the last entry in the sector. Set the name and tag the next entry DIR_ENTRY_LAST_AND_UNUSED
+                    // (But not the last entry in the sector) Set the name and tag the next entry DIR_ENTRY_LAST_AND_UNUSED
                     if (entry_index != dir_entries_per_sector) {
-                        //TODO
+                        // Clear the entry attribute byte
+                        dir_entry->DIR_Attr = 0x0;
+                        // Set the file size to zero
+                        dir_entry->DIR_FileSize = 0x0;
+                        // Set the filename
+                        dir_entry->DIR_Name[0] = *filename_wrapper->name;
+                        dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                        ++dir_entry->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
+                        return E_SUCCESS;
                     }
                     // Last entry in directory, and the sector. Set the name and tag the first entry in the
                     // next sector DIR_ENTRY_LAST_AND_UNUSED
-                    //TODO
+                    // Clear the entry attribute byte
+                    dir_entry->DIR_Attr = 0x0;
+                    // Set the file size to zero
+                    dir_entry->DIR_FileSize = 0x0;
+                    // Set the filename
+                    dir_entry->DIR_Name[0] = *filename_wrapper->name;
+                    dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                    if (sector_index == sectors_per_cluster) {
+                        // TODO travers FAT, find the first available cluster, set it accordingly, and set the new cwd
+                        uint32_t sector_num = first_sector_of_cluster(cwd);
+                        int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+                        if (read_status != SDHC_SUCCESS) {
+                            // Fatal error
+                            __BKPT();
+                        }
+                        struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
+                        return E_SUCCESS;
+                    }
                 }
                 dir_entry++;
                 entry_index++;
             }
             sector_num++;
+            sector_index++;
         }
         uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
         // Set cwd to the current directory's FAT entry and continue iteration
