@@ -172,7 +172,7 @@ void initUART(void){
 
 void shell_debug(void) {
     dir_ls();
-    char *fname = "SYSTEM";
+    //char *fname = "SYSTEM";
     /**
     int create_file = dir_create_file(fname);
     if (create_file != E_SUCCESS) {
