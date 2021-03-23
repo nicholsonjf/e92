@@ -72,7 +72,7 @@ int dir_set_cwd_to_root(void) {
 // Check for long filenames and skip them.
 int dir_ls(void) {
     // Pointer to hold the pretty filename
-    Filename_8_3_Wrapper *pfname;
+    Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
     while (1) {
         uint32_t sector_num = first_sector_of_cluster(cwd);
         uint32_t sector_index = 0;
@@ -97,8 +97,8 @@ int dir_ls(void) {
                     entry_index++;
                     continue;
                 }
-                int ffn_result = entry_to_filename(dir_entry, &pfname);
-                myprintf("%s\n", pfname->combined);
+                int ffn_result = entry_to_filename(dir_entry, filename_wrapper);
+                myprintf("%s\n", filename_wrapper->combined);
                 dir_entry++;
                 entry_index++;
             }
@@ -108,7 +108,7 @@ int dir_ls(void) {
         // Set cwd to the current directory's FAT entry and continue iteration
         cwd = cwdFATentry;
     }
-    myFree(pfname);
+    myFree(filename_wrapper);
     return E_SUCCESS;
 }
 
@@ -126,32 +126,32 @@ int chr_8_3_valid(uint8_t c) {
 }
 
 
-int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *file_wrapper) {
-    memset(&file_wrapper, 0, sizeof(file_wrapper));
+int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *filename_wrapper) {
+    memset(&filename_wrapper, 0, sizeof(filename_wrapper));
     int dot_index;
     // Check if first character in filename is a space ' ' or period '.'
     if (dir_entry->DIR_Name[0] == 0x20 || dir_entry->DIR_Name[0] == 0x2E) {
         return E_FILE_NAME_INVALID;
     }
-    // Copy filename into file_wrapper.name and file_wrapper.combined
+    // Copy filename into filename_wrapper.name and filename_wrapper.combined
     for (int i=0; i<7; i++) {
         if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
-            file_wrapper.combined[i] = dir_entry->DIR_Name[i];
-            file_wrapper.name[i] = dir_entry->DIR_Name[i];
+            filename_wrapper->combined[i] = dir_entry->DIR_Name[i];
+            filename_wrapper->name[i] = dir_entry->DIR_Name[i];
         }
         else {
             dot_index = i;
         }
     }
-    // Check if there's a file extension and copy it into file_wrapper.name and file_wrapper.combined
+    // Check if there's a file extension and copy it into filename_wrapper.name and filename_wrapper.combined
     if (chr_8_3_valid(dir_entry->DIR_Name[8]) == E_SUCCESS) {
-        // Put a dot into file_wrapper.combined
-        file_wrapper.combined[dot_index] = '.';
+        // Put a dot into filename_wrapper.combined
+        filename_wrapper->combined[dot_index] = '.';
         for (int i=8, j=0, k=dot_index+1; i<11; i++, j++, k++) {
             // Add each extension letter
             if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
-                file_wrapper.ext[j] = dir_entry->DIR_Name[i];
-                file_wrapper.combined[k] = dir_entry->DIR_Name[i];
+                filename_wrapper->ext[j] = dir_entry->DIR_Name[i];
+                filename_wrapper->combined[k] = dir_entry->DIR_Name[i];
             }
         }
     }
@@ -159,46 +159,46 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *fil
 }
 
 // filename is assumed to be null terminated
-int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *file_wrapper) {
+int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *filename_wrapper) {
     // Check if first character in filename is a space ' ' or period '.'
     if (filename[0] == 0x20 || filename[0] == 0x2E) {
         return E_FILE_NAME_INVALID;
     }
     int ext = 0;
-    for (int i=0; i<sizeof(filename)-1; i++)
+    for (int i=0; i<sizeof(filename)-1; i++) {
         if (chr_8_3_valid(filename[i]) != E_SUCCESS) {
             return E_FILE_NAME_INVALID;
         }
         // If character is a period
         if (filename[i] == 0x2E) {
             ext = 1;
-            file_wrapper->combined[i] = 0x2E;
+            filename_wrapper->combined[i] = 0x2E;
             continue;
         }
         if (ext == 0) {
-            file_wrapper->combined[i] = filename[i];
-            file_wrapper->name[i] = filename[i];
+            filename_wrapper->combined[i] = filename[i];
+            filename_wrapper->name[i] = filename[i];
         }
         if (ext == 1) {
-            file_wrapper->combined[i] = filename[i];
-            file_wrapper->ext[i] = filename[i];
+            filename_wrapper->combined[i] = filename[i];
+            filename_wrapper->ext[i] = filename[i];
         }
     }
     return E_SUCCESS;
 }
 
-// Assumes file_wrapper has no invalid characters, because it was created by init_file_wrapper
-int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *dir_entry) {
+// Assumes filename_wrapper has no invalid characters, because it was created by create_filename_wrapper
+int filename_to_entry(Filename_8_3_Wrapper *filename_wrapper, struct dir_entry_8_3 *dir_entry) {
     // First zero out the entry's DIR_Name
     memset(dir_entry, 0, 11);
     // Copy fname_wrapper.name into dir_entry->DIR_Name
     for (int i=0; i<7; i++) {
-        dir_entry->DIR_Name[i] = file_wrapper->name[i];
+        dir_entry->DIR_Name[i] = filename_wrapper->name[i];
     }
     // Copy fname_wrapper.ext into dir_entry->DIR_Name
     // If there is no extension, zeroes will be copied over which is fine
     for (int i=8; i<11; i++) {
-        dir_entry->DIR_Name[i] = file_wrapper->name[i];
+        dir_entry->DIR_Name[i] = filename_wrapper->name[i];
     }
     return E_SUCCESS;
 }
@@ -206,7 +206,7 @@ int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *
 // Check for long filenames and skip them.
 int dir_find_file(char *filename, uint32_t *firstCluster) {
     // Pointer to hold the pretty filename
-    Filename_8_3_Wrapper *pfname;
+    Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
     while (1) {
         uint32_t sector_num = first_sector_of_cluster(cwd);
         uint32_t sector_index = 0;
@@ -243,8 +243,8 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
                     return E_FILE_IS_DIRECTORY;
                 }
                 // This is an in-use 8.3 file, check to see if it matches
-                int ffn_result = entry_to_filename(dir_entry, &pfname); // Filename + extension of entry at current point in iteration
-                int fnamecmp  = strncmp((const char*)pfname->combined, (const char*)filename, (size_t)sizeof(filename));
+                int ffn_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                int fnamecmp  = strncmp((const char*)filename_wrapper->combined, (const char*)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
                     return E_SUCCESS;
@@ -258,7 +258,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
         // Set cwd to the current directory's FAT entry and continue iteration
         cwd = cwdFATentry;
     }
-    myFree(pfname);
+    myFree(filename_wrapper);
     return E_SUCCESS;
 }
 
@@ -275,8 +275,13 @@ int dir_create_file(char *filename) {
     if (ffr == E_SUCCESS || ffr == E_FILE_IS_DIRECTORY) {
         return E_FILE_EXISTS;
     }
+    // Malloc space for the filename wrapper
+    Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
+    int filename_wrapper_sts = create_filename_wrapper(filename, filename_wrapper);
+    if (filename_wrapper_sts != E_SUCCESS) {
+        return E_FILE_NAME_INVALID;
+    }
     // Find first free entry
-    Filename_8_3_Wrapper *pfname;
     while (1) {
         uint32_t sector_num = first_sector_of_cluster(cwd);
         uint32_t sector_index = 0;
@@ -297,7 +302,8 @@ int dir_create_file(char *filename) {
                     // Set the file size to zero
                     dir_entry->DIR_FileSize = 0x0;
                     // Set the filename
-                    Filename_8_3_Wrapper *file_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
+                    dir_entry->DIR_Name[0] = &filename_wrapper->name;
+                    dir_entry->DIR_Name[8] = &filename_wrapper->ext;
                 }
                 // Last entry in directory found.
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
@@ -318,7 +324,7 @@ int dir_create_file(char *filename) {
         // Set cwd to the current directory's FAT entry and continue iteration
         cwd = cwdFATentry;
     }
-    myFree(pfname);
+    myFree(filename_wrapper);
     myFree(fcluster);
     return E_SUCCESS;
 }
