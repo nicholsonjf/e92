@@ -72,10 +72,12 @@ int dir_set_cwd_to_root(void) {
 
 // Check for long filenames and skip them.
 int dir_ls(void) {
+    uint32_t current_cluster_index = cwd;
     // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
-    while (1) {
-        uint32_t sector_num = first_sector_of_cluster(cwd);
+    while (current_cluster_index <= total_data_clusters + 1)
+    {
+        uint32_t sector_num = first_sector_of_cluster(current_cluster_index);
         uint32_t sector_index = 0;
         while (sector_index < sectors_per_cluster) {
             uint8_t sector_data[512];
@@ -87,20 +89,24 @@ int dir_ls(void) {
             struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
             int entry_index = 0;
             while (entry_index < dir_entries_per_sector) {
+                // Last unused, return success
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
                     return E_SUCCESS;
                 }
+                // Unused entry, continue to next entry
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
                     dir_entry++;
                     entry_index++;
                     continue;
                 }
+                // A directory, continue
                 uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
                 if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
                     dir_entry++;
                     entry_index++;
                     continue;
                 }
+                // A valid file, output filename to console
                 int ffn_result = entry_to_filename(dir_entry, filename_wrapper);
                 myprintf("%s\n", filename_wrapper->combined);
                 dir_entry++;
@@ -108,22 +114,35 @@ int dir_ls(void) {
             }
             sector_num++;
         }
-        uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
+        uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, cwd);
+        if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE)
+        {
+            return E_FILE_NOT_IN_CWD;
+        }
+        if (current_cluster_FAT_entry == FAT_ENTRY_DEFECTIVE_CLUSTER)
+        {
+            // Fatal error
+            __BKPT();
+        }
+        // FAT entry is in use and points to next cluster
         // Set cwd to the current directory's FAT entry and continue iteration
-        cwd = cwdFATentry;
+        cwd = current_cluster_FAT_entry;
     }
     myFree(filename_wrapper);
     return E_SUCCESS;
 }
 
 int chr_8_3_valid(uint8_t c) {
-    if ((c < 0x20) ||
-    (c == 0x22) ||
-    (c >= 0x2A && c <= 0x2F) ||
-    (c >= 0x3A && c <= 0x3F) ||
-    (c >= 0x5B && c <= 0x5D) ||
-    (c >= 0x61 && c <= 0x7A) ||
-    (c == 0x7C)) {
+    // Exclude the NULL terminator, we'll handle that in create_filename_wrapper
+    if ((c < 0x20 && c != 0) ||
+        (c == 0x22) ||
+        // Exclude the period from this validator, we will handle it in create_filename_wrapper
+        (c >= 0x2A && c <= 0x2F && c != 0x2E) ||
+        (c >= 0x3A && c <= 0x3F) ||
+        (c >= 0x5B && c <= 0x5D) ||
+        (c >= 0x61 && c <= 0x7A) ||
+        (c == 0x7C))
+    {
         return E_CHR_INVALID_8_3;
     }
     return E_SUCCESS;
@@ -132,7 +151,7 @@ int chr_8_3_valid(uint8_t c) {
 
 int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *filename_wrapper) {
     memset(filename_wrapper, 0x0, sizeof(Filename_8_3_Wrapper));
-    int dot_index;
+    int filename_end_index;
     int ext_index = 8;
     // Check if first character in filename is a space ' ' or period '.'
     if (dir_entry->DIR_Name[0] == 0x20 || dir_entry->DIR_Name[0] == 0x2E) {
@@ -140,20 +159,25 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *fil
     }
     // Copy filename into filename_wrapper.name and filename_wrapper.combined
     for (int i=0; i<ext_index; i++) {
-        if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
+        // The chr is "valid" and not a period or zero
+        if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS && dir_entry->DIR_Name[i] != 0x0 && dir_entry->DIR_Name[i] != 0x2E)
+        {
             filename_wrapper->combined[i] = dir_entry->DIR_Name[i];
             filename_wrapper->name[i] = dir_entry->DIR_Name[i];
         }
         else {
-            dot_index = i;
+            filename_end_index = i;
+            break;
         }
     }
-    // Check if there's a file extension and copy it into filename_wrapper.name and filename_wrapper.combined
-    if (chr_8_3_valid(dir_entry->DIR_Name[ext_index]) == E_SUCCESS) {
+    // Check if there's a valid file extension and copy it into filename_wrapper.name and filename_wrapper.combined
+    int ext_first_chr = dir_entry->DIR_Name[ext_index];
+    // The first chr of the ext is "valid" and not a period or zero
+    if (chr_8_3_valid(ext_first_chr) == E_SUCCESS && ext_first_chr != 0x0 && ext_first_chr != 0x2E) {
         // Put a dot into filename_wrapper->combined
-        filename_wrapper->combined[dot_index] = '.';
-        // 
-        for (int i=ext_index, j=0, k=dot_index+1; i<ext_index+3; i++, j++, k++) {
+        filename_wrapper->combined[filename_end_index] = '.';
+        // Copy in the extension characters
+        for (int i=ext_index, j=0, k=filename_end_index+1; i<ext_index+3; i++, j++, k++) {
             // Add each extension letter
             if (chr_8_3_valid(dir_entry->DIR_Name[i]) == E_SUCCESS) {
                 filename_wrapper->ext[j] = dir_entry->DIR_Name[i];
@@ -166,28 +190,41 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *fil
 
 // filename is assumed to be null terminated
 int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *filename_wrapper) {
+    // Caller is responsible for freeing filename_wrapper!
+    memset(filename_wrapper, 0x0, sizeof(Filename_8_3_Wrapper));
     // Check if first character in filename is a space ' ' or period '.'
     if (filename[0] == 0x20 || filename[0] == 0x2E) {
         return E_FILE_NAME_INVALID;
     }
-    int is_ext = 0;
-    for (int i=0; i<sizeof(filename)-1; i++) {
-        if (chr_8_3_valid(filename[i]) != E_SUCCESS) {
-            return E_FILE_NAME_INVALID;
-        }
-        // If character is a period
-        if (filename[i] == 0x2E) {
-            is_ext = 1;
+    // Initialize to zero. Because first chr cannot be a period, if period_index > 0 it means the
+    // filename may have a valid extension and the next chr will need to be checked
+    int period_index = 0;
+    int max_filename_length = 11;
+    for (int i=0; i<max_filename_length; i++) {
+        // First period in the filename reached, and it is not the first letter in the filename
+        if (filename[i] == 0x2E && period_index == 0) {
+            period_index = i;
             filename_wrapper->combined[i] = 0x2E;
             continue;
         }
-        if (is_ext == 0) {
+        // Second period in the filename reached, which is not supported, return filename invalid
+        if (filename[i] == 0x2E && period_index > 0)
+        {
+            return E_FILE_NAME_INVALID;
+        }
+        if (chr_8_3_valid(filename[i]) != E_SUCCESS)
+        {
+            return E_FILE_NAME_INVALID;
+        }
+        // Haven't hit the period yet, continue copying chrs to ->name
+        if (period_index == 0) {
             filename_wrapper->combined[i] = filename[i];
             filename_wrapper->name[i] = filename[i];
         }
-        if (is_ext == 1) {
+        // Reached an extension, start copying chrs to ->ext
+        if (period_index > 0) {
             filename_wrapper->combined[i] = filename[i];
-            filename_wrapper->ext[i] = filename[i];
+            filename_wrapper->ext[i-(period_index+1)] = filename[i];
         }
     }
     return E_SUCCESS;
@@ -212,9 +249,11 @@ int filename_to_entry(Filename_8_3_Wrapper *filename_wrapper, struct dir_entry_8
 
 // Check for long filenames and skip them.
 int dir_find_file(char *filename, uint32_t *firstCluster) {
-    // Pointer to hold the pretty filename
+    uint32_t current_cluster_index = cwd; 
+    // Pointer to hold the pretty filename. Caller is responsible for freeing filename_wrapper!
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
-    while (1) {
+    while (current_cluster_index <= total_data_clusters + 1)
+    {
         uint32_t sector_num = first_sector_of_cluster(cwd);
         uint32_t sector_index = 0;
         while (sector_index < sectors_per_cluster) {
@@ -227,8 +266,9 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
             struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
             int entry_index = 0;
             while (entry_index < dir_entries_per_sector) {
-                // End of sector, return error
+                // Last entry in the directory and it is unused. Return file not found.
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
+                    myFree(filename_wrapper);
                     return E_FILE_NOT_IN_CWD;
                 }
                 // Entry not used, continue
@@ -237,17 +277,19 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
                     entry_index++;
                     continue;
                 }
-                // Long dir entry, not supported, return error
+                // Long dir entry, not supported, continue
                 uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
                 if ( dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME) {
                     dir_entry++;
                     entry_index++;
                     continue;
                 }
-                // Entry is a dir, return error
+                // Entry is a dir (nested directories not supported), continue
                 uint8_t dir_attr_dir_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_DIRECTORY;
                 if ( dir_attr_dir_masked == DIR_ENTRY_ATTR_DIRECTORY) {
-                    return E_FILE_IS_DIRECTORY;
+                    dir_entry++;
+                    entry_index++;
+                    continue;
                 }
                 // This is an in-use 8.3 file, check to see if it matches
                 int ffn_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
@@ -261,29 +303,22 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
             }
             sector_num++;
         }
-        uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
-        if (cwdFATentry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE) {
+        uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_index);
+        if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE) {
             return E_FILE_NOT_IN_CWD;
         }
-        if (cwdFATentry == FAT_ENTRY_DEFECTIVE_CLUSTER) {
+        if (current_cluster_FAT_entry == FAT_ENTRY_DEFECTIVE_CLUSTER) {
             // Fatal error
             __BKPT();
         }
         // FAT entry is in use and points to next cluster
-        // Set cwd to the current directory's FAT entry and continue iteration
-        cwd = cwdFATentry;
+        // Set cluster to the current cluster's FAT entry and continue iteration
+        current_cluster_index = current_cluster_FAT_entry;
     }
-    myFree(filename_wrapper);
-    return E_SUCCESS;
+    return E_FILE_NOT_IN_CWD;
 }
 
 int dir_create_file(char *filename) {
-    // Return an error if requested filename uses an invalid character
-    for (int i=0; i<sizeof(filename-1); i++) {
-        if (chr_8_3_valid(filename[i]) != E_SUCCESS) {
-            return E_FILE_NAME_INVALID;
-        }
-    }
     uint32_t *fcluster = myMalloc(sizeof(uint32_t));
     // Check if the filename already exists
     int ffr = dir_find_file(filename, fcluster);
@@ -297,13 +332,15 @@ int dir_create_file(char *filename) {
         return E_FILE_NAME_INVALID;
     }
     // Find a free entry or return an error
-    while (1) {
+    uint32_t current_cluster_index = root_directory_cluster;
+    while (current_cluster_index <= total_data_clusters + 1)
+    {
         // Initialize current sector index to 0
         uint32_t current_sector_index = 0;
         uint32_t first_sector_number = first_sector_of_cluster(cwd);
-    init_sector:
+    init_sector:;
         uint32_t current_sector_number = first_sector_number + current_sector_index;
-        while (sector_index <= sectors_per_cluster) {
+        while (current_sector_index <= sectors_per_cluster) {
             uint8_t sector_data[512];
             int read_status = sdhc_read_single_block(rca, current_sector_number, card_status, sector_data);
             if (read_status != SDHC_SUCCESS) {
@@ -311,8 +348,8 @@ int dir_create_file(char *filename) {
                 __BKPT();
             }
             struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
-            int entry_index = 1;
-            while (entry_index <= dir_entries_per_sector) {
+            int entry_index = 0;
+            while (entry_index < dir_entries_per_sector) {
                 // Unused entry found, create file
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED) {
                     // Clear the entry attribute byte
@@ -322,13 +359,20 @@ int dir_create_file(char *filename) {
                     // Set the filename
                     dir_entry->DIR_Name[0] = *filename_wrapper->name;
                     dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                    // Write the updated sector data to the microSD
+                    int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
+                    if (write_status != SDHC_SUCCESS)
+                    {
+                        // Fatal error
+                        __BKPT();
+                    }
                     return E_SUCCESS;
                 }
                 // Last entry in sector, and it is unused (no active entries in this sector after this one).
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
                     // If the current entry index != entries per sector
                     // set the name and tag the next entry DIR_ENTRY_LAST_AND_UNUSED
-                    if (entry_index != dir_entries_per_sector) {
+                    if (entry_index+1 != dir_entries_per_sector) {
                         // Clear the entry attribute byte
                         dir_entry->DIR_Attr = 0x0;
                         // Set the file size to zero
@@ -336,7 +380,14 @@ int dir_create_file(char *filename) {
                         // Set the filename
                         dir_entry->DIR_Name[0] = *filename_wrapper->name;
                         dir_entry->DIR_Name[8] = *filename_wrapper->ext;
-                        ++dir_entry->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
+                        (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
+                        // Write the updated sector data to the microSD
+                        int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
+                        if (write_status != SDHC_SUCCESS)
+                        {
+                            // Fatal error
+                            __BKPT();
+                        }
                         return E_SUCCESS;
                     }
                     // The current entry index == entries per sector
@@ -347,7 +398,7 @@ int dir_create_file(char *filename) {
                             goto init_sector;
                         }
                         // Current sector == sectors per cluster.
-                        // Find a free cluster, or return an error.
+                        // Find a free cluster, or return an error. Unless FSI_Nxt_Free has a valid value, start at cluster 2 per spec
                         uint32_t cluster_search_index = 2;
                         if (FSI_Nxt_Free != FSI_NXT_FREE_UNKNOWN) {
                             cluster_search_index = FSI_Nxt_Free;
@@ -374,7 +425,14 @@ int dir_create_file(char *filename) {
                                 // Set the filename
                                 dir_entry->DIR_Name[0] = *filename_wrapper->name;
                                 dir_entry->DIR_Name[8] = *filename_wrapper->ext;
-                                ++dir_entry->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
+                                (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
+                                // Write the updated sector data to the microSD
+                                int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
+                                if (write_status != SDHC_SUCCESS)
+                                {
+                                    // Fatal error
+                                    __BKPT();
+                                }
                                 // Update the FAT
                                 write_FAT_entry(rca, cwd, cluster_search_index);
                                 return E_SUCCESS;
@@ -391,8 +449,9 @@ int dir_create_file(char *filename) {
             current_sector_number++;
             current_sector_index++;
         }
+        current_cluster_index++;
     }
     myFree(filename_wrapper);
     myFree(fcluster);
-    return E_SUCCESS;
+    return E_NO_FREE_CLUSTER;
 }
