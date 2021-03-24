@@ -39,6 +39,7 @@ enum error_t
     E_FILE_IS_DIRECTORY,
     E_FILE_EXISTS,
     E_CHR_INVALID_8_3,
+    E_NO_FREE_CLUSTER,
     E_COUNT
 };
 

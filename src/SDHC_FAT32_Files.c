@@ -8,6 +8,7 @@
 #include "my-malloc.h"
 #include "FAT.h"
 #include "myFAT32driver.h"
+#include "fsinfo.h"
 
 /////// GLOBALS
 
@@ -226,7 +227,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
             struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
             int entry_index = 0;
             while (entry_index < dir_entries_per_sector) {
-                // End of dir, return error
+                // End of sector, return error
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
                     return E_FILE_NOT_IN_CWD;
                 }
@@ -243,7 +244,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
                     entry_index++;
                     continue;
                 }
-                // Entry is a dir, return 
+                // Entry is a dir, return error
                 uint8_t dir_attr_dir_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_DIRECTORY;
                 if ( dir_attr_dir_masked == DIR_ENTRY_ATTR_DIRECTORY) {
                     return E_FILE_IS_DIRECTORY;
@@ -261,6 +262,14 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
             sector_num++;
         }
         uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
+        if (cwdFATentry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE) {
+            return E_FILE_NOT_IN_CWD;
+        }
+        if (cwdFATentry == FAT_ENTRY_DEFECTIVE_CLUSTER) {
+            // Fatal error
+            __BKPT();
+        }
+        // FAT entry is in use and points to next cluster
         // Set cwd to the current directory's FAT entry and continue iteration
         cwd = cwdFATentry;
     }
@@ -287,13 +296,16 @@ int dir_create_file(char *filename) {
     if (filename_wrapper_sts != E_SUCCESS) {
         return E_FILE_NAME_INVALID;
     }
-    // Find first free entry
+    // Find a free entry or return an error
     while (1) {
-        uint32_t sector_num = first_sector_of_cluster(cwd);
-        uint32_t sector_index = 1;
+        // Initialize current sector index to 0
+        uint32_t current_sector_index = 0;
+        uint32_t first_sector_number = first_sector_of_cluster(cwd);
+    init_sector:
+        uint32_t current_sector_number = first_sector_number + current_sector_index;
         while (sector_index <= sectors_per_cluster) {
             uint8_t sector_data[512];
-            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            int read_status = sdhc_read_single_block(rca, current_sector_number, card_status, sector_data);
             if (read_status != SDHC_SUCCESS) {
                 // Fatal error
                 __BKPT();
@@ -312,9 +324,10 @@ int dir_create_file(char *filename) {
                     dir_entry->DIR_Name[8] = *filename_wrapper->ext;
                     return E_SUCCESS;
                 }
-                // Last entry in directory found.
+                // Last entry in sector, and it is unused (no active entries in this sector after this one).
                 if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED) {
-                    // (But not the last entry in the sector) Set the name and tag the next entry DIR_ENTRY_LAST_AND_UNUSED
+                    // If the current entry index != entries per sector
+                    // set the name and tag the next entry DIR_ENTRY_LAST_AND_UNUSED
                     if (entry_index != dir_entries_per_sector) {
                         // Clear the entry attribute byte
                         dir_entry->DIR_Attr = 0x0;
@@ -326,36 +339,58 @@ int dir_create_file(char *filename) {
                         ++dir_entry->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
                         return E_SUCCESS;
                     }
-                    // Last entry in directory, and the sector. Set the name and tag the first entry in the
-                    // next sector DIR_ENTRY_LAST_AND_UNUSED
-                    // Clear the entry attribute byte
-                    dir_entry->DIR_Attr = 0x0;
-                    // Set the file size to zero
-                    dir_entry->DIR_FileSize = 0x0;
-                    // Set the filename
-                    dir_entry->DIR_Name[0] = *filename_wrapper->name;
-                    dir_entry->DIR_Name[8] = *filename_wrapper->ext;
-                    if (sector_index == sectors_per_cluster) {
-                        // TODO travers FAT, find the first available cluster, set it accordingly, and set the new cwd
-                        uint32_t sector_num = first_sector_of_cluster(cwd);
-                        int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
-                        if (read_status != SDHC_SUCCESS) {
-                            // Fatal error
-                            __BKPT();
+                    // The current entry index == entries per sector
+                    else {
+                        // Current sector != sectors per cluster, increment the sector and continue checking entries
+                        if (current_sector_index+1 < sectors_per_cluster) {
+                            current_sector_index++;
+                            goto init_sector;
                         }
-                        struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3*)sector_data;
-                        return E_SUCCESS;
+                        // Current sector == sectors per cluster.
+                        // Find a free cluster, or return an error.
+                        uint32_t cluster_search_index = 2;
+                        if (FSI_Nxt_Free != FSI_NXT_FREE_UNKNOWN) {
+                            cluster_search_index = FSI_Nxt_Free;
+                        }
+                        // Traverse the FAT and check if there is a free cluster
+                        while (cluster_search_index <= total_data_clusters+1) {
+                            uint32_t cluster_fat_entry = read_FAT_entry(rca, cluster_search_index);
+                            if (cluster_fat_entry == FAT_ENTRY_FREE) {
+                                // If there's a free cluster, set the name and tag the first entry in the
+                                // next sector DIR_ENTRY_LAST_AND_UNUSED
+                                // Clear the entry attribute byte
+                                uint32_t sector_num = first_sector_of_cluster(cluster_search_index);
+                                int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+                                if (read_status != SDHC_SUCCESS)
+                                {
+                                    // Fatal error
+                                    __BKPT();
+                                }
+                                struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3 *)sector_data;
+                                dir_entry->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
+                                dir_entry->DIR_Attr = 0x0;
+                                // Set the file size to zero
+                                dir_entry->DIR_FileSize = 0x0;
+                                // Set the filename
+                                dir_entry->DIR_Name[0] = *filename_wrapper->name;
+                                dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                                ++dir_entry->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
+                                // Update the FAT
+                                write_FAT_entry(rca, cwd, cluster_search_index);
+                                return E_SUCCESS;
+                            }
+                            cluster_search_index++;
+                        }
+                        // All clusters are used, return E_NO_FREE_CLUSTER
+                        return E_NO_FREE_CLUSTER;
                     }
                 }
                 dir_entry++;
                 entry_index++;
             }
-            sector_num++;
-            sector_index++;
+            current_sector_number++;
+            current_sector_index++;
         }
-        uint32_t cwdFATentry = read_FAT_entry(rca, cwd);
-        // Set cwd to the current directory's FAT entry and continue iteration
-        cwd = cwdFATentry;
     }
     myFree(filename_wrapper);
     myFree(fcluster);
