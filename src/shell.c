@@ -13,6 +13,7 @@
 #include "myFAT32driver.h"
 #include "SDHC_FAT32_Files.h"
 #include "breakpoint.h"
+#include "unit_tests.h"
 
 
 char *help_text =
@@ -170,23 +171,15 @@ void initUART(void){
 	uartInit(UART2_BASE_PTR, moduleClock/KHzInHz, baud);
 }
 
-void shell_debug(void) {
-    char *fname = "JAMES.TXT";
-    int delete_file = dir_delete_file(fname);
-    myprintf("%d\n", delete_file);
-    dir_set_cwd_to_root();
-    dir_ls();
-}
-
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
 
 int main(int argc, char **argv)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
-    // TODO Remove shell_debug before submitting
-    initDevIO();
-    shell_debug();
+    if (TEST_MODE) {
+        run_test_suite();
+    }
     while (1)
     {
         char linebuf[BUFFER_SIZE_FOR_SHELL_INPUT];

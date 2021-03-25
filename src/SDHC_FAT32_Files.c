@@ -107,7 +107,7 @@ int dir_ls(void) {
                     continue;
                 }
                 // A valid file, output filename to console
-                int ffn_result = entry_to_filename(dir_entry, filename_wrapper);
+                int etf_result = entry_to_filename(dir_entry, filename_wrapper);
                 myprintf("%s\n", filename_wrapper->combined);
                 dir_entry++;
                 entry_index++;
@@ -126,7 +126,7 @@ int dir_ls(void) {
         }
         // FAT entry is in use and points to next cluster
         // Set cwd to the current directory's FAT entry and continue iteration
-        current_cluster_index = current_cluster_FAT_entry;
+        current_cluster_number = current_cluster_FAT_entry;
     }
     myFree(filename_wrapper);
     return E_SUCCESS;
@@ -301,7 +301,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
                     continue;
                 }
                 // This is an in-use 8.3 file, check to see if it matches
-                int ffn_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                int etf_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
                 int fnamecmp  = strncmp((const char*)filename_wrapper->combined, (const char*)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
@@ -346,7 +346,7 @@ int dir_create_file(char *filename) {
     {
         // Initialize current sector index to 0
         uint32_t current_sector_index = 0;
-        uint32_t first_sector_number = first_sector_of_cluster(current_cluster_index);
+        uint32_t first_sector_number = first_sector_of_cluster(current_cluster_number);
     init_sector:;
         uint32_t current_sector_number = first_sector_number + current_sector_index;
         while (current_sector_index <= sectors_per_cluster) {
@@ -513,7 +513,7 @@ int dir_delete_file(char *filename) {
                     continue;
                 }
                 // This is an in-use 8.3 file, check to see if it matches
-                int ffn_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                int etf_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
                 int fnamecmp = strncmp((const char *)filename_wrapper->combined, (const char *)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     // File found. Delete it.
