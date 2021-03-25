@@ -126,7 +126,7 @@ int dir_ls(void) {
         }
         // FAT entry is in use and points to next cluster
         // Set cwd to the current directory's FAT entry and continue iteration
-        cwd = current_cluster_FAT_entry;
+        current_cluster_index = current_cluster_FAT_entry;
     }
     myFree(filename_wrapper);
     return E_SUCCESS;
@@ -346,7 +346,7 @@ int dir_create_file(char *filename) {
     {
         // Initialize current sector index to 0
         uint32_t current_sector_index = 0;
-        uint32_t first_sector_number = first_sector_of_cluster(cwd);
+        uint32_t first_sector_number = first_sector_of_cluster(current_cluster_index);
     init_sector:;
         uint32_t current_sector_number = first_sector_number + current_sector_index;
         while (current_sector_index <= sectors_per_cluster) {
@@ -443,7 +443,7 @@ int dir_create_file(char *filename) {
                                     __BKPT();
                                 }
                                 // Update the FAT
-                                write_FAT_entry(rca, cwd, cluster_search_index);
+                                write_FAT_entry(rca, cluster_search_index, cluster_search_index);
                                 return E_SUCCESS;
                             }
                             cluster_search_index++;
