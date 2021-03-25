@@ -193,7 +193,7 @@ int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *filename_wrapp
     // Caller is responsible for freeing filename_wrapper!
     memset(filename_wrapper, 0x0, sizeof(Filename_8_3_Wrapper));
     // Check if first character in filename is a space ' ' or period '.'
-    if (filename[0] == 0x20 || filename[0] == 0x2E) {
+    if (filename[0] == 0x20 || filename[0] == 0x2E || filename[0] == 0x0) {
         return E_FILE_NAME_INVALID;
     }
     // Initialize to zero. Because first chr cannot be a period, if period_index > 0 it means the
@@ -203,6 +203,10 @@ int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *filename_wrapp
     int max_file_ext_length = 3;
     int max_combined_length = max_file_name_length + max_file_ext_length;
     for (int i=0; i<max_combined_length; i++) {
+        // Null terminator reached
+        if (i > 0 && filename[i] == 0x0) {
+            return E_SUCCESS;
+        }
         // First period in the filename reached, and it is not the first letter in the filename
         if (filename[i] == 0x2E && period_index == 0) {
             // If the following chr is valid it's safe to continue, else return here
@@ -230,7 +234,7 @@ int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *filename_wrapp
             filename_wrapper->name[i] = filename[i];
         }
         // Reached an extension, start copying chrs to ->ext
-        if (period_index > 1 && i-period_index <= max_file_ext_length) {
+        if (period_index >= 1 && i-period_index <= max_file_ext_length) {
             filename_wrapper->combined[i] = filename[i];
             // Start index of ->ext is 0, a.k.a current position minus one (the period) minus period_index (file_name)
             filename_wrapper->ext[i-1-period_index] = filename[i];
