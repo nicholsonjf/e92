@@ -72,12 +72,12 @@ int dir_set_cwd_to_root(void) {
 
 // Check for long filenames and skip them.
 int dir_ls(void) {
-    uint32_t current_cluster_index = cwd;
+    uint32_t current_cluster_number = cwd;
     // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
-    while (current_cluster_index <= total_data_clusters + 1)
+    while (current_cluster_number <= total_data_clusters + 1)
     {
-        uint32_t sector_num = first_sector_of_cluster(current_cluster_index);
+        uint32_t sector_num = first_sector_of_cluster(current_cluster_number);
         uint32_t sector_index = 0;
         while (sector_index < sectors_per_cluster) {
             uint8_t sector_data[512];
@@ -258,10 +258,10 @@ int filename_to_entry(Filename_8_3_Wrapper *filename_wrapper, struct dir_entry_8
 
 // Check for long filenames and skip them.
 int dir_find_file(char *filename, uint32_t *firstCluster) {
-    uint32_t current_cluster_index = cwd; 
+    uint32_t current_cluster_number = cwd; 
     // Pointer to hold the pretty filename. Caller is responsible for freeing filename_wrapper!
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
-    while (current_cluster_index <= total_data_clusters + 1)
+    while (current_cluster_number <= total_data_clusters + 1)
     {
         uint32_t sector_num = first_sector_of_cluster(cwd);
         uint32_t sector_index = 0;
@@ -312,7 +312,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
             }
             sector_num++;
         }
-        uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_index);
+        uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_number);
         if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE) {
             return E_FILE_NOT_IN_CWD;
         }
@@ -322,7 +322,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
         }
         // FAT entry is in use and points to next cluster
         // Set cluster to the current cluster's FAT entry and continue iteration
-        current_cluster_index = current_cluster_FAT_entry;
+        current_cluster_number = current_cluster_FAT_entry;
     }
     return E_FILE_NOT_IN_CWD;
 }
@@ -341,8 +341,8 @@ int dir_create_file(char *filename) {
         return E_FILE_NAME_INVALID;
     }
     // Find a free entry or return an error
-    uint32_t current_cluster_index = root_directory_cluster;
-    while (current_cluster_index <= total_data_clusters + 1)
+    uint32_t current_cluster_number = root_directory_cluster;
+    while (current_cluster_number <= total_data_clusters + 1)
     {
         // Initialize current sector index to 0
         uint32_t current_sector_index = 0;
@@ -458,9 +458,116 @@ int dir_create_file(char *filename) {
             current_sector_number++;
             current_sector_index++;
         }
-        current_cluster_index++;
+        current_cluster_number++;
     }
     myFree(filename_wrapper);
     myFree(fcluster);
     return E_NO_FREE_CLUSTER;
+}
+
+int dir_delete_file(char *filename) {
+    uint32_t current_cluster_number = cwd;
+    // Pointer to hold the pretty filename. Caller is responsible for freeing filename_wrapper!
+    Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
+    while (current_cluster_number <= total_data_clusters + 1) {
+        uint32_t sector_num = first_sector_of_cluster(cwd);
+        uint32_t sector_index = 0;
+        while (sector_index < sectors_per_cluster) {
+            uint8_t sector_data[512];
+            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            if (read_status != SDHC_SUCCESS)
+            {
+                // Fatal error
+                __BKPT();
+            }
+            struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3 *)sector_data;
+            int entry_index = 0;
+            while (entry_index < dir_entries_per_sector) {
+                // Last entry in the directory and it is unused. Return file not found.
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED)
+                {
+                    myFree(filename_wrapper);
+                    return E_FILE_NOT_IN_CWD;
+                }
+                // Entry not used, continue
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED)
+                {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // Long dir entry, not supported, continue
+                uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
+                if (dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME)
+                {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // Entry is a dir (nested directories not supported), continue
+                uint8_t dir_attr_dir_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_DIRECTORY;
+                if (dir_attr_dir_masked == DIR_ENTRY_ATTR_DIRECTORY)
+                {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // This is an in-use 8.3 file, check to see if it matches
+                int ffn_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                int fnamecmp = strncmp((const char *)filename_wrapper->combined, (const char *)filename, (size_t)sizeof(filename));
+                if (fnamecmp == 0) {
+                    // File found. Delete it.
+                    dir_entry->DIR_Name[0] = 0xE5;
+                    dir_entry->DIR_FstClusHI = 0x0;
+                    // Write the updated sector data to the microSD
+                    int write_status = sdhc_write_single_block(rca, sector_num, card_status, sector_data);
+                    if (write_status != SDHC_SUCCESS)
+                    {
+                        // Fatal error
+                        __BKPT();
+                    }
+                    // Free the file's FAT entries
+                    uint32_t file_first_cluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+                    // Traverse the linked list of FAT entries (if linked entries exist) and free all the linked entries
+                    uint32_t file_current_fat_entry = file_first_cluster;
+                    while (file_current_fat_entry <= total_data_clusters + 1)
+                    {
+                        uint32_t file_next_fat_entry = read_FAT_entry(rca, file_first_cluster);
+                        if (file_next_fat_entry == FAT_ENTRY_DEFECTIVE_CLUSTER || file_current_fat_entry == total_data_clusters + 1)
+                        {
+                            // Fatal error
+                            __BKPT();
+                        }
+                        if (file_next_fat_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE)
+                        {
+                            // FAT entry is last and end of file, set it to free and return
+                            write_FAT_entry(rca, file_current_fat_entry, FAT_ENTRY_FREE);
+                            return E_SUCCESS;
+                        }
+                        // FAT entry is in use and points to next cluster
+                        // Set the current entry to free and continue traversing
+                        write_FAT_entry(rca, file_current_fat_entry, FAT_ENTRY_FREE);
+                        file_current_fat_entry = file_next_fat_entry;
+                    }
+                    dir_entry++;
+                    entry_index++;
+                }
+            }
+            sector_num++;
+        }
+        uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_number);
+        if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE)
+        {
+            return E_FILE_NOT_IN_CWD;
+        }
+        if (current_cluster_FAT_entry == FAT_ENTRY_DEFECTIVE_CLUSTER)
+        {
+            // Fatal error
+            __BKPT();
+        }
+        // FAT entry is in use and points to next cluster
+        // Set cluster to the current cluster's FAT entry and continue iteration
+        current_cluster_number = current_cluster_FAT_entry;
+    }
+    return E_FILE_NOT_IN_CWD;
 }

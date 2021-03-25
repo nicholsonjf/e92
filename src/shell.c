@@ -172,8 +172,8 @@ void initUART(void){
 
 void shell_debug(void) {
     char *fname = "JAMES.TXT";
-    int create_file = dir_create_file(fname);
-    myprintf("%d\n", create_file);
+    int delete_file = dir_delete_file(fname);
+    myprintf("%d\n", delete_file);
     dir_set_cwd_to_root();
     dir_ls();
 }
