@@ -157,7 +157,7 @@ void memoryMap(void) {
     }
     struct mem_region *current = mymem;
     myprintf("\n");
-    myprintf("%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
+    myprintf("%10s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
     while (current < endmymem)
     {
         char **free;
@@ -168,7 +168,7 @@ void memoryMap(void) {
             char *true = "true";
             free = &true;
         }
-        myprintf("%12p%5d%7s%12d\n", current->data, current->pid, *free, current->size);
+        myprintf("%10p%5d%7s%12d\n", current->data, current->pid, *free, current->size);
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
     myprintf("\n");

@@ -199,11 +199,19 @@ int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *filename_wrapp
     // Initialize to zero. Because first chr cannot be a period, if period_index > 0 it means the
     // filename may have a valid extension and the next chr will need to be checked
     int period_index = 0;
-    int max_filename_length = 11;
-    for (int i=0; i<max_filename_length; i++) {
+    int max_file_name_length = 8;
+    int max_file_ext_length = 3;
+    int max_combined_length = max_file_name_length + max_file_ext_length;
+    for (int i=0; i<max_combined_length; i++) {
         // First period in the filename reached, and it is not the first letter in the filename
         if (filename[i] == 0x2E && period_index == 0) {
+            // If the following chr is valid it's safe to continue, else return here
+            if (chr_8_3_valid(filename[i+1]) != E_SUCCESS) {
+                // This is a valid filename with no extension
+                return E_SUCCESS;
+            }
             period_index = i;
+            // Add the period to filename_wrapper->combined and continue to write ext
             filename_wrapper->combined[i] = 0x2E;
             continue;
         }
@@ -222,9 +230,10 @@ int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *filename_wrapp
             filename_wrapper->name[i] = filename[i];
         }
         // Reached an extension, start copying chrs to ->ext
-        if (period_index > 0) {
+        if (period_index > 1 && i-period_index <= max_file_ext_length) {
             filename_wrapper->combined[i] = filename[i];
-            filename_wrapper->ext[i-(period_index+1)] = filename[i];
+            // Start index of ->ext is 0, a.k.a current position minus one (the period) minus period_index (file_name)
+            filename_wrapper->ext[i-1-period_index] = filename[i];
         }
     }
     return E_SUCCESS;
@@ -357,8 +366,8 @@ int dir_create_file(char *filename) {
                     // Set the file size to zero
                     dir_entry->DIR_FileSize = 0x0;
                     // Set the filename
-                    dir_entry->DIR_Name[0] = *filename_wrapper->name;
-                    dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                    strncpy((char *)&dir_entry->DIR_Name[0], (char *)&filename_wrapper->name, 8);
+                    strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
                     // Write the updated sector data to the microSD
                     int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
                     if (write_status != SDHC_SUCCESS)
@@ -378,8 +387,8 @@ int dir_create_file(char *filename) {
                         // Set the file size to zero
                         dir_entry->DIR_FileSize = 0x0;
                         // Set the filename
-                        dir_entry->DIR_Name[0] = *filename_wrapper->name;
-                        dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                        strncpy((char *)&dir_entry->DIR_Name[0], (char *)&filename_wrapper->name, 8);
+                        strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
                         (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
                         // Write the updated sector data to the microSD
                         int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
@@ -423,8 +432,8 @@ int dir_create_file(char *filename) {
                                 // Set the file size to zero
                                 dir_entry->DIR_FileSize = 0x0;
                                 // Set the filename
-                                dir_entry->DIR_Name[0] = *filename_wrapper->name;
-                                dir_entry->DIR_Name[8] = *filename_wrapper->ext;
+                                strncpy((char *)&dir_entry->DIR_Name[0], (char *)&filename_wrapper->name, 8);
+                                strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
                                 (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
                                 // Write the updated sector data to the microSD
                                 int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
