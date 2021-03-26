@@ -553,9 +553,9 @@ int dir_delete_file(char *filename) {
                         write_FAT_entry(rca, file_current_fat_entry, FAT_ENTRY_FREE);
                         file_current_fat_entry = file_next_fat_entry;
                     }
-                    dir_entry++;
-                    entry_index++;
                 }
+                dir_entry++;
+                entry_index++;
             }
             sector_num++;
         }

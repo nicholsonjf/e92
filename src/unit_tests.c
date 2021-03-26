@@ -18,22 +18,19 @@
 
 int debug = 1;
 
-uint8_t rchar(void) {
-    return 'A' + (rand() % 26);
-}
-
 void test_create_file(void) {
     char *test_name = "Create File";
     char *result = "FAIL";
-    char fname[4] = {rchar(), '.', rchar(), '\0'};
+    char *fname = "TEST.JPG";
+    int delete_file = dir_delete_file(fname);
     int create_file = dir_create_file(fname);
     if (create_file == E_SUCCESS) {
         result = "PASS";
     }
     myprintf("%s: %s\n\n", test_name, result);
     if (debug == 1) {
+        myprintf("delete_file error code: %d\n", delete_file);
         myprintf("create_file error code: %d\n", create_file);
-        myprintf("random file name: %s\n", fname);
         dir_set_cwd_to_root();
         dir_ls();
     }
