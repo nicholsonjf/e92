@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "directory.h"
 #include "bootSector.h"
+#include "devinio.h"
 
 /* All functions return an int which indicates success if 0 and an
    error code otherwise (only some errors are listed) */
@@ -115,12 +116,8 @@ int dir_create_dir(char *filename);
 int dir_delete_dir(char *filename);
 
 /**
- * A file_descriptor is used as an index into an array of structures describing
- * open files
- * All entries in the array are initially closed and not associated with any
- * open files
+ * Moved file_descriptor declaration to devinio.h
  */
-typedef uint32_t file_descriptor;
 
 /**
  * Search for filename in the cwd and, if successful, store a file descriptor

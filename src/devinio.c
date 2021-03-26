@@ -5,9 +5,9 @@
  * Author: James Nicholson
  */
 
+#include "devinio.h"
 #include <string.h>
 #include "SDHC_FAT32_Files.h"
-#include "devinio.h"
 #include "pcb.h"
 #include "my-malloc.h"
 #include "myFAT32driver.h"
@@ -27,6 +27,16 @@ device_p *devices;
 
 int initDevIO(void)
 {
+    int initLED_status = initLED();
+    if (initLED_status != E_SUCCESS)
+    {
+        return initLED_status;
+    }
+    int initPB_status = initPB();
+    if (initPB_status != E_SUCCESS)
+    {
+        return initPB_status;
+    }
     int initFAT_status = initFAT();
     if (initFAT_status != E_SUCCESS) {
         return initFAT_status;
@@ -57,7 +67,7 @@ int get_device(char *pathname, Device *device)
     return E_DEVICE_PATH;
 }
 
-int fopen(char *pathname, file_descriptor *fd)
+int myfopen(char *pathname, file_descriptor *fd)
 {
     Device *device = myMalloc(sizeof(Device));
     int get_device_status = get_device(pathname, device);
@@ -85,7 +95,7 @@ int fopen(char *pathname, file_descriptor *fd)
     return E_SUCCESS;
 }
 
-int fdelete(char *pathname)
+int myfdelete(char *pathname)
 {
     if (pathname[0] != '/') {
         return E_FILE_NAME_INVALID;

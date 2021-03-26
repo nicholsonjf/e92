@@ -1,7 +1,7 @@
-#include <stdlib.h>
-
 #ifndef _MYMALLOC_H
 #define _MYMALLOC_H
+
+#include <stdlib.h>
 
 extern struct mem_region *mymem;
 extern struct mem_region *endmymem;

@@ -1,3 +1,4 @@
+#include "unit_tests.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +14,6 @@
 #include "myFAT32driver.h"
 #include "SDHC_FAT32_Files.h"
 #include "breakpoint.h"
-#include "unit_tests.h"
 #include "utils.h"
 
 

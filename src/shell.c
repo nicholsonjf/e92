@@ -1,20 +1,19 @@
+#include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdarg.h>
 #include "my-malloc.h"
-#include "shell.h"
 #include "uart.h"
 #include "delay.h"
 #include "uartNL.h"
 #include "derivative.h"
 #include "devinio.h"
-#include "myFAT32driver.h"
-#include "SDHC_FAT32_Files.h"
 #include "breakpoint.h"
 #include "unit_tests.h"
 #include "utils.h"
+#include "SDHC_FAT32_Files.h"
 
 
 char *help_text =
@@ -79,7 +78,7 @@ struct error_d
     {E_WRONG_PID, "The PID of the current process does not match the PID of provided address"},
     {E_ADDR_NOT_ALLOCATED, "The address provided does not match a previously allocated address"},
     {E_MALLOC, "Unable to allocate the requested memory"},
-    {E_STRTOUL, "The number you provided is out of range, or contains an invalid character"},
+    {E_STRTOL, "The number you provided is out of range, or contains an invalid character"},
     {E_BRANGE_EX, "The value provided exceeds the storage capacity of a byte"},
     {E_ADDR_SPC, "The range of addresses specified is not within the current address space"}};
 
@@ -364,7 +363,7 @@ int cmd_malloc(int argc, char *argv[])
     long bytes = my_strtol(argv[0]);
     if (bytes < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     }
     // Cast to the type myMalloc is expecting.
     uint32_t c_bytes = (uint32_t)bytes;
@@ -390,7 +389,7 @@ int cmd_free(int argc, char *argv[])
     long addr = my_strtol(argv[0]);
     if (addr < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     }
     void *p = (void *)addr;
     int free_status = myFreeErrorCode(p);
@@ -423,20 +422,20 @@ int cmd_memset(int argc, char *argv[])
     long start_addr = my_strtol(argv[0]);
     if (start_addr < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     }
     void *start_p = (void *)start_addr;
     long byte_val = my_strtol(argv[1]);
     if (byte_val < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     } else if (byte_val > 255) {
         return E_BRANGE_EX;
     }
     long size = my_strtol(argv[2]);
     if (size < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     }
     return myMemset(start_p, (uint8_t)byte_val, size);
 }
@@ -454,13 +453,13 @@ int cmd_memchk(int argc, char *argv[])
     long start_addr = my_strtol(argv[0]);
     if (start_addr < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     }
     void *start_p = (void *)start_addr;
     long byte_val = my_strtol(argv[1]);
     if (byte_val < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     }
     else if (byte_val > 255)
     {
@@ -469,7 +468,7 @@ int cmd_memchk(int argc, char *argv[])
     long size = my_strtol(argv[2]);
     if (size < 0)
     {
-        return E_STRTOUL;
+        return E_STRTOL;
     }
     return myMemchk(start_p, (uint8_t)byte_val, size);
 }
@@ -497,7 +496,7 @@ int cmd_delete(int argc, char *argv[])
         return E_NOT_ENOUGH_ARGS;
     }
 
-    int delete_status = fdelete(argv[0]);
+    int delete_status = myfdelete(argv[0]);
     if (delete_status != E_SUCCESS)
     {
         return delete_status;
@@ -515,7 +514,7 @@ int cmd_open(int argc, char *argv[])
         return E_NOT_ENOUGH_ARGS;
     }
     file_descriptor *fd = myMalloc(sizeof(file_descriptor));
-    int open_status = fopen(argv[0], fd);
+    int open_status = myfopen(argv[0], fd);
     if (open_status != E_SUCCESS) {
         return open_status;
     }

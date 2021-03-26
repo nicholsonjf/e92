@@ -8,6 +8,14 @@
 #ifndef _DEVINIO_H
 #define _DEVINIO_H
 
+#include <stdint.h>
+
+/**
+ * A file_descriptor is used as an index into an array of structures describing
+ * open files
+ * All entries in the array are initially closed and not associated with any
+ * open files
+ */
 typedef uint32_t file_descriptor;
 
 typedef struct device
@@ -33,6 +41,8 @@ typedef struct stream
 
 int initDevIO(void);
 
-int fopen(char *pathname, file_descriptor *fd);
+int myfopen(char *pathname, file_descriptor *fd);
+
+int myfdelete(char *pathname);
 
 #endif /* ifndef _DEVINIO_H */

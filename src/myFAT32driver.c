@@ -5,9 +5,9 @@
  * Author: James Nicholson
  */
 
+#include "myFAT32driver.h"
 #include "microSD.h"
 #include "SDHC_FAT32_Files.h"
-#include "myFAT32driver.h"
 #include "my-malloc.h"
 #include "utils.h"
 
@@ -16,17 +16,17 @@
  */
 struct sdhc_card_status *card_status;
 
-int fgetc(void)
+int fatfgetc(void)
 {
     return E_SUCCESS;
 }
 
-int fputc(void)
+int fatfputc(void)
 {
     return E_SUCCESS;
 }
 
-int fclose(void)
+int fatfclose(void)
 {
     return E_SUCCESS;
 }
@@ -44,8 +44,8 @@ int initFAT(void) {
         return set_cwd;
     }
     // Define the struct Device FAT32
-    FAT32->fgetc = fgetc;
-    FAT32->fputc = fputc;
-    FAT32->fclose = fclose;
+    FAT32->fgetc = fatfgetc;
+    FAT32->fputc = fatfputc;
+    FAT32->fclose = fatfclose;
     return E_SUCCESS;
 }

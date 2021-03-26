@@ -5,28 +5,28 @@
  * Author: James Nicholson
  */
 
+#include "myPBdriver.h"
 #include <stdint.h>
 #include "devinio.h"
 #include "pushbutton.h"
-#include "myPBdriver.h"
 #include "utils.h"
 
-int fgetc(void)
+int pbfgetc(void)
 {
     return E_SUCCESS;
 }
 
-int fputc(void)
+int pbfputc(void)
 {
     return E_SUCCESS;
 }
 
-int fclose(void)
+int pbfclose(void)
 {
     return E_SUCCESS;
 }
 
-int initLED(void)
+int initPB(void)
 {
     /* Initialize the push buttons */
     ledInitAll();
@@ -34,9 +34,9 @@ int initLED(void)
     Device *pbs[] = {SW1, SW2};
     for (int i = 0; i < sizeof(pbs) / sizeof(pbs[0]); i++)
     {
-        pbs[i]->fgetc = fgetc;
-        pbs[i]->fputc = fputc;
-        pbs[i]->fclose = fclose;
+        pbs[i]->fgetc = pbfgetc;
+        pbs[i]->fputc = pbfputc;
+        pbs[i]->fclose = pbfclose;
     }
     return E_SUCCESS;
 }

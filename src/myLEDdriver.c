@@ -5,23 +5,23 @@
  * Author: James Nicholson
  */
 
+#include "myLEDdriver.h"
 #include <stdint.h>
 #include "devinio.h"
 #include "led.h"
-#include "myLEDdriver.h"
 #include "utils.h"
 
-int fgetc(void)
+int ledfgetc(void)
 {
     return E_SUCCESS;
 }
 
-int fputc(void)
+int ledfputc(void)
 {
     return E_SUCCESS;
 }
 
-int fclose(void)
+int ledfclose(void)
 {
     return E_SUCCESS;
 }
@@ -33,9 +33,9 @@ int initLED(void)
     // Define the struct Devices
     Device *leds[] = {LEDYellow, LEDGreen, LEDOrange, LEDBlue};
     for (int i=0; i<sizeof(leds)/sizeof(leds[0]); i++) {
-        leds[i]->fgetc = fgetc;
-        leds[i]->fputc = fputc;
-        leds[i]->fclose = fclose;
+        leds[i]->fgetc = ledfgetc;
+        leds[i]->fputc = ledfputc;
+        leds[i]->fclose = ledfclose;
     }
     return E_SUCCESS;
 }

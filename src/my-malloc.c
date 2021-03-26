@@ -1,11 +1,11 @@
 #include "my-malloc.h"
-#include "pcb.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include "utils.h"
+#include "pcb.h"
 
 struct pcb *currentPCB;
 

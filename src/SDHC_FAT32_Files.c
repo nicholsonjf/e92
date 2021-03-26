@@ -1,5 +1,5 @@
-#include <string.h>
 #include "SDHC_FAT32_Files.h"
+#include <string.h>
 #include "utils.h"
 #include "microSD.h"
 #include "bootSector.h"
@@ -15,7 +15,7 @@
 /**
  * Indicates whether the file system is mounted: 0 if false, 1 if true.
  */
-int file_structure_mounted;
+int file_structure_mounted = 0;
 
 /**
  * Relative Card Address of currently mounted card.

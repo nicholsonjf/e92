@@ -10,6 +10,7 @@
 
 // Helper function prototypes.
 long my_strtol(char *str);
+
 void myprintf(char *format, ...);
 
 // Shell error types.
@@ -23,7 +24,7 @@ enum error_t
     E_ADDR_NOT_ALLOCATED,
     E_WRONG_PID,
     E_MALLOC,
-    E_STRTOUL,
+    E_STRTOL,
     E_BRANGE_EX, // 9
     E_ADDR_SPC,
     E_NO_MICRO_SD,
