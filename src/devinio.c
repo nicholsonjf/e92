@@ -73,6 +73,7 @@ int fopen(char *pathname, file_descriptor *fd)
             *fd = i;
             (*currentPCB->streams)[i].device = device;
             (*currentPCB->streams)[i].pathname = pathname;
+            break;
         }
     }
     // Then call the device->fopen function
@@ -81,15 +82,23 @@ int fopen(char *pathname, file_descriptor *fd)
     {
         return E_INIT_STREAM;
     }
+    return E_SUCCESS;
 }
 
-int fopen(char *pathname)
+int fdelete(char *pathname)
 {
-    // TODO create 8_3 file name from pathname
-    int delete_file = dir_delete_file(fname);
-    int create_file = dir_create_file(fname);
-    if (create_file == E_SUCCESS)
-    {
-        result = "PASS";
+    if (pathname[0] != '/') {
+        return E_FILE_NAME_INVALID;
     }
+    const char *filename = pathname[1];
+    size_t pathname_len = strlen(filename);
+    if (pathname_len < 1 || pathname_len > 11) {
+        return E_FILE_NAME_TOO_LONG;
+    }
+    int delete_file = dir_delete_file(filename);
+    if (delete_file != E_SUCCESS)
+    {
+        return delete_file;
+    }
+    return E_SUCCESS;
 }

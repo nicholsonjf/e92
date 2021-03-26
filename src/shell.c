@@ -500,7 +500,7 @@ int cmd_delete(int argc, char *argv[])
     int delete_status = fdelete(argv[0]);
     if (delete_status != E_SUCCESS)
     {
-        return E_FILE_DELETE;
+        return delete_status;
     }
     return E_SUCCESS;
 }
@@ -517,9 +517,10 @@ int cmd_open(int argc, char *argv[])
     file_descriptor *fd = myMalloc(sizeof(file_descriptor));
     int open_status = fopen(argv[0], fd);
     if (open_status != E_SUCCESS) {
-        return E_FILE_OPEN;
+        return open_status;
     }
-    myprintf("%lu\n", (unsigned long*)file_descriptor);
+    unsigned long fd_index = (unsigned long)*fd;
+    myprintf("%lu\n", fd_index);
     myFree(fd);
     return E_SUCCESS;
 }

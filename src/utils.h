@@ -35,7 +35,8 @@ enum error_t
     E_FILE_EXISTS,
     E_FILE_OPEN,
     E_FILE_DELETE,
-    E_CHR_INVALID_8_3, // 20
+    E_FILE_NAME_TOO_LONG, // 20
+    E_CHR_INVALID_8_3,
     E_NO_FREE_CLUSTER,
     E_INIT_STREAM,
     E_DEVICE_PATH,
