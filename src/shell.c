@@ -109,7 +109,8 @@ struct commandEntry
                 {"free", cmd_free},
                 {"memoryMap", cmd_memory_map},
                 {"memset", cmd_memset},
-                {"memchk", cmd_memchk}
+                {"memchk", cmd_memchk},
+                {"open", cmd_open}
                 };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);

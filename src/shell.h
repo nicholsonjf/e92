@@ -42,6 +42,7 @@ enum error_t
     E_NO_FREE_CLUSTER, // 19
     E_INIT_STREAM,
     E_DEVICE_PATH,
+    E_GENERIC,
     E_COUNT
 };
 

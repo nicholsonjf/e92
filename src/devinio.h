@@ -8,10 +8,6 @@
 #ifndef _DEVINIO_H
 #define _DEVINIO_H
 
-#include "myFAT32driver.h"
-#include "myLEDdriver.h"
-#include "myPBdriver.h"
-
 typedef struct device
 {
     int (*fgetc)(char *minor);

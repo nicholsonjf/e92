@@ -8,9 +8,11 @@
 #ifndef _MYLEDDRIVER_H
 #define _MYLEDDRIVER_H
 
-Device LEDGreen;
-Device LEDYellow;
-Device LEDBlue;
-Device LEDOrange;
+#include "devinio.h"
+
+Device *LEDGreen;
+Device *LEDYellow;
+Device *LEDBlue;
+Device *LEDOrange;
 
 #endif /* ifndef _MYLEDDRIVER_H */
