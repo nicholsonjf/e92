@@ -1,3 +1,13 @@
+Implementation Notes
+
+FAT32
+~FAT32 files can either be open (status=1) or closed(status=0). All I/O system calls are available for any open file.
+~The FAT32 file system is implemented as a single directory. Only files can be created, not directories (for now).
+~Only valid 8_3 filenames are accepted
+
+MISCELLANEOUS
+~There's no stdin, stdout, stderr, just an array of 32 streams at pcb->streams (would like to implement stdin, stdout, stderr later)
+
 Project plan
 
 ~ Port shell to K70 (done)

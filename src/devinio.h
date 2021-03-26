@@ -8,32 +8,28 @@
 #ifndef _DEVINIO_H
 #define _DEVINIO_H
 
-enum modes
-{
-    O_RDONLY,
-    O_WRONLY,
-    O_RDWR
-};
+#include "myFAT32driver.h"
+#include "myLEDdriver.h"
+#include "myPBdriver.h"
 
 typedef struct device
 {
     int (*fgetc)(char *minor);
     int (*fputc)(char *minor);
-    int (*fclose)(char *minor);
+    int (*fclose)(void);
 } Device;
 
 typedef struct stream
 {
     Device *device;
-    uint8_t flag;
+    uint8_t status;
+    char *pathname;
     // FAT32 members
-    char *minor;
     uint32_t block;
-    uint8_t uintentry_in_sector; // 0-15
+    uint8_t entry_in_sector; // 0-15
     uint32_t offset;
     uint32_t size;
     uint32_t current_cluster;
-    // Pushbutton members
 
 } Stream;
 

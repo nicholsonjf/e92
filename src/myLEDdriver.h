@@ -8,9 +8,9 @@
 #ifndef _MYLEDDRIVER_H
 #define _MYLEDDRIVER_H
 
-extern Device led_green;
-extern Device led_yellow;
-extern Device led_blue;
-extern Device led_orange;
+Device LEDGreen;
+Device LEDYellow;
+Device LEDBlue;
+Device LEDOrange;
 
 #endif /* ifndef _MYLEDDRIVER_H */

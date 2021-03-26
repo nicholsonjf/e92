@@ -8,64 +8,34 @@
 #include <stdint.h>
 #include "shell.h"
 #include "devinio.h"
+#include "led.h"
 #include "myLEDdriver.h"
 
-int led_green_fgetc(char *minor) {
-    //TODO
-    return 1; // value from checking LED
-}
-
-int led_green_fputc(char *minor) {
-    // TODO
+int initLED(void)
+{
+    /* Initialize all of the LEDs */
+    ledInitAll();
+    // Define the struct Devices
+    Device *leds[] = {LEDYellow, LEDGreen, LEDOrange, LEDBlue};
+    for (int i=0; i<sizeof(leds)/sizeof(leds[0]); i++) {
+        leds[i]->fgetc = fgetc;
+        leds[i]->fputc = fputc;
+        leds[i]->fclose = fclose;
+    }
     return E_SUCCESS;
 }
 
-int led_orange_fgetc(char *minor) {
-    //TODO
-    return 1; // value from checking LED
-}
-
-int led_orange_fputc(char *minor) {
-    // TODO
+int fgetc(void)
+{
     return E_SUCCESS;
 }
 
-int led_yellow_fgetc(char *minor) {
-    //TODO
-    return 1; // value from checking LED
-}
-
-int led_yellow_fputc(char *minor) {
-    // TODO
+int fputc(void)
+{
     return E_SUCCESS;
 }
 
-int led_blue_fgetc(char *minor) {
-    //TODO
-    return 1; // value from checking LED
-}
-
-int led_blue_fputc(char *minor) {
-    // TODO
+int fclose(void)
+{
     return E_SUCCESS;
 }
-
-Device led_yellow = {
-    .fgetc = &led_yellow_fgetc,
-    .fputc = &led_yellow_fputc
-};
-
-Device led_blue = {
-    .fgetc = &led_blue_fgetc,
-    .fputc = &led_blue_fputc
-};
-
-Device led_orange = {
-    .fgetc = &led_orange_fgetc,
-    .fputc = &led_orange_fputc
-};
-
-Device led_green = {
-    .fgetc = &led_green_fgetc,
-    .fputc = &led_green_fputc
-};

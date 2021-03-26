@@ -29,8 +29,23 @@ int initFAT(void) {
         return set_cwd;
     }
     // Define the struct Device FAT32
-    FAT32->fgetc = *fgetc;
-    FAT32->fputc = *fputc;
-    FAT32->fclose = *fclose;
+    FAT32->fgetc = fgetc;
+    FAT32->fputc = fputc;
+    FAT32->fclose = fclose;
+    return E_SUCCESS;
+}
+
+int fgetc(void)
+{
+    return E_SUCCESS;
+}
+
+int fputc(void)
+{
+    return E_SUCCESS;
+}
+
+int fclose(void)
+{
     return E_SUCCESS;
 }

@@ -41,6 +41,7 @@ enum error_t
     E_CHR_INVALID_8_3,
     E_NO_FREE_CLUSTER, // 19
     E_INIT_STREAM,
+    E_DEVICE_PATH,
     E_COUNT
 };
 
