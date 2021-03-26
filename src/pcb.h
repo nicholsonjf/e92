@@ -1,5 +1,6 @@
 #ifndef _MYPCB_H
 #define _MYPCB_H
+
 struct pcb
 {
     int pid;

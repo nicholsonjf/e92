@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "microSD.h"
+#include "devinio.h"
 
 
 /**
@@ -17,6 +18,7 @@
  */
 extern struct sdhc_card_status *card_status;
 
+Device *FAT32;
 
 int initFAT(void);
 

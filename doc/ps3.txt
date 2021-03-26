@@ -80,3 +80,18 @@ Project plan
     
     -Before unmount:
         ~Call flush_cache
+
+~Add a command "lsd" that lists devices
+    -Column one of output is mount path
+
+        Device      Mount Path            
+        ---------------------------------
+        FAT32       "/"
+        Button 1    "/dev/pushbutton/sw1"
+        Button 2    "/dev/pushbutton/sw2"
+        Yellow LED  "/dev/led/yellow"
+        Orange LED  "/dev/led/orange"
+        Blue LED    "/dev/led/blue"
+        Green LED   "/dev/led/green"
+        
+    -Column two is device description

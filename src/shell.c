@@ -489,3 +489,71 @@ int cmd_memchk(int argc, char *argv[])
     }
     return myMemchk(start_p, (uint8_t)byte_val, size);
 }
+
+/**
+ * Shell "create" command
+ */
+int cmd_create(int argc, char *argv[])
+{
+    if (argc != 1)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+
+    return E_SUCCESS;
+}
+
+/**
+ * Shell "open" command
+ */
+int cmd_open(int argc, char *argv[])
+{
+    if (argc != 1)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    file_descriptor *fd = myMalloc(sizeof(file_descriptor));
+    int open_status = fopen(arg[0], fd);
+    if (open_status != E_SUCCESS) {
+        return E_FILE_OPEN;
+    }
+    myprintf("%lu\n", (unsigned long)*file_descriptor)
+    return E_SUCCESS;
+}
+
+/**
+ * Shell "close" command
+ */
+int cmd_close(int argc, char *argv[])
+{
+    if (argc != 1)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    return E_SUCCESS;
+}
+
+/**
+ * Shell "read" command
+ */
+int cmd_read(int argc, char *argv[])
+{
+    if (argc != 1)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    return E_SUCCESS;
+}
+
+/**
+ * Shell "write" command
+ */
+int cmd_write(int argc, char *argv[])
+{
+    if (argc != 1)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+    return E_SUCCESS;
+}
+

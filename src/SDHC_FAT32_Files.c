@@ -73,7 +73,7 @@ int dir_set_cwd_to_root(void) {
 // Check for long filenames and skip them.
 int dir_ls(void) {
     uint32_t current_cluster_number = cwd;
-    // Pointer to hold the pretty filename
+    // Pointer to hold the pretty filename.
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
     while (current_cluster_number <= total_data_clusters + 1)
     {
