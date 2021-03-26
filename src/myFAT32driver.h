@@ -8,7 +8,6 @@
 #ifndef _MYFAT32DRIVER_H
 #define _MYFAT32DRIVER_H
 
-#include <stdint.h>
 #include "microSD.h"
 #include "devinio.h"
 

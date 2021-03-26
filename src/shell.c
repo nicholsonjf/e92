@@ -14,6 +14,7 @@
 #include "SDHC_FAT32_Files.h"
 #include "breakpoint.h"
 #include "unit_tests.h"
+#include "utils.h"
 
 
 char *help_text =
@@ -102,16 +103,20 @@ struct commandEntry
     char *name;
     int (*functionp)(int argc, char *argv[]);
 } commands[] = {
-                {"echo", cmd_echo},
-                {"exit", cmd_exit},
-                {"help", cmd_help},
-                {"malloc", cmd_malloc},
-                {"free", cmd_free},
-                {"memoryMap", cmd_memory_map},
-                {"memset", cmd_memset},
-                {"memchk", cmd_memchk},
-                {"open", cmd_open}
-                };
+    {"echo", cmd_echo},
+    {"exit", cmd_exit},
+    {"help", cmd_help},
+    {"malloc", cmd_malloc},
+    {"free", cmd_free},
+    {"memoryMap", cmd_memory_map},
+    {"memset", cmd_memset},
+    {"memchk", cmd_memchk},
+    {"open", cmd_open},
+    {"create", cmd_create},
+    {"read", cmd_read},
+    {"write", cmd_write},
+    {"delete", cmd_delete},
+    };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
 
@@ -126,17 +131,6 @@ cmd_pntr find_cmd(char *arg)
         }
     }
     return NULL;
-}
-
-#define BUFFER_SIZE_FOR_FORMATTED_OUTPUT 4096
-
-void myprintf(char*format, ...){
-    char buffer[BUFFER_SIZE_FOR_FORMATTED_OUTPUT]; // holds the rendered string
-    va_list args;
-    va_start(args, format);
-    int length = vsnprintf(buffer, sizeof(buffer), format, args);
-    va_end(args);
-    uartPutsNL(UART2_BASE_PTR, buffer);
 }
 
 
@@ -178,6 +172,7 @@ int main(int argc, char **argv)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
+    initDevIO();
     if (TEST_MODE) {
         run_test_suite();
     }
@@ -382,18 +377,6 @@ int cmd_malloc(int argc, char *argv[])
     return E_SUCCESS;
 }
 
-// Returns -1 if there was an error
-long my_strtol(char *str)
-{
-    errno = 0;
-    long bytes = strtol(str, NULL, 0);
-    if (errno != 0)
-    {
-        return -1;
-    }
-    return bytes;
-}
-
 int cmd_free(int argc, char *argv[])
 {
     if (argc == 0)
@@ -505,6 +488,24 @@ int cmd_create(int argc, char *argv[])
 }
 
 /**
+ * Shell "delete" command
+ */
+int cmd_delete(int argc, char *argv[])
+{
+    if (argc != 1)
+    {
+        return E_NOT_ENOUGH_ARGS;
+    }
+
+    int delete_status = fdelete(argv[0]);
+    if (delete_status != E_SUCCESS)
+    {
+        return E_FILE_DELETE;
+    }
+    return E_SUCCESS;
+}
+
+/**
  * Shell "open" command
  */
 int cmd_open(int argc, char *argv[])
@@ -514,11 +515,12 @@ int cmd_open(int argc, char *argv[])
         return E_NOT_ENOUGH_ARGS;
     }
     file_descriptor *fd = myMalloc(sizeof(file_descriptor));
-    int open_status = fopen(arg[0], fd);
+    int open_status = fopen(argv[0], fd);
     if (open_status != E_SUCCESS) {
         return E_FILE_OPEN;
     }
-    myprintf("%lu\n", (unsigned long)*file_descriptor)
+    myprintf("%lu\n", (unsigned long*)file_descriptor);
+    myFree(fd);
     return E_SUCCESS;
 }
 

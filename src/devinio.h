@@ -8,6 +8,8 @@
 #ifndef _DEVINIO_H
 #define _DEVINIO_H
 
+typedef uint32_t file_descriptor;
+
 typedef struct device
 {
     int (*fgetc)(char *minor);

@@ -6,16 +6,14 @@
  */
 
 #include <string.h>
-#include "shell.h"
 #include "SDHC_FAT32_Files.h"
-#include "myFAT32driver.h"
 #include "devinio.h"
 #include "pcb.h"
 #include "my-malloc.h"
 #include "myFAT32driver.h"
 #include "myLEDdriver.h"
 #include "myPBdriver.h"
-
+#include "utils.h"
 
 #define NUMBER_OF_DEVICES 7
 
@@ -83,5 +81,15 @@ int fopen(char *pathname, file_descriptor *fd)
     {
         return E_INIT_STREAM;
     }
+}
 
+int fopen(char *pathname)
+{
+    // TODO create 8_3 file name from pathname
+    int delete_file = dir_delete_file(fname);
+    int create_file = dir_create_file(fname);
+    if (create_file == E_SUCCESS)
+    {
+        result = "PASS";
+    }
 }

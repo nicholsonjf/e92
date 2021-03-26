@@ -6,24 +6,10 @@
  */
 
 #include <stdint.h>
-#include "shell.h"
 #include "devinio.h"
 #include "led.h"
 #include "myLEDdriver.h"
-
-int initLED(void)
-{
-    /* Initialize all of the LEDs */
-    ledInitAll();
-    // Define the struct Devices
-    Device *leds[] = {LEDYellow, LEDGreen, LEDOrange, LEDBlue};
-    for (int i=0; i<sizeof(leds)/sizeof(leds[0]); i++) {
-        leds[i]->fgetc = fgetc;
-        leds[i]->fputc = fputc;
-        leds[i]->fclose = fclose;
-    }
-    return E_SUCCESS;
-}
+#include "utils.h"
 
 int fgetc(void)
 {
@@ -37,5 +23,19 @@ int fputc(void)
 
 int fclose(void)
 {
+    return E_SUCCESS;
+}
+
+int initLED(void)
+{
+    /* Initialize all of the LEDs */
+    ledInitAll();
+    // Define the struct Devices
+    Device *leds[] = {LEDYellow, LEDGreen, LEDOrange, LEDBlue};
+    for (int i=0; i<sizeof(leds)/sizeof(leds[0]); i++) {
+        leds[i]->fgetc = fgetc;
+        leds[i]->fputc = fputc;
+        leds[i]->fclose = fclose;
+    }
     return E_SUCCESS;
 }

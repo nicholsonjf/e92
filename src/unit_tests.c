@@ -14,6 +14,7 @@
 #include "SDHC_FAT32_Files.h"
 #include "breakpoint.h"
 #include "unit_tests.h"
+#include "utils.h"
 
 
 int debug = 1;
@@ -37,6 +38,5 @@ void test_create_file(void) {
 }
 
 void run_test_suite() {
-    initDevIO();
     test_create_file();
 }
