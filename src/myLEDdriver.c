@@ -30,7 +30,7 @@ int ledfdelete(char *pathname) {
     return E_NOT_SUPPORTED;
 }
 
-int ledfopen(char *pathname)
+int ledfopen(char *pathname, file_descriptor *fd)
 {
     return E_NOT_SUPPORTED;
 }
@@ -39,7 +39,7 @@ int ledfcreate(char *pathname, file_descriptor *fd) {
     return E_NOT_SUPPORTED;
 }
 
-    int initLED(void)
+int initLED(void)
 {
     /* Initialize all of the LEDs */
     ledInitAll();

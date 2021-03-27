@@ -662,8 +662,8 @@ int dir_delete_file(char *filename) {
 }
 
 int file_open(char *filename, file_descriptor *descrp) {
-    uint32_t *firstCluster;
-    int dir_find_file_status = dir_find_file(filename, firstCluster);
+    uint32_t *fcluster = myMalloc(sizeof(uint32_t));
+    int dir_find_file_status = dir_find_file(filename, fcluster);
     if (dir_find_file_status != E_SUCCESS) {
         return dir_find_file_status;
     }
@@ -675,5 +675,6 @@ int file_open(char *filename, file_descriptor *descrp) {
     // Update the Stream
     Stream stream = (currentPCB->streams)[*descrp];
     stream.position = 0;
+    myFree(fcluster);
     return E_SUCCESS;
 }

@@ -21,7 +21,7 @@ int fatfgetc(file_descriptor *fd)
     return E_SUCCESS;
 }
 
-int fatfputc(char *pathname, file_descriptor *fd)
+int fatfputc(char c, file_descriptor *fd)
 {
     return E_SUCCESS;
 }

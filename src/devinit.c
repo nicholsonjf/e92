@@ -16,7 +16,7 @@
 #include "utils.h"
 #include <string.h>
 
-device_p *devices;
+device_p devices[NUMBER_OF_DEVICES];
 
 int initDevices(void)
 {
@@ -35,15 +35,27 @@ int initDevices(void)
     {
         return initFAT_status;
     }
-    devices = myMalloc(NUMBER_OF_DEVICES * sizeof(device_p));
-    device_p *initializedDevices = {
-        {"/", FAT32},
-        {"/dev/pushbutton/sw1", SW1},
-        {"/dev/pushbutton/sw2", SW2},
-        {"/dev/led/yellow", LEDYellow},
-        {"/dev/led/orange", LEDOrange},
-        {"/dev/led/blue", LEDBlue},
-        {"/dev/led/green", LEDGreen}};
-    devices = initializedDevices;
+    char *pathnames[] = {
+        "/",
+        "/dev/pushbutton/sw1",
+        "/dev/pushbutton/sw2",
+        "/dev/led/yellow",
+        "/dev/led/orange",
+        "/dev/led/blue",
+        "/dev/led/green"
+    };
+    Device *initializedDevices[] = {
+        FAT32,
+        SW1,
+        SW2,
+        LEDYellow,
+        LEDOrange,
+        LEDBlue,
+        LEDGreen
+    };
+    for (int i=0; i<NUMBER_OF_DEVICES; i++) {
+        (&devices)[i]->pathname = pathnames[i];
+        (&devices)[i]->device = initializedDevices[i];
+    }
     return E_SUCCESS;
 }
