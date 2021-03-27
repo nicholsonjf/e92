@@ -10,6 +10,8 @@
 
 #include "devinio.h"
 
+int initLED(void);
+
 Device *LEDGreen;
 Device *LEDYellow;
 Device *LEDBlue;

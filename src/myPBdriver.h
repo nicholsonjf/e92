@@ -10,6 +10,8 @@
 
 #include "devinio.h"
 
+int initPB(void);
+
 Device *SW1;
 Device *SW2;
 

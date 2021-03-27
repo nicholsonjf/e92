@@ -10,60 +10,15 @@
 #include "fsinfo.h"
 #include "devinutils.h"
 #include "pcb.h"
+#include "mySDHCdriver.h"
 #include <string.h>
 
-
-/////// GLOBALS
-
-/**
- * Indicates whether the file system is mounted: 0 if false, 1 if true.
- */
-int file_structure_mounted = 0;
-
-/**
- * Relative Card Address of currently mounted card.
- */
-uint32_t rca;
 
 /**
  * Cluster number of the current working directory.
  */
 uint32_t cwd;
 
-/**
- * Number of sectors in a cluster.
- */
-uint8_t dir_entries_per_sector;
-
-
-/////// FUNCTIONS
-
-int file_structure_mount(void) {
-    if (file_structure_mounted) {
-        return E_FILE_STRUCT_MOUNTED;
-    }
-    microSDCardDetectConfig();
-    int microSDdetected = microSDCardDetectedUsingSwitch();
-    if (!microSDdetected) {
-        return E_NO_MICRO_SD;
-    }
-    microSDCardDisableCardDetectARMPullDownResistor();
-    rca = sdhc_initialize();
-    file_structure_mounted = 1;
-    dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
-    return E_SUCCESS;
-}
-
-int file_structure_umount(void) {
-    if (!file_structure_mounted) {
-        return E_FILE_STRUCT_NOT_MOUNTED;
-    }
-    // TODO call flush_cache
-    sdhc_command_send_set_clr_card_detect_connect(rca);
-    myFree(card_status);
-    file_structure_mounted = 0;
-    return E_SUCCESS;
-}
 
 int dir_set_cwd_to_root(void) {
     if (!file_structure_mounted) {
@@ -673,8 +628,7 @@ int file_open(char *filename, file_descriptor *descrp) {
         return get_stream_status;
     }
     // Update the Stream
-    Stream stream = (currentPCB->streams)[*descrp];
-    stream.position = 0;
+    (currentPCB->streams)[*descrp].position = 0;
     myFree(fcluster);
     return E_SUCCESS;
 }

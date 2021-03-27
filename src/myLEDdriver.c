@@ -6,10 +6,10 @@
  */
 
 #include "myLEDdriver.h"
-#include <stdint.h>
 #include "devinio.h"
 #include "led.h"
 #include "utils.h"
+#include <stdint.h>
 
 int ledfgetc(file_descriptor *fd)
 {

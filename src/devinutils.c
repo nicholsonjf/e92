@@ -11,7 +11,6 @@
 #include "utils.h"
 #include <string.h>
 
-
 int get_device(char *pathname, Device *device)
 {
     for (int i = 0; i < NUMBER_OF_DEVICES; i++)

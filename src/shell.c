@@ -332,11 +332,9 @@ int cmd_exit(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    if (file_structure_mounted) {
-        int unmount = file_structure_umount();
-        if (unmount != E_SUCCESS) {
-            return unmount;
-        }
+    int exit_devices_status = exitDevices();
+    if (exit_devices_status != E_SUCCESS) {
+        return E_EXIT_DEVICES;
     }
     exit(E_SUCCESS);
 }

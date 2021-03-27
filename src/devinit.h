@@ -13,6 +13,8 @@
 
 int initDevices(void);
 
+int exitDevices(void);
+
 typedef struct
 {
     char *pathname;

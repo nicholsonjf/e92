@@ -43,7 +43,7 @@ int pbfopen(char *filename, file_descriptor *fd)
 int initPB(void)
 {
     /* Initialize the push buttons */
-    ledInitAll();
+    pushbuttonInitAll();
     // Define the struct Devices
     Device *pbs[] = {SW1, SW2};
     for (int i = 0; i < sizeof(pbs) / sizeof(pbs[0]); i++)

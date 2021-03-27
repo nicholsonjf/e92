@@ -10,11 +10,15 @@
 #include "SDHC_FAT32_Files.h"
 #include "my-malloc.h"
 #include "utils.h"
+#include <string.h>
 
 /**
  * Initialize a structure to hold additional SDHC status data, defined in initFAT()
  */
 struct sdhc_card_status *card_status;
+
+uint8_t dir_entries_per_sector;
+
 
 int fatfgetc(file_descriptor *fd)
 {
@@ -33,7 +37,7 @@ int fatfclose(file_descriptor *fd)
 
 int fatfopen(char *pathname, file_descriptor *fd)
 {
-    int fatfopen_status = file_open(pathname, *fd);
+    int fatfopen_status = file_open(pathname, fd);
     if (fatfopen_status != E_SUCCESS) {
         return fatfopen_status;
     }
@@ -50,13 +54,12 @@ int fatfdelete(char *pathname)
     {
         return E_FILE_NAME_INVALID;
     }
-    const char *filename = pathname[1];
-    size_t pathname_len = strlen(filename);
+    size_t pathname_len = strlen(&pathname[1]);
     if (pathname_len < 1 || pathname_len > 11)
     {
         return E_FILE_NAME_TOO_LONG;
     }
-    int delete_file = dir_delete_file(filename);
+    int delete_file = dir_delete_file(&pathname[1]);
     if (delete_file != E_SUCCESS)
     {
         return delete_file;
@@ -64,13 +67,9 @@ int fatfdelete(char *pathname)
     return E_SUCCESS;
 }
 
+
 int initFAT(void) {
-    // Mount the SDHC card
-    card_status = myMalloc(sizeof(struct sdhc_card_status));
-    int microSDmounted = file_structure_mount();
-    if (microSDmounted != E_SUCCESS) {
-        return microSDmounted;
-    }
+    uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
     // Set cwd to the root cluster
     int set_cwd = dir_set_cwd_to_root();
     if (set_cwd != E_SUCCESS) {

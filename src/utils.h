@@ -43,6 +43,7 @@ enum error_t
     E_DEVICE_PATH,
     E_GENERIC,
     E_NOT_SUPPORTED,
+    E_EXIT_DEVICES,
     E_COUNT // E_COUNT must be last to calculate the total number of error types
 };
 
