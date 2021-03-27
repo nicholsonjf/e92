@@ -9,6 +9,7 @@
 #include "unit_tests.h"
 #include "utils.h"
 #include "devinit.h"
+#include "devinutils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

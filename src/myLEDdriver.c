@@ -11,22 +11,35 @@
 #include "led.h"
 #include "utils.h"
 
-int ledfgetc(void)
+int ledfgetc(file_descriptor *fd)
+{
+    return E_NOT_SUPPORTED;
+}
+
+int ledfputc(char c, file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int ledfputc(void)
+int ledfclose(file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int ledfclose(void)
-{
-    return E_SUCCESS;
+int ledfdelete(char *pathname) {
+    return E_NOT_SUPPORTED;
 }
 
-int initLED(void)
+int ledfopen(char *pathname)
+{
+    return E_NOT_SUPPORTED;
+}
+
+int ledfcreate(char *pathname, file_descriptor *fd) {
+    return E_NOT_SUPPORTED;
+}
+
+    int initLED(void)
 {
     /* Initialize all of the LEDs */
     ledInitAll();
@@ -36,6 +49,9 @@ int initLED(void)
         leds[i]->fgetc = ledfgetc;
         leds[i]->fputc = ledfputc;
         leds[i]->fclose = ledfclose;
+        leds[i]->fdelete = ledfdelete;
+        leds[i]->fcreate = ledfcreate;
+        leds[i]->fopen = ledfopen;
     }
     return E_SUCCESS;
 }

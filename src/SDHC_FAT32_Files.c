@@ -1,5 +1,4 @@
 #include "SDHC_FAT32_Files.h"
-#include <string.h>
 #include "utils.h"
 #include "microSD.h"
 #include "bootSector.h"
@@ -10,6 +9,9 @@
 #include "myFAT32driver.h"
 #include "fsinfo.h"
 #include "devinutils.h"
+#include "pcb.h"
+#include <string.h>
+
 
 /////// GLOBALS
 
@@ -332,6 +334,88 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
     return E_FILE_NOT_IN_CWD;
 }
 
+// Check for long filenames and skip them.
+int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3 *dir_entry)
+{
+    uint32_t current_cluster_number = cwd;
+    // Pointer to hold the pretty filename. Caller is responsible for freeing filename_wrapper!
+    Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
+    while (current_cluster_number <= total_data_clusters + 1)
+    {
+        uint32_t sector_num = first_sector_of_cluster(cwd);
+        uint32_t sector_index = 0;
+        while (sector_index < sectors_per_cluster)
+        {
+            uint8_t sector_data[512];
+            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            if (read_status != SDHC_SUCCESS)
+            {
+                // Fatal error
+                __BKPT();
+            }
+            struct dir_entry_8_3 *dir_entry = (struct dir_entry_8_3 *)sector_data;
+            int entry_index = 0;
+            while (entry_index < dir_entries_per_sector)
+            {
+                // Last entry in the directory and it is unused. Return file not found.
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_LAST_AND_UNUSED)
+                {
+                    myFree(filename_wrapper);
+                    return E_FILE_NOT_IN_CWD;
+                }
+                // Entry not used, continue
+                if (dir_entry->DIR_Name[0] == DIR_ENTRY_UNUSED)
+                {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // Long dir entry, not supported, continue
+                uint8_t dir_attr_long_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_LONG_NAME_MASK;
+                if (dir_attr_long_masked == DIR_ENTRY_ATTR_LONG_NAME)
+                {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // Entry is a dir (nested directories not supported), continue
+                uint8_t dir_attr_dir_masked = dir_entry->DIR_Attr & DIR_ENTRY_ATTR_DIRECTORY;
+                if (dir_attr_dir_masked == DIR_ENTRY_ATTR_DIRECTORY)
+                {
+                    dir_entry++;
+                    entry_index++;
+                    continue;
+                }
+                // This is an in-use 8.3 file, check to see if it matches
+                int etf_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                int fnamecmp = strncmp((const char *)filename_wrapper->combined, (const char *)filename, (size_t)sizeof(filename));
+                if (fnamecmp == 0)
+                {
+                    *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+                    return E_SUCCESS;
+                }
+                dir_entry++;
+                entry_index++;
+            }
+            sector_num++;
+        }
+        uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_number);
+        if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE)
+        {
+            return E_FILE_NOT_IN_CWD;
+        }
+        if (current_cluster_FAT_entry == FAT_ENTRY_DEFECTIVE_CLUSTER)
+        {
+            // Fatal error
+            __BKPT();
+        }
+        // FAT entry is in use and points to next cluster
+        // Set cluster to the current cluster's FAT entry and continue iteration
+        current_cluster_number = current_cluster_FAT_entry;
+    }
+    return E_FILE_NOT_IN_CWD;
+}
+
 int dir_create_file(char *filename) {
     uint32_t *fcluster = myMalloc(sizeof(uint32_t));
     // Check if the filename already exists
@@ -584,9 +668,12 @@ int file_open(char *filename, file_descriptor *descrp) {
         return dir_find_file_status;
     }
     // Get an available Stream or return an error
-    int get_stream_status = get_available_stream(file_descriptor * fd);
+    int get_stream_status = get_available_stream(descrp);
     if (get_stream_status != E_SUCCESS) {
         return get_stream_status;
     }
-    // Update the 
+    // Update the Stream
+    Stream stream = (currentPCB->streams)[*descrp];
+    stream.position = 0;
+    return E_SUCCESS;
 }

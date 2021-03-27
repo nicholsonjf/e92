@@ -16,31 +16,36 @@
  */
 struct sdhc_card_status *card_status;
 
-int fatfgetc(void)
+int fatfgetc(file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int fatfputc(void)
+int fatfputc(char *pathname, file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int fatfclose(void)
+int fatfclose(file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int fatfopen(char *pathname, file_descriptor *descrp)
+int fatfopen(char *pathname, file_descriptor *fd)
 {
-    int fatfopen_status = file_open(char *filename, file_descriptor *descrp);
+    int fatfopen_status = file_open(pathname, *fd);
     if (fatfopen_status != E_SUCCESS) {
         return fatfopen_status;
     }
     return E_SUCCESS;
 }
 
-int fatfdelete(char *pathname) {
+int fatfcreate(char *pathname, file_descriptor *fd) {
+    return E_SUCCESS;
+}
+
+int fatfdelete(char *pathname)
+{
     if (pathname[0] != '/')
     {
         return E_FILE_NAME_INVALID;

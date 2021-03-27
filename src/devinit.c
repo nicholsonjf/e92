@@ -5,8 +5,8 @@
  * Author: James Nicholson
  */
 
-#include "devinio.h"
-#include <string.h>
+#include "devinit.h"
+#include "devinutils.h"
 #include "SDHC_FAT32_Files.h"
 #include "pcb.h"
 #include "my-malloc.h"
@@ -14,14 +14,7 @@
 #include "myLEDdriver.h"
 #include "myPBdriver.h"
 #include "utils.h"
-
-#define NUMBER_OF_DEVICES 7
-
-typedef struct device_p
-{
-    char *pathname;
-    Device *device;
-} device_p;
+#include <string.h>
 
 device_p *devices;
 

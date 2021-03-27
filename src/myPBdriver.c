@@ -11,17 +11,31 @@
 #include "pushbutton.h"
 #include "utils.h"
 
-int pbfgetc(void)
+int pbfgetc(file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int pbfputc(void)
+int pbfputc(char c, file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int pbfclose(void)
+int pbfclose(file_descriptor *fd)
+{
+    return E_SUCCESS;
+}
+
+int pbfdelete(char *pathname) {
+    return E_NOT_SUPPORTED;
+}
+
+int pbfcreate(char *pathname, file_descriptor *fd)
+{
+    return E_SUCCESS;
+}
+
+int pbfopen(char *filename, file_descriptor *fd)
 {
     return E_SUCCESS;
 }
@@ -37,6 +51,9 @@ int initPB(void)
         pbs[i]->fgetc = pbfgetc;
         pbs[i]->fputc = pbfputc;
         pbs[i]->fclose = pbfclose;
+        pbs[i]->fdelete = pbfdelete;
+        pbs[i]->fcreate = pbfcreate;
+        pbs[i]->fopen = pbfopen;
     }
     return E_SUCCESS;
 }

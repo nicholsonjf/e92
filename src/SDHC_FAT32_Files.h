@@ -159,10 +159,6 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen);
 
 /////// ADDED BY JAMES
 
-/**
- * Indicates whether the file system is mounted: 0 if false, 1 if true.
- */
-extern int file_structure_mounted;
 
 /**
  * Takes a character and determines if it's a valid FAT32 8_3 filename character
@@ -199,5 +195,11 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *fil
 int filename_to_entry(Filename_8_3_Wrapper *file_wrapper, struct dir_entry_8_3 *dir_entry);
 
 int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *file_wrapper);
+
+/**
+ * Extended dir_find_file
+ * The same as dir_find_file except it places a pointer to the dir entry in dir_entry if the file is found
+ */
+int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3 *dir_entry);
 
 #endif /* ifndef _SDHC_FAT32_FILES_H_ */

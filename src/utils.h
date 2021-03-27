@@ -42,7 +42,8 @@ enum error_t
     E_MAX_STREAMS,
     E_DEVICE_PATH,
     E_GENERIC,
-    E_COUNT
+    E_NOT_SUPPORTED,
+    E_COUNT // E_COUNT must be last to calculate the total number of error types
 };
 
 #endif /* ifndef _MYUTIL_H */

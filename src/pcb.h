@@ -6,7 +6,7 @@
 struct pcb
 {
     int pid;
-    Stream *streams[32];
+    Stream streams[32];
 };
 
 extern struct pcb *currentPCB;

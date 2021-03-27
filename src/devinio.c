@@ -8,6 +8,7 @@
 #include "devinio.h"
 #include "my-malloc.h"
 #include "utils.h"
+#include "pcb.h"
 #include <string.h>
 
 
@@ -22,10 +23,10 @@ int myfopen(char *pathname, file_descriptor *fd)
     if (fopen_status != E_SUCCESS) {
         return fopen_status;
     }
-    currentPCB->streams[*fd].device = device;
-    currentPCB->streams[*fd].pathname = pathname;
+    (currentPCB->streams)[*fd].device = device;
+    (currentPCB->streams)[*fd].pathname = pathname;
     // Stream is in use
-    currentPCB->streams[i].status = 1;
+    (currentPCB->streams)[*fd].status = 1;
     return E_SUCCESS;
 }
 
@@ -37,14 +38,10 @@ int myfdelete(char *pathname)
     {
         return E_DEVICE_PATH;
     }
-    int fopen_status = device->fopen(pathname, fd);
-    if (fopen_status != E_SUCCESS)
+    int fdelete_status = device->fdelete(pathname);
+    if (fdelete_status != E_SUCCESS)
     {
-        return fopen_status;
+        return fdelete_status;
     }
-    currentPCB->streams[*fd].device = device;
-    currentPCB->streams[*fd].pathname = pathname;
-    // Stream is in use
-    currentPCB->streams[i].status = 1;
     return E_SUCCESS;
 }
