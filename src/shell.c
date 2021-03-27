@@ -1,9 +1,4 @@
 #include "shell.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <stdarg.h>
 #include "my-malloc.h"
 #include "uart.h"
 #include "delay.h"
@@ -13,7 +8,12 @@
 #include "breakpoint.h"
 #include "unit_tests.h"
 #include "utils.h"
-#include "SDHC_FAT32_Files.h"
+#include "devinit.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <stdarg.h>
 
 
 char *help_text =
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
-    initDevIO();
+    initDevices();
     if (TEST_MODE) {
         run_test_suite();
     }

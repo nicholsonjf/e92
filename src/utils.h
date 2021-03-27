@@ -39,7 +39,7 @@ enum error_t
     E_FILE_NAME_TOO_LONG, // 20
     E_CHR_INVALID_8_3,
     E_NO_FREE_CLUSTER,
-    E_INIT_STREAM,
+    E_MAX_STREAMS,
     E_DEVICE_PATH,
     E_GENERIC,
     E_COUNT

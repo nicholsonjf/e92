@@ -9,6 +9,7 @@
 #include "FAT.h"
 #include "myFAT32driver.h"
 #include "fsinfo.h"
+#include "devinutils.h"
 
 /////// GLOBALS
 
@@ -574,4 +575,18 @@ int dir_delete_file(char *filename) {
         current_cluster_number = current_cluster_FAT_entry;
     }
     return E_FILE_NOT_IN_CWD;
+}
+
+int file_open(char *filename, file_descriptor *descrp) {
+    uint32_t *firstCluster;
+    int dir_find_file_status = dir_find_file(filename, firstCluster);
+    if (dir_find_file_status != E_SUCCESS) {
+        return dir_find_file_status;
+    }
+    // Get an available Stream or return an error
+    int get_stream_status = get_available_stream(file_descriptor * fd);
+    if (get_stream_status != E_SUCCESS) {
+        return get_stream_status;
+    }
+    // Update the 
 }

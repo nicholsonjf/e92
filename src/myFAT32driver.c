@@ -31,6 +31,34 @@ int fatfclose(void)
     return E_SUCCESS;
 }
 
+int fatfopen(char *pathname, file_descriptor *descrp)
+{
+    int fatfopen_status = file_open(char *filename, file_descriptor *descrp);
+    if (fatfopen_status != E_SUCCESS) {
+        return fatfopen_status;
+    }
+    return E_SUCCESS;
+}
+
+int fatfdelete(char *pathname) {
+    if (pathname[0] != '/')
+    {
+        return E_FILE_NAME_INVALID;
+    }
+    const char *filename = pathname[1];
+    size_t pathname_len = strlen(filename);
+    if (pathname_len < 1 || pathname_len > 11)
+    {
+        return E_FILE_NAME_TOO_LONG;
+    }
+    int delete_file = dir_delete_file(filename);
+    if (delete_file != E_SUCCESS)
+    {
+        return delete_file;
+    }
+    return E_SUCCESS;
+}
+
 int initFAT(void) {
     // Mount the SDHC card
     card_status = myMalloc(sizeof(struct sdhc_card_status));
@@ -47,5 +75,6 @@ int initFAT(void) {
     FAT32->fgetc = fatfgetc;
     FAT32->fputc = fatfputc;
     FAT32->fclose = fatfclose;
+    FAT32->fopen = fatfopen;
     return E_SUCCESS;
 }

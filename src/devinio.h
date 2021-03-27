@@ -22,6 +22,7 @@ typedef struct device
 {
     int (*fgetc)(char *minor);
     int (*fputc)(char *minor);
+    int (*fopen)(char *pathname, file_descriptor *fd);
     int (*fclose)(void);
 } Device;
 
@@ -38,8 +39,6 @@ typedef struct stream
     uint32_t current_cluster;
 
 } Stream;
-
-int initDevIO(void);
 
 int myfopen(char *pathname, file_descriptor *fd);
 
