@@ -25,8 +25,8 @@ uint32_t rca;
 
 int file_structure_mount(void)
 {
-    // card_status is freed in file_structure_umount
-    struct sdhc_card_status *card_status = myMalloc(sizeof(struct sdhc_card_status));
+    // my_card_status is freed in file_structure_umount
+    struct sdhc_card_status *my_card_status = myMalloc(sizeof(struct sdhc_card_status));
     if (file_structure_mounted)
     {
         return E_FILE_STRUCT_MOUNTED;
@@ -51,7 +51,7 @@ int file_structure_umount(void)
     }
     invalidate_entire_FAT_cache();
     sdhc_command_send_set_clr_card_detect_connect(rca);
-    myFree(card_status);
+    myFree(my_card_status);
     file_structure_mounted = 0;
     return E_SUCCESS;
 }

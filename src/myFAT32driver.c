@@ -15,7 +15,7 @@
 /**
  * Initialize a structure to hold additional SDHC status data, defined in initFAT()
  */
-struct sdhc_card_status *card_status;
+struct sdhc_card_status *my_card_status;
 
 uint8_t dir_entries_per_sector;
 

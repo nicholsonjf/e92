@@ -14,7 +14,7 @@
 /**
  * Structure to hold additional SDHC status data
  */
-extern struct sdhc_card_status *card_status;
+extern struct sdhc_card_status *my_card_status;
 
 /**
  * Micro SDHC mount status

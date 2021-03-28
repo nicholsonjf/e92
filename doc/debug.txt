@@ -1,3 +1,20 @@
+***CODEWARRIOR TRACEBACK***
+
+PS3_RAM_Segger J-Link_Trace [CodeWarrior]	
+	ARM Processors, PS3.elf (Suspended)	
+		Thread [ID: 0x0] (Suspended: Signal 'Halt' received. Description: User halted thread.)	
+			7 Default_Handler() kinetis_sysinit.c:31 0x1fff01e8	
+			6 sdhc_read_single_block() microSD.c:841 0x1fff2c92	
+			5 dir_delete_file() SDHC_FAT32_Files.c:534 0x1fff5706	
+			4 test_create_file() unit_tests.c:26 0x1fff044e	
+			3 run_test_suite() unit_tests.c:46 0x1fff0464	
+			2 main() shell.c:182 0x1fff0a46	
+			1 __thumb_startup() __arm_start.c:279 0x1fff0294	
+	C:\Users\nicho\workspace\PS3\RAM\PS3.elf (3/28/21 3:38 AM)	
+
+
+***DEBUG OUTPUT TO TERMINAL***
+
 OEM ID: SD
 Product Name: SD32G
 Product Revision: 8.5

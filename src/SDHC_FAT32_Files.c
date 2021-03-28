@@ -39,7 +39,7 @@ int dir_ls(void) {
         uint32_t sector_index = 0;
         while (sector_index < sectors_per_cluster) {
             uint8_t sector_data[512];
-            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            int read_status = sdhc_read_single_block(rca, sector_num, my_card_status, sector_data);
             if (read_status != SDHC_SUCCESS) {
                 // Fatal error
                 __BKPT();
@@ -232,7 +232,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
         uint32_t sector_index = 0;
         while (sector_index < sectors_per_cluster) {
             uint8_t sector_data[512];
-            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            int read_status = sdhc_read_single_block(rca, sector_num, my_card_status, sector_data);
             if (read_status != SDHC_SUCCESS) {
                 // Fatal error
                 __BKPT();
@@ -310,7 +310,7 @@ int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3
         while (sector_index < sectors_per_cluster)
         {
             uint8_t sector_data[512];
-            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            int read_status = sdhc_read_single_block(rca, sector_num, my_card_status, sector_data);
             if (read_status != SDHC_SUCCESS)
             {
                 // Fatal error
@@ -408,7 +408,7 @@ int dir_create_file(char *filename) {
         uint32_t current_sector_number = first_sector_number + current_sector_index;
         while (current_sector_index <= sectors_per_cluster) {
             uint8_t sector_data[512];
-            int read_status = sdhc_read_single_block(rca, current_sector_number, card_status, sector_data);
+            int read_status = sdhc_read_single_block(rca, current_sector_number, my_card_status, sector_data);
             if (read_status != SDHC_SUCCESS) {
                 // Fatal error
                 __BKPT();
@@ -426,7 +426,7 @@ int dir_create_file(char *filename) {
                     strncpy((char *)&dir_entry->DIR_Name[0], (char *)&filename_wrapper->name, 8);
                     strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
                     // Write the updated sector data to the microSD
-                    int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
+                    int write_status = sdhc_write_single_block(rca, current_sector_number, my_card_status, sector_data);
                     if (write_status != SDHC_SUCCESS)
                     {
                         // Fatal error
@@ -448,7 +448,7 @@ int dir_create_file(char *filename) {
                         strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
                         (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
                         // Write the updated sector data to the microSD
-                        int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
+                        int write_status = sdhc_write_single_block(rca, current_sector_number, my_card_status, sector_data);
                         if (write_status != SDHC_SUCCESS)
                         {
                             // Fatal error
@@ -477,7 +477,7 @@ int dir_create_file(char *filename) {
                                 // next sector DIR_ENTRY_LAST_AND_UNUSED
                                 // Clear the entry attribute byte
                                 uint32_t sector_num = first_sector_of_cluster(cluster_search_index);
-                                int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+                                int read_status = sdhc_read_single_block(rca, sector_num, my_card_status, sector_data);
                                 if (read_status != SDHC_SUCCESS)
                                 {
                                     // Fatal error
@@ -493,7 +493,7 @@ int dir_create_file(char *filename) {
                                 strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
                                 (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
                                 // Write the updated sector data to the microSD
-                                int write_status = sdhc_write_single_block(rca, current_sector_number, card_status, sector_data);
+                                int write_status = sdhc_write_single_block(rca, current_sector_number, my_card_status, sector_data);
                                 if (write_status != SDHC_SUCCESS)
                                 {
                                     // Fatal error
@@ -531,7 +531,7 @@ int dir_delete_file(char *filename) {
         uint32_t sector_index = 0;
         while (sector_index < sectors_per_cluster) {
             uint8_t sector_data[512];
-            int read_status = sdhc_read_single_block(rca, sector_num, card_status, sector_data);
+            int read_status = sdhc_read_single_block(rca, sector_num, my_card_status, sector_data);
             if (read_status != SDHC_SUCCESS)
             {
                 // Fatal error
@@ -581,7 +581,7 @@ int dir_delete_file(char *filename) {
                     dir_entry->DIR_Name[0] = 0xE5;
                     dir_entry->DIR_FstClusHI = 0x0;
                     // Write the updated sector data to the microSD
-                    int write_status = sdhc_write_single_block(rca, sector_num, card_status, sector_data);
+                    int write_status = sdhc_write_single_block(rca, sector_num, my_card_status, sector_data);
                     if (write_status != SDHC_SUCCESS)
                     {
                         // Fatal error

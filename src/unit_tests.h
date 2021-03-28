@@ -3,6 +3,6 @@
 
 #define TEST_MODE 1
 
-void run_test_suite(void);
+int run_test_suite(void);
 
 #endif /* ifndef _UNITTESTS_H */
