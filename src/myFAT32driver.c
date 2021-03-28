@@ -76,9 +76,9 @@ int initFAT(void) {
         return set_cwd;
     }
     // Define the struct Device FAT32
-    FAT32->fgetc = fatfgetc;
-    FAT32->fputc = fatfputc;
-    FAT32->fclose = fatfclose;
-    FAT32->fopen = fatfopen;
+    FAT32.fgetc = fatfgetc;
+    FAT32.fputc = fatfputc;
+    FAT32.fclose = fatfclose;
+    FAT32.fopen = fatfopen;
     return E_SUCCESS;
 }

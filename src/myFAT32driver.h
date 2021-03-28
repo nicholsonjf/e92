@@ -12,7 +12,7 @@
 #include "devinio.h"
 
 
-Device *FAT32;
+Device FAT32;
 
 int initFAT(void);
 

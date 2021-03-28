@@ -44,14 +44,14 @@ int initLED(void)
     /* Initialize all of the LEDs */
     ledInitAll();
     // Define the struct Devices
-    Device *leds[] = {LEDYellow, LEDGreen, LEDOrange, LEDBlue};
+    Device leds[4] = {LEDYellow, LEDGreen, LEDOrange, LEDBlue};
     for (int i=0; i<sizeof(leds)/sizeof(leds[0]); i++) {
-        leds[i]->fgetc = ledfgetc;
-        leds[i]->fputc = ledfputc;
-        leds[i]->fclose = ledfclose;
-        leds[i]->fdelete = ledfdelete;
-        leds[i]->fcreate = ledfcreate;
-        leds[i]->fopen = ledfopen;
+        leds[i].fgetc = ledfgetc;
+        leds[i].fputc = ledfputc;
+        leds[i].fclose = ledfclose;
+        leds[i].fdelete = ledfdelete;
+        leds[i].fcreate = ledfcreate;
+        leds[i].fopen = ledfopen;
     }
     return E_SUCCESS;
 }

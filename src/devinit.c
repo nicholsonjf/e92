@@ -62,7 +62,7 @@ int initDevices(void)
         "/dev/led/blue",
         "/dev/led/green"
     };
-    Device *initializedDevices[] = {
+    Device initializedDevices[] = {
         FAT32,
         SW1,
         SW2,
@@ -73,7 +73,7 @@ int initDevices(void)
     };
     for (int i=0; i<NUMBER_OF_DEVICES; i++) {
         (&devices)[i]->pathname = pathnames[i];
-        (&devices)[i]->device = initializedDevices[i];
+        (&devices)[i]->device = &initializedDevices[i];
     }
     return E_SUCCESS;
 }
