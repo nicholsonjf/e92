@@ -47,7 +47,7 @@ int file_structure_umount(void)
     {
         return E_FILE_STRUCT_NOT_MOUNTED;
     }
-    // TODO call flush_cache
+    invalidate_entire_FAT_cache();
     sdhc_command_send_set_clr_card_detect_connect(rca);
     myFree(&card_status);
     file_structure_mounted = 0;

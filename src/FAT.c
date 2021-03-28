@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
  *
- * Last updated: 2:14 PM 16-Mar-2021
+ * Last updated: 12:42 PM 20-Mar-2021
  */
 
 #include <stdlib.h>
@@ -24,7 +24,7 @@
 
 uint32_t FAT_sector_valid;
 uint32_t FAT_in_mem_0_origin_sector;
-uint32_t FAT_sector[512/4];
+uint32_t FAT_sector[BS_REQUIRED_BYTES_PER_SECTOR/FAT_BYTES_PER_FAT_ENTRY];
 
 static int FAT_endiannessDetermined = 0;
 /* FAT_endian will indicate if the *computer* is little or big endian;
@@ -35,6 +35,15 @@ static enum endianness {
 } FAT_endian;
 
 /* This module implements a single sector write-through FAT cache */
+/* Because the cache is write-through, the primary and backup FATs on */
+/*   the microSD card are always kept up-to-date whenever a FAT entry */
+/*   is updated using the write_FAT_entry function. */
+/* Note: When unmounting a microSD card, you must call the */
+/*   invalidate_entire_FAT_cache function so that no FAT data from an */
+/*   earlier mounted microSD card will be used with a newly inserted */
+/*   card.  Of course, this only is an issue if you allow cards to be */
+/*   unmounted and new cards to be mounted without reloading your OS */
+/*   into the K70. */
 
 static void determineEndianness(void);
 
@@ -72,8 +81,10 @@ static void determineEndianness(void) {
 uint32_t read_FAT_entry(uint32_t rca, uint32_t cluster) {
   char output_buffer[FAT_OUTPUT_BUFFER_SIZE];
 
-  uint32_t FAT_0_origin_sector_for_cluster_num = cluster/(bytes_per_sector/4);
-  uint32_t FAT_entry_offset_in_sector = cluster%(bytes_per_sector/4);
+  uint32_t FAT_0_origin_sector_for_cluster_num =
+    cluster/(bytes_per_sector/FAT_BYTES_PER_FAT_ENTRY);
+  uint32_t FAT_entry_offset_in_sector =
+    cluster%(bytes_per_sector/FAT_BYTES_PER_FAT_ENTRY);
   uint32_t FAT_sector_to_access =
     FAT_0_origin_sector_for_cluster_num+first_FAT_sector;
   
@@ -115,8 +126,10 @@ uint32_t read_FAT_entry(uint32_t rca, uint32_t cluster) {
 void write_FAT_entry(uint32_t rca, uint32_t cluster, uint32_t nextCluster) {
   char output_buffer[FAT_OUTPUT_BUFFER_SIZE];
 
-  uint32_t FAT_0_origin_sector_for_cluster_num = cluster/(bytes_per_sector/4);
-  uint32_t FAT_entry_offset_in_sector = cluster%(bytes_per_sector/4);
+  uint32_t FAT_0_origin_sector_for_cluster_num =
+    cluster/(bytes_per_sector/FAT_BYTES_PER_FAT_ENTRY);
+  uint32_t FAT_entry_offset_in_sector =
+    cluster%(bytes_per_sector/FAT_BYTES_PER_FAT_ENTRY);
   uint32_t FAT_sector_to_access =
     FAT_0_origin_sector_for_cluster_num+first_FAT_sector;
   
@@ -168,10 +181,14 @@ void write_FAT_entry(uint32_t rca, uint32_t cluster, uint32_t nextCluster) {
   return;
 }
 
-void invalidate_FAT_by_sector(uint32_t sector_address) {
+void invalidate_FAT_cache_by_sector(uint32_t sector_address) {
   if(sector_address == (FAT_in_mem_0_origin_sector+first_FAT_sector)) {
     FAT_sector_valid = 0;
   }
+}
+
+void invalidate_entire_FAT_cache(void) {
+  FAT_sector_valid = 0;
 }
 
 static void read_FAT(uint32_t rca, uint8_t *data, uint32_t sector) {
@@ -201,7 +218,7 @@ static void read_FAT(uint32_t rca, uint8_t *data, uint32_t sector) {
     int i;
     uint8_t MSByte, NextToMSByte;
 
-    for(i = 0; i < 512; i += 4) {
+    for(i = 0; i < bytes_per_sector; i += FAT_BYTES_PER_FAT_ENTRY) {
       MSByte = data[i];
       NextToMSByte = data[i+1];
       data[i] = data[i+3];
@@ -234,7 +251,7 @@ static void write_FAT(uint32_t rca, uint8_t *data, uint32_t sector) {
     int i;
     uint8_t MSByte, NextToMSByte;
 
-    for(i = 0; i < 512; i += 4) {
+    for(i = 0; i < bytes_per_sector; i += FAT_BYTES_PER_FAT_ENTRY) {
       MSByte = data[i];
       NextToMSByte = data[i+1];
       data[i] = data[i+3];
@@ -257,7 +274,7 @@ static void write_FAT(uint32_t rca, uint8_t *data, uint32_t sector) {
     int i;
     uint8_t MSByte, NextToMSByte;
 
-    for(i = 0; i < 512; i += 4) {
+    for(i = 0; i < bytes_per_sector; i += FAT_BYTES_PER_FAT_ENTRY) {
       MSByte = data[i];
       NextToMSByte = data[i+1];
       data[i] = data[i+3];
@@ -273,7 +290,8 @@ int FAT_copy_verify(uint32_t rca) {
 
   uint32_t main_FAT_sector_number, copy_FAT_sector_number, i;
   struct sdhc_card_status card_status;
-  uint8_t main_FAT_data[512], copy_FAT_data[512];
+  uint8_t main_FAT_data[BS_REQUIRED_BYTES_PER_SECTOR],
+    copy_FAT_data[BS_REQUIRED_BYTES_PER_SECTOR];
   int compare_equal;
 
   compare_equal = 1;

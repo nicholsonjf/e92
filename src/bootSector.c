@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
  *
- * Last updated: 9:27 PM 8-Mar-2021
+ * Last updated: 12:30 PM 20-Mar-2021
  */
 
 #include <stdio.h>
@@ -27,12 +27,14 @@ uint16_t FSInfo_sector_number;
 uint32_t sectors_per_cluster;
 uint32_t first_FAT_sector;
 uint32_t sectors_per_FAT;
+uint8_t number_of_FATs;
 uint32_t root_directory_cluster;
 uint32_t total_data_clusters;
 uint8_t BPB_Media;
+uint16_t BackupBootSector;
+int card_format_mbr;
 
 uint32_t first_data_sector;
-uint16_t BackupBootSector;
 
 static int chs_to_cylinder(struct chs_field *CHS_field_p);
 static int chs_to_head(struct chs_field *CHS_field_p);
@@ -69,7 +71,9 @@ void boot_sector_read(uint32_t rca) {
 
   boot_sector_p = (struct boot_sector *)data;
 
-  int card_format_mbr = 1, acceptableFormat = 1;
+  int acceptableFormat = 1;
+
+  card_format_mbr = 1;
 
   if(boot_sector_p->Signature_word[0] == 0x55) {
     if(BS_DEBUG)
@@ -116,10 +120,11 @@ void boot_sector_read(uint32_t rca) {
 
   /* this is the test that Linux performs to determine if this sector is
      an MBR or a VBR */
+  /* all bits except for the Active/Bootable bit in the status byte in
+     all partition entries must be 0's in a valid MBR */
   for(part_num = 1; part_num <= PARTITION_NUM_ENTRIES; part_num++) {
     part_status = part_entry_p->status;
-    if((part_status != PARTITION_STATUS_NOTBOOTABLE) &&
-       (part_status != PARTITION_STATUS_BOOTABLE)) {
+    if((part_status & ~PARTITION_STATUS_BOOTABLE_MASK) != 0 ) {
       card_format_mbr = 0;
     }
     part_entry_p++;
@@ -129,10 +134,8 @@ void boot_sector_read(uint32_t rca) {
     /* this is probably an MBR (Master Boot Record) that contains
        partition information */
     if(BS_INFORMATIVE_PRINTF) {
-      snprintf(output_buffer, sizeof(output_buffer),
-	       "All four partition entry status bytes in sector 0 are either 0x%02X or 0x%02X;\n\tthis is probably a valid MBR\n",
-	       PARTITION_STATUS_NOTBOOTABLE, PARTITION_STATUS_BOOTABLE);
-      CONSOLE_PUTS(output_buffer);
+      CONSOLE_PUTS("Because all four partition entry status bytes in sector 0 have their low-order seven bits set to 0,\n\tthis is probably a valid MBR\n");
+      CONSOLE_PUTS("\tthis is probably a valid MBR\n");
     }
   } else {
     if(BS_INFORMATIVE_PRINTF) {
@@ -221,16 +224,19 @@ void boot_sector_read(uint32_t rca) {
 		 part_type,
 		 part_type == PARTITION_TYPE_EMPTY ? " (Empty)" :
 		 part_type ==
-		 PARTITION_TYPE_FAT32_LBA ? " (DOS 7.1+ FAT32 with LBA)" : "");
+		 PARTITION_TYPE_FAT32_CHS ? " (DOS 7.1+ FAT32 with CHS Addressing)" :
+		 part_type ==
+		 PARTITION_TYPE_FAT32_LBA ? " (DOS 7.1+ FAT32 with LBA)" :
+		 "");
 	CONSOLE_PUTS(output_buffer);
       }
-      if(part_status & PARTITION_STATUS_BOOTABLE)
+      if(part_status & PARTITION_STATUS_BOOTABLE_MASK)
 	number_of_bootable_partitions++;
       if(BS_INFORMATIVE_PRINTF) {
 	snprintf(output_buffer, sizeof(output_buffer),
 		 "\tStatus: 0x%02X (%s), First LBA: %lu,\n",
 		 part_status,
-		 (part_status & PARTITION_STATUS_BOOTABLE) ? "Bootable/Active" : "Not Bootable/Inactive",
+		 (part_status & PARTITION_STATUS_BOOTABLE_MASK) ? "Bootable/Active" : "Not Bootable/Inactive",
 		 first_sector_LBA);
 	CONSOLE_PUTS(output_buffer);
 	snprintf(output_buffer, sizeof(output_buffer),
@@ -244,14 +250,17 @@ void boot_sector_read(uint32_t rca) {
 		 chs_to_sector(&part_entry_p->last_sector_CHS_address));
 	CONSOLE_PUTS(output_buffer);
       }
-      if((part_status != PARTITION_STATUS_NOTBOOTABLE) &&
-	 (part_status != PARTITION_STATUS_BOOTABLE)) {
+      if((part_status & ~PARTITION_STATUS_BOOTABLE_MASK) != 0 ) {
 	acceptableFormat = 0;
 	if(BS_DEBUG)
 	  CONSOLE_PUTS("*****Status byte in partition entry is invalid\n");
       }
       part_entry_p++;
-      if((part_type == PARTITION_TYPE_FAT32_LBA) && (first_sector_LBA != 0)) {
+      if((part_type == PARTITION_TYPE_FAT32_CHS) &&
+	 (first_sector_LBA != 0)) {
+	file_structure_first_sector = first_sector_LBA;
+      } else if((part_type == PARTITION_TYPE_FAT32_LBA) &&
+		(first_sector_LBA != 0)) {
 	file_structure_first_sector = first_sector_LBA;
       }
     }
@@ -266,7 +275,7 @@ void boot_sector_read(uint32_t rca) {
 
     if(file_structure_first_sector == 0)
       if(BS_DEBUG)
-	CONSOLE_PUTS("*****No FAT32_LBA partition found; assume there are no partitions*****\n");
+	CONSOLE_PUTS("*****No FAT32_CHS or FAT32_LBA partition found; assume there are no partitions*****\n");
 
     /* now read the boot sector of the FAT32_LBA partition */
 
@@ -365,13 +374,14 @@ void boot_sector_read(uint32_t rca) {
     CONSOLE_PUTS(output_buffer);
   }
 
+  number_of_FATs = boot_sector_p->BPB_NumFATs;
   if(BS_DEBUG) {
     snprintf(output_buffer, sizeof(output_buffer),
 	     "The count of file allocation tables (FATs) on the volume (BPB_NumFATs): %u\n",
-	     boot_sector_p->BPB_NumFATs);
+	     number_of_FATs);
     CONSOLE_PUTS(output_buffer);
   }
-  if(boot_sector_p->BPB_NumFATs != 2) {
+  if(number_of_FATs != 2) {
     if(BS_INFORMATIVE_PRINTF)
       CONSOLE_PUTS("*****BPB_NumFATs is not 2; unsupported format*****\n");
     acceptableFormat = 0;
@@ -713,7 +723,7 @@ void boot_sector_read(uint32_t rca) {
   
   /* The first data sector (that is, the first sector in which
      directories and files may be stored): */
-  first_data_sector = RsvdSecCnt + (boot_sector_p->BPB_NumFATs * sectors_per_FAT);
+  first_data_sector = RsvdSecCnt + (number_of_FATs * sectors_per_FAT);
   if(BS_DEBUG) {
     snprintf(output_buffer, sizeof(output_buffer),
 	     "First data sector: %lu\n", first_data_sector);
@@ -729,7 +739,7 @@ void boot_sector_read(uint32_t rca) {
   }
 
   /* The total number of data sectors: */
-  total_data_sectors = TotSec32 - (RsvdSecCnt + (boot_sector_p->BPB_NumFATs * sectors_per_FAT));
+  total_data_sectors = TotSec32 - (RsvdSecCnt + (number_of_FATs * sectors_per_FAT));
   if(BS_DEBUG) {
     snprintf(output_buffer, sizeof(output_buffer),
 	     "Total number of data sectors: %lu\n", total_data_sectors);

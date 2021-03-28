@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
  *
- * Last updated: 9:32 PM 8-Mar-2021
+ * Last updated: 12:51 PM 20-Mar-2021
  */
 
 #include <stdio.h>
@@ -28,7 +28,7 @@ void FSInfo_sector_read(uint32_t rca, uint32_t block_address) {
   char output_buffer[FSI_OUTPUT_BUFFER_SIZE];
 
   struct sdhc_card_status card_status;
-  uint8_t data[512];
+  uint8_t data[BS_REQUIRED_BYTES_PER_SECTOR];
 
   struct FSInfo_sector *FSInfo_sector_p;
 
@@ -56,7 +56,7 @@ void FSInfo_sector_read(uint32_t rca, uint32_t block_address) {
 
   int i, allZero;
   allZero = 1;
-  for(i = 0; i <480; i++) {
+  for(i = 0; i < sizeof(FSInfo_sector_p->FSI_Reserved1); i++) {
     if(FSInfo_sector_p->FSI_Reserved1[i] != 0) {
       allZero = 0;
       break;
@@ -117,7 +117,7 @@ void FSInfo_sector_read(uint32_t rca, uint32_t block_address) {
   }
 
   allZero = 1;
-  for(i = 0; i <12; i++) {
+  for(i = 0; i < sizeof(FSInfo_sector_p->FSI_Reserved2); i++) {
     if(FSInfo_sector_p->FSI_Reserved2[i] != 0) {
       allZero = 0;
       break;

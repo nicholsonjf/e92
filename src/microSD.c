@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
  *
- * Last updated: 9:29 PM 8-Mar-2021
+ * Last updated: 1:36 PM 21-Mar-2021
  */
 
 #include <stdio.h>
@@ -852,7 +852,7 @@ enum sdhc_status sdhc_read_single_block(uint32_t rca, uint32_t block_address,
 
 enum sdhc_status sdhc_write_single_block(uint32_t rca, uint32_t block_address,
                                          struct sdhc_card_status *card_status,
-                                         uint8_t data[512]) {
+                                         const uint8_t data[512]) {
   enum sdhc_status status;
 
   /* SD Physical Specification says that CMD24 has an R1 response.  See

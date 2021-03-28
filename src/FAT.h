@@ -10,7 +10,7 @@
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
  *
- * Last updated: 10:17 PM 10-Mar-2021
+ * Last updated: 12:40 PM 20-Mar-2021
  */
 
 #ifndef _FAT_H
@@ -23,6 +23,9 @@
 /* These #define's enable debugging output */
 #define FAT_DEBUG 0
 #define FAT_INFORMATIVE_PRINTF 0
+
+/* Number of bytes per FAT entry */
+#define FAT_BYTES_PER_FAT_ENTRY 4
 
 /* Mask for the low-order 28 bits of a FAT entry; these are the bits that are
    meaningful */
@@ -54,6 +57,12 @@ uint32_t read_FAT_entry(uint32_t rca, uint32_t cluster);
 /*   Any necessary I/O is performed by this function */
 void write_FAT_entry(uint32_t rca, uint32_t cluster, uint32_t nextCluster);
 
+/* Indicate that the entire FAT cache should be invalidated */
+/*   This function should be called whenever a microSD card is unmounted */
+/*   so that if a new card is later mounted, the previous contents of the */
+/*   FAT cache is not used. */
+void invalidate_entire_FAT_cache(void);
+
 /* #define's and functions below this comment are for internal use only */
 /* -------------------------------------------------------------------- */
 
@@ -70,7 +79,7 @@ void write_FAT_entry(uint32_t rca, uint32_t cluster, uint32_t nextCluster);
 /* Size of buffer used in snprintf and CONSOLE_PUTS */
 #define FAT_OUTPUT_BUFFER_SIZE 129
 
-void invalidate_FAT_by_sector(uint32_t sector_address);
+void invalidate_FAT_cache_by_sector(uint32_t sector_address);
 
 int FAT_copy_verify(uint32_t rca);
 

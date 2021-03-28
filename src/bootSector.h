@@ -9,6 +9,8 @@
  * Written by James L. Frankel (frankel@seas.harvard.edu)
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
+ *
+ * Last updated: 12:30 PM 20-Mar-2021
  */
 
 #ifndef _BOOT_SECTOR_H
@@ -67,8 +69,14 @@ extern uint16_t FSInfo_sector_number;
 extern uint32_t first_FAT_sector;
 /* Number of sectors per FAT */
 extern uint32_t sectors_per_FAT;
+/* Number of FATs */
+extern uint8_t number_of_FATs;
 /* Indicates the type of media used */
 extern uint8_t BPB_Media;
+/* Sector number of the first sector of the copy of the boot record */
+extern uint16_t BackupBootSector;
+/* Flag to indicate if this microSDHC card has an MBR (i.e., is partitioned) */
+extern int card_format_mbr;
 
 #define BPB_BKBOOTSEC_RECOMMENDED 6
 #define BS_REQUIRED_BYTES_PER_SECTOR 512
@@ -128,10 +136,11 @@ struct modern_standard_MBR {
 
 #define PARTITION_NUM_ENTRIES 4
 
-#define PARTITION_STATUS_NOTBOOTABLE 0x00
-#define PARTITION_STATUS_BOOTABLE 0x80
+#define PARTITION_STATUS_BOOTABLE_BIT 7
+#define PARTITION_STATUS_BOOTABLE_MASK (1<<PARTITION_STATUS_BOOTABLE_BIT)
 
 #define PARTITION_TYPE_EMPTY 0x00
+#define PARTITION_TYPE_FAT32_CHS 0x0B
 #define PARTITION_TYPE_FAT32_LBA 0x0C
 
 /* Note: Using bit fields to map hardware bit field format relies on

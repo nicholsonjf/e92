@@ -9,6 +9,8 @@
  * Written by James L. Frankel (frankel@seas.harvard.edu) & Daniel Willenson
  *
  * Copyright (c) 2021 James L. Frankel.  All rights reserved.
+ *
+ * Last updated: 1:35 PM 21-Mar-2021
  */
 
 #ifndef _MICRO_SD_H
@@ -20,7 +22,7 @@
 
 /* These #define's enable debugging output */
 #define MICRO_SD_DEBUG 0
-#define MICRO_SD_INFORMATIVE_PRINTF 1
+#define MICRO_SD_INFORMATIVE_PRINTF 0
 
 /* Routine to configure the microSD Card Detect switch & pull-down resistor in
    the ARM */
@@ -160,7 +162,7 @@ enum sdhc_status sdhc_read_single_block(uint32_t rca, uint32_t block_address,
    equal to SDHC_SUCCESS, all is well; otherwise, the operation failed */
 enum sdhc_status sdhc_write_single_block(uint32_t rca, uint32_t block_address,
                                          struct sdhc_card_status *card_status,
-                                         uint8_t data[512]);
+                                         const uint8_t data[512]);
 
 /* Routine to connect the 50k Ohm (nominal value, specified range is 10k Ohm to
    90k Ohm) pull-up resistor inside the SD card; This should be called when
