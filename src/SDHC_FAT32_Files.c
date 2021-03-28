@@ -66,6 +66,9 @@ int dir_ls(void) {
                 }
                 // A valid file, output filename to console
                 int etf_result = entry_to_filename(dir_entry, filename_wrapper);
+                if (etf_result != E_SUCCESS) {
+                    return etf_result;
+                }
                 myprintf("%s\n", filename_wrapper->combined);
                 dir_entry++;
                 entry_index++;
@@ -221,7 +224,7 @@ int filename_to_entry(Filename_8_3_Wrapper *filename_wrapper, struct dir_entry_8
 // Check for long filenames and skip them.
 int dir_find_file(char *filename, uint32_t *firstCluster) {
     uint32_t current_cluster_number = cwd; 
-    // Pointer to hold the pretty filename. Caller is responsible for freeing filename_wrapper!
+    // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
     while (current_cluster_number <= total_data_clusters + 1)
     {
@@ -264,6 +267,10 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
                 }
                 // This is an in-use 8.3 file, check to see if it matches
                 int etf_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                if (etf_result != E_SUCCESS)
+                {
+                    return etf_result;
+                }
                 int fnamecmp  = strncmp((const char*)filename_wrapper->combined, (const char*)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     *firstCluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
@@ -286,6 +293,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
         // Set cluster to the current cluster's FAT entry and continue iteration
         current_cluster_number = current_cluster_FAT_entry;
     }
+    myFree(filename_wrapper);
     return E_FILE_NOT_IN_CWD;
 }
 
@@ -293,7 +301,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
 int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3 *dir_entry)
 {
     uint32_t current_cluster_number = cwd;
-    // Pointer to hold the pretty filename. Caller is responsible for freeing filename_wrapper!
+    // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
     while (current_cluster_number <= total_data_clusters + 1)
     {
@@ -343,6 +351,10 @@ int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3
                 }
                 // This is an in-use 8.3 file, check to see if it matches
                 int etf_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                if (etf_result != E_SUCCESS)
+                {
+                    return etf_result;
+                }
                 int fnamecmp = strncmp((const char *)filename_wrapper->combined, (const char *)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0)
                 {
@@ -368,6 +380,7 @@ int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3
         // Set cluster to the current cluster's FAT entry and continue iteration
         current_cluster_number = current_cluster_FAT_entry;
     }
+    myFree(filename_wrapper);
     return E_FILE_NOT_IN_CWD;
 }
 
@@ -558,6 +571,10 @@ int dir_delete_file(char *filename) {
                 }
                 // This is an in-use 8.3 file, check to see if it matches
                 int etf_result = entry_to_filename(dir_entry, filename_wrapper); // Filename + extension of entry at current point in iteration
+                if (etf_result != E_SUCCESS)
+                {
+                    return etf_result;
+                }
                 int fnamecmp = strncmp((const char *)filename_wrapper->combined, (const char *)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     // File found. Delete it.
@@ -613,6 +630,7 @@ int dir_delete_file(char *filename) {
         // Set cluster to the current cluster's FAT entry and continue iteration
         current_cluster_number = current_cluster_FAT_entry;
     }
+    myFree(filename_wrapper);
     return E_FILE_NOT_IN_CWD;
 }
 

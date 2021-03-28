@@ -15,6 +15,7 @@
 
 int myfopen(char *pathname, file_descriptor *fd)
 {
+    // TODO addres device must be freed on file close
     Device *device = myMalloc(sizeof(Device));
     int get_device_status = get_device(pathname, device);
     if (get_device_status == E_DEVICE_PATH) {
@@ -44,5 +45,6 @@ int myfdelete(char *pathname)
     {
         return fdelete_status;
     }
+    myFree(device);
     return E_SUCCESS;
 }
