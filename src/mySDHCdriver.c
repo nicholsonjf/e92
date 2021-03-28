@@ -10,6 +10,7 @@
 #include "bootSector.h"
 #include "utils.h"
 #include "my-malloc.h"
+#include "FAT.h"
 #include <stdint.h>
 
 /**
