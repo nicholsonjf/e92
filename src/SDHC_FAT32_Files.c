@@ -524,7 +524,7 @@ int dir_create_file(char *filename) {
 
 int dir_delete_file(char *filename) {
     uint32_t current_cluster_number = cwd;
-    // Pointer to hold the pretty filename. Caller is responsible for freeing filename_wrapper!
+    // Pointer to hold the pretty filename.
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
     while (current_cluster_number <= total_data_clusters + 1) {
         uint32_t sector_num = first_sector_of_cluster(cwd);
