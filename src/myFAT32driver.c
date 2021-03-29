@@ -14,8 +14,9 @@
 
 /**
  * Initialize a structure to hold additional SDHC status data, defined in initFAT()
+ * // TODO This doesn't need to be a global variable, just define it in each function where it's used
  */
-struct sdhc_card_status *my_card_status;
+struct sdhc_card_status my_card_status;
 
 uint8_t dir_entries_per_sector;
 

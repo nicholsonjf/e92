@@ -39,7 +39,8 @@ Project plan
     -cmd_fopen returns the value from put_stream (i.e. the "file descriptor") to the user
 
 ~TODO
-    -
+    - Remove outer while loops that iterate over every cluster. Traverse linked clusters instead.
+    - Move global my_card_status variable into functions that need it. Doesn't need to be global.
 
 
 ~DONE
