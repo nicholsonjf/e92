@@ -133,8 +133,8 @@ int entry_to_filename(struct dir_entry_8_3 *dir_entry, Filename_8_3_Wrapper *fil
     }
     // Check if there's a valid file extension and copy it into filename_wrapper.name and filename_wrapper.combined
     int ext_first_chr = dir_entry->DIR_Name[ext_index];
-    // The first chr of the ext is "valid" and not a period or zero
-    if (chr_8_3_valid(ext_first_chr) == E_SUCCESS && ext_first_chr != 0x0 && ext_first_chr != 0x2E) {
+    // The first chr of the ext is "valid" and not a period, zero, or space
+    if (chr_8_3_valid(ext_first_chr) == E_SUCCESS && ext_first_chr != 0x0 && ext_first_chr != 0x2E && ext_first_chr != 0x20) {
         // Put a dot into filename_wrapper->combined
         filename_wrapper->combined[filename_end_index] = '.';
         // Copy in the extension characters
@@ -636,6 +636,7 @@ int dir_delete_file(char *filename) {
 
 int file_open(char *filename, file_descriptor *descrp) {
     uint32_t *fcluster = myMalloc(sizeof(uint32_t));
+    // TODO Update this to use dir_find_file_x, which will supply a pointer to the found file's dir entry
     int dir_find_file_status = dir_find_file(filename, fcluster);
     if (dir_find_file_status != E_SUCCESS) {
         return dir_find_file_status;
@@ -646,6 +647,8 @@ int file_open(char *filename, file_descriptor *descrp) {
         return get_stream_status;
     }
     // Update the Stream
+    // TODO set the stream.status to 1 (stream is in use)
+    // TODO use the dir entry provided above to set the stream.first_cluster and stream.first_Sector
     (currentPCB->streams)[*descrp].position = 0;
     myFree(fcluster);
     return E_SUCCESS;

@@ -30,7 +30,7 @@ int get_available_stream(file_descriptor *fd)
     for (int i = 0; i < sizeof(currentPCB->streams) / sizeof(currentPCB->streams[0]); i++)
     {
         // Stream is available
-        if ((currentPCB->streams)[i].status == 0)
+        if ((currentPCB->streams)[i].in_use == 0)
         {
             // Pass the file descriptor back to the caller
             *fd = i;

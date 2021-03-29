@@ -31,11 +31,12 @@ typedef struct device
 typedef struct stream
 {
     Device *device; // pointer to the Device used to operate on the file
-    uint8_t status; // whether the stream is open (1) or closed (0)
+    uint8_t in_use; // whether the stream is currently in use (stream.in_use=1) or not (stream.in_use=0)
     char *pathname; // the pathname of the file
     // FAT32 members
     uint32_t position; // current file position in bytes
-    struct dir_entry_8_3 *dir_entry; // pointer to the file's dir entry
+    uint32_t first_cluster; // cluster number of the file's first data cluster
+    uint32_t first_sector; // sector number of the first sector in first_cluster
 } Stream;
 
 int myfopen(char *pathname, file_descriptor *fd);

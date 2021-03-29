@@ -25,10 +25,12 @@ int myfopen(char *pathname, file_descriptor *fd)
     if (fopen_status != E_SUCCESS) {
         return fopen_status;
     }
+    // stream was successfully defined and is located at index *fd
+    // finish defining the stream members
     (currentPCB->streams)[*fd].device = device;
     (currentPCB->streams)[*fd].pathname = pathname;
     // Stream is in use
-    (currentPCB->streams)[*fd].status = 1;
+    (currentPCB->streams)[*fd].in_use = 1;
     return E_SUCCESS;
 }
 
