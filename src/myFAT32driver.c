@@ -18,8 +18,6 @@
  */
 struct sdhc_card_status my_card_status;
 
-uint8_t dir_entries_per_sector;
-
 
 int fatfgetc(file_descriptor *fd)
 {
@@ -70,7 +68,6 @@ int fatfdelete(char *pathname)
 
 
 int initFAT(void) {
-    uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
     // Set cwd to the root cluster
     int set_cwd = dir_set_cwd_to_root();
     if (set_cwd != E_SUCCESS) {

@@ -19,6 +19,10 @@
  */
 uint32_t cwd;
 
+/**
+ * Number of sectors in a cluster.
+ */
+uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
 
 int dir_set_cwd_to_root(void) {
     if (!file_structure_mounted) {

@@ -16,9 +16,4 @@ Device FAT32;
 
 int initFAT(void);
 
-/**
- * Number of sectors in a cluster.
- */
-extern uint8_t dir_entries_per_sector;
-
 #endif /* ifndef _MYFAT32DRIVER_H */
