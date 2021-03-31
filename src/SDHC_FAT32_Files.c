@@ -406,7 +406,7 @@ int dir_create_file(char *filename) {
         return E_FILE_NAME_INVALID;
     }
     // Find a free entry or return an error
-    uint32_t current_cluster_number = root_directory_cluster;
+    uint32_t current_cluster_number = cwd;
     while (current_cluster_number <= total_data_clusters + 1)
     {
         // Initialize current sector index to 0
