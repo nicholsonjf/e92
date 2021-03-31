@@ -144,8 +144,12 @@ int myFreeErrorCode(void *ptr) {
 }
 
 
-void myFree(void *ptr) {
-    int rv = myFreeErrorCode(ptr);
+int myFree(void *ptr) {
+    int myFreeStatus = myFreeErrorCode(ptr);
+    if (myFreeStatus != E_SUCCESS) {
+    	return myFreeStatus;
+    }
+    return E_SUCCESS;
 }
 
 

@@ -364,8 +364,6 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_STRTOL;
     }
-    // Cast to the type myMalloc is expecting.
-    uint32_t c_bytes = (uint32_t)bytes;
     void *p = myMalloc(bytes);
     if (p == NULL)
     {

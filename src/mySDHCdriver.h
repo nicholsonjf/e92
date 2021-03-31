@@ -12,11 +12,6 @@
 #include "microSD.h"
 
 /**
- * Structure to hold additional SDHC status data
- */
-extern struct sdhc_card_status my_card_status;
-
-/**
  * Micro SDHC mount status
  */
 extern int file_structure_mounted;

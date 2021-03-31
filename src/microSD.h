@@ -21,8 +21,8 @@
 #include "SDCardReader.h"
 
 /* These #define's enable debugging output */
-#define MICRO_SD_DEBUG 1
-#define MICRO_SD_INFORMATIVE_PRINTF 1
+#define MICRO_SD_DEBUG 0
+#define MICRO_SD_INFORMATIVE_PRINTF 0
 
 /* Routine to configure the microSD Card Detect switch & pull-down resistor in
    the ARM */

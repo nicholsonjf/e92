@@ -21,8 +21,8 @@
 #include "SDCardReader.h"
 
 /* These #define's enable debugging output */
-#define FAT_DEBUG 1
-#define FAT_INFORMATIVE_PRINTF 1
+#define FAT_DEBUG 0
+#define FAT_INFORMATIVE_PRINTF 0
 
 /* Number of bytes per FAT entry */
 #define FAT_BYTES_PER_FAT_ENTRY 4

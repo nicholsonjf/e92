@@ -63,12 +63,16 @@ long my_strtol(char *str)
     return -1;
 }
 
-void myprintf(char *format, ...)
+int myprintf(char *format, ...)
 {
     char buffer[BUFFER_SIZE_FOR_FORMATTED_OUTPUT]; // holds the rendered string
     va_list args;
     va_start(args, format);
     int length = vsnprintf(buffer, sizeof(buffer), format, args);
+    if (length < 0) {
+        return E_MYPRINTF;
+    }
     va_end(args);
     uartPutsNL(UART2_BASE_PTR, buffer);
+    return E_SUCCESS;
 }

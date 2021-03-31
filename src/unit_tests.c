@@ -19,14 +19,12 @@
 
 int debug = 1;
 
-int test_create_file(void) {
+void test_create_file(void) {
     char *test_name = "Create File";
     char *result = "FAIL";
     char *fname = "TEST.JPG";
+    // Delete fname so it can be created
     int delete_file = dir_delete_file(fname);
-    if (delete_file != E_SUCCESS || E_FILE_NOT_IN_CWD) {
-        return delete_file;
-    }
     int create_file = dir_create_file(fname);
     if (create_file == E_SUCCESS) {
         result = "PASS";
@@ -38,10 +36,8 @@ int test_create_file(void) {
         dir_set_cwd_to_root();
         dir_ls();
     }
-    return E_SUCCESS;
 }
 
-int run_test_suite() {
+void run_test_suite() {
     test_create_file();
-    return E_SUCCESS;
 }

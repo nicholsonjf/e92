@@ -19,11 +19,6 @@
  */
 uint32_t cwd;
 
-/**
- * Number of sectors in a cluster.
- */
-uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
-
 int dir_set_cwd_to_root(void) {
     if (!file_structure_mounted) {
         return E_FILE_STRUCT_NOT_MOUNTED;
@@ -34,6 +29,8 @@ int dir_set_cwd_to_root(void) {
 
 // Check for long filenames and skip them.
 int dir_ls(void) {
+    struct sdhc_card_status my_card_status;
+    uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
     uint32_t current_cluster_number = cwd;
     // Pointer to hold the pretty filename.
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
@@ -228,6 +225,8 @@ int filename_to_entry(Filename_8_3_Wrapper *filename_wrapper, struct dir_entry_8
 
 // Check for long filenames and skip them.
 int dir_find_file(char *filename, uint32_t *firstCluster) {
+    uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
+    struct sdhc_card_status my_card_status;
     uint32_t current_cluster_number = cwd; 
     // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
@@ -305,6 +304,8 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
 // Check for long filenames and skip them.
 int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3 *dir_entry)
 {
+    uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
+    struct sdhc_card_status my_card_status;
     uint32_t current_cluster_number = cwd;
     // Pointer to hold the pretty filename
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));
@@ -390,6 +391,8 @@ int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3
 }
 
 int dir_create_file(char *filename) {
+    uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
+    struct sdhc_card_status my_card_status;
     uint32_t *fcluster = myMalloc(sizeof(uint32_t));
     // Check if the filename already exists
     int ffr = dir_find_file(filename, fcluster);
@@ -528,6 +531,8 @@ int dir_create_file(char *filename) {
 }
 
 int dir_delete_file(char *filename) {
+    uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
+    struct sdhc_card_status my_card_status;
     uint32_t current_cluster_number = cwd;
     // Pointer to hold the pretty filename.
     Filename_8_3_Wrapper *filename_wrapper = myMalloc(sizeof(Filename_8_3_Wrapper));

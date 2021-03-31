@@ -11,7 +11,7 @@
 // Helper function prototypes.
 long my_strtol(char *str);
 
-void myprintf(char *format, ...);
+int myprintf(char *format, ...);
 
 // Shell error types.
 enum error_t
@@ -44,6 +44,7 @@ enum error_t
     E_GENERIC,
     E_NOT_SUPPORTED,
     E_EXIT_DEVICES,
+    E_MYPRINTF,
     E_COUNT // E_COUNT must be last to calculate the total number of error types
 };
 

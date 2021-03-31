@@ -49,7 +49,6 @@ int file_structure_umount(void)
     }
     invalidate_entire_FAT_cache();
     sdhc_command_send_set_clr_card_detect_connect(rca);
-    myFree(&my_card_status);
     file_structure_mounted = 0;
     return E_SUCCESS;
 }
