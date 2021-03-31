@@ -35,7 +35,7 @@ int ledfopen(char *pathname, file_descriptor *fd)
     return E_NOT_SUPPORTED;
 }
 
-int ledfcreate(char *pathname, file_descriptor *fd) {
+int ledfcreate(char *pathname) {
     return E_NOT_SUPPORTED;
 }
 

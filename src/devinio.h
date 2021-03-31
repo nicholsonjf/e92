@@ -25,7 +25,7 @@ typedef struct device
     int (*fopen)(char *pathname, file_descriptor *fd);
     int (*fdelete)(char *pathname);
     int (*fclose)(file_descriptor *fd);
-    int (*fcreate)(char *pathname, file_descriptor *fd);
+    int (*fcreate)(char *pathname);
 } Device;
 
 typedef struct stream
@@ -42,5 +42,7 @@ typedef struct stream
 int myfopen(char *pathname, file_descriptor *fd);
 
 int myfdelete(char *pathname);
+
+int myfcreate(char *pathname);
 
 #endif /* ifndef _DEVINIO_H */

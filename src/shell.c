@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "devinit.h"
 #include "devinutils.h"
+#include "SDHC_FAT32_Files.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,6 +117,7 @@ struct commandEntry
     {"read", cmd_read},
     {"write", cmd_write},
     {"delete", cmd_delete},
+    {"ls", cmd_ls}
     };
 
 typedef int (*cmd_pntr)(int argc, char *argv[]);
@@ -479,7 +481,11 @@ int cmd_create(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-
+    int create_file_status = myfcreate(argv[0]);
+    if (create_file_status != E_SUCCESS)
+    {
+        return create_file_status;
+    }
     return E_SUCCESS;
 }
 
@@ -557,3 +563,18 @@ int cmd_write(int argc, char *argv[])
     return E_SUCCESS;
 }
 
+/**
+ * Shell "ls" command
+ */
+int cmd_ls(int argc, char *argv[])
+{
+    if (argc > 0)
+    {
+        return E_TOO_MANY_ARGS;
+    }
+    int ls_status = dir_ls();
+    if (ls_status != E_SUCCESS) {
+        return E_LS;
+    }
+    return E_SUCCESS;
+}

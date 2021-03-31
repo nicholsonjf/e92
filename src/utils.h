@@ -45,6 +45,7 @@ enum error_t
     E_NOT_SUPPORTED,
     E_EXIT_DEVICES,
     E_MYPRINTF,
+    E_LS,
     E_COUNT // E_COUNT must be last to calculate the total number of error types
 };
 

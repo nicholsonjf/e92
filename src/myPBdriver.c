@@ -30,7 +30,7 @@ int pbfdelete(char *pathname) {
     return E_NOT_SUPPORTED;
 }
 
-int pbfcreate(char *pathname, file_descriptor *fd)
+int pbfcreate(char *pathname)
 {
     return E_SUCCESS;
 }

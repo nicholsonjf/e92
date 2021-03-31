@@ -17,7 +17,7 @@ int myfopen(char *pathname, file_descriptor *fd)
 {
     // TODO addres device must be freed on file close
     Device *device = myMalloc(sizeof(Device));
-    int get_device_status = get_device(pathname, device);
+    int get_device_status = get_device(pathname, &device);
     if (get_device_status == E_DEVICE_PATH) {
         return E_DEVICE_PATH;
     }
@@ -31,13 +31,14 @@ int myfopen(char *pathname, file_descriptor *fd)
     (currentPCB->streams)[*fd].pathname = pathname;
     // Stream is in use
     (currentPCB->streams)[*fd].in_use = 1;
+    myFree(device);
     return E_SUCCESS;
 }
 
 int myfdelete(char *pathname)
 {
-    Device *device = myMalloc(sizeof(Device));
-    int get_device_status = get_device(pathname, device);
+    Device *device = malloc(sizeof(Device));
+    int get_device_status = get_device(pathname, &device);
     if (get_device_status == E_DEVICE_PATH)
     {
         return get_device_status;
@@ -46,6 +47,23 @@ int myfdelete(char *pathname)
     if (fdelete_status != E_SUCCESS)
     {
         return fdelete_status;
+    }
+    myFree(device);
+    return E_SUCCESS;
+}
+
+int myfcreate(char *pathname)
+{
+    Device *device = malloc(sizeof(Device));
+    int get_device_status = get_device(pathname, &device);
+    if (get_device_status == E_DEVICE_PATH)
+    {
+        return get_device_status;
+    }
+    int fcreate_status = device->fcreate(pathname);
+    if (fcreate_status != E_SUCCESS)
+    {
+        return fcreate_status;
     }
     myFree(device);
     return E_SUCCESS;

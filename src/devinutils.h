@@ -17,7 +17,7 @@
  */
 extern int file_structure_mounted;
 
-int get_device(char *pathname, Device *device);
+int get_device(char *pathname, Device **device);
 
 int get_available_stream(file_descriptor *fd);
 

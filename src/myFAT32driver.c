@@ -12,12 +12,7 @@
 #include "utils.h"
 #include <string.h>
 
-/**
- * Initialize a structure to hold additional SDHC status data, defined in initFAT()
- * // TODO This doesn't need to be a global variable, just define it in each function where it's used
- */
-struct sdhc_card_status my_card_status;
-
+Device FAT32;
 
 int fatfgetc(file_descriptor *fd)
 {
@@ -43,7 +38,12 @@ int fatfopen(char *pathname, file_descriptor *fd)
     return E_SUCCESS;
 }
 
-int fatfcreate(char *pathname, file_descriptor *fd) {
+int fatfcreate(char *pathname) {
+    int create_file_status = dir_create_file(pathname);
+    if (create_file_status != E_SUCCESS)
+    {
+        return create_file_status;
+    }
     return E_SUCCESS;
 }
 
@@ -78,5 +78,7 @@ int initFAT(void) {
     FAT32.fputc = fatfputc;
     FAT32.fclose = fatfclose;
     FAT32.fopen = fatfopen;
+    FAT32.fdelete = fatfdelete;
+    FAT32.fcreate = fatfcreate;
     return E_SUCCESS;
 }

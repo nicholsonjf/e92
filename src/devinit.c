@@ -54,7 +54,6 @@ int initDevices(void)
         return initFAT_status;
     }
     char *pathnames[] = {
-        "/",
         "/dev/pushbutton/sw1",
         "/dev/pushbutton/sw2",
         "/dev/led/yellow",
@@ -63,7 +62,6 @@ int initDevices(void)
         "/dev/led/green"
     };
     Device initializedDevices[] = {
-        FAT32,
         SW1,
         SW2,
         LEDYellow,

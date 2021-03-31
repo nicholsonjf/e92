@@ -39,11 +39,14 @@ Project plan
     -cmd_fopen returns the value from put_stream (i.e. the "file descriptor") to the user
 
 ~TODO
-    - Remove outer while loops that iterate over every cluster. Traverse linked clusters instead.
-    - Move global my_card_status variable into functions that need it. Doesn't need to be global.
+    - Replace E_NOT_ENOUGH_ARGS/E_TOO_MANY_ARGS with E_WRONG_NUM_ARGS
+    - Add help text for new commands
+    
 
 
 ~DONE
+    - Move global my_card_status variable into functions that need it. Doesn't need to be global.
+    - Remove outer while loops that iterate over every cluster. Traverse linked clusters instead.
     -Refactor "help" shell command
         ~Provide it with unformatted strings and use printf rules to format output
 

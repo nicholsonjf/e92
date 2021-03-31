@@ -588,6 +588,9 @@ int dir_delete_file(char *filename) {
                 int fnamecmp = strncmp((const char *)filename_wrapper->combined, (const char *)filename, (size_t)sizeof(filename));
                 if (fnamecmp == 0) {
                     // File found. Delete it.
+                    // But first record the file's first cluster
+                    uint32_t file_first_cluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+                    // Set below values according to deletion process
                     dir_entry->DIR_Name[0] = 0xE5;
                     dir_entry->DIR_FstClusHI = 0x0;
                     // Write the updated sector data to the microSD
@@ -597,9 +600,11 @@ int dir_delete_file(char *filename) {
                         // Fatal error
                         __BKPT();
                     }
-                    // Free the file's FAT entries
-                    uint32_t file_first_cluster = (uint32_t)dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
-                    // Traverse the linked list of FAT entries (if linked entries exist) and free all the linked entries
+                    // if the first cluster is 0, it's a new file that's never been written to and the deletion is finished
+                    if (file_first_cluster == 0) {
+                        return E_SUCCESS;
+                    }
+                    // Otherwise, traverse the linked list of FAT entries (if linked entries exist) and free all the linked entries
                     uint32_t file_current_fat_entry = file_first_cluster;
                     while (file_current_fat_entry <= total_data_clusters + 1)
                     {
