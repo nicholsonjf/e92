@@ -40,7 +40,7 @@ int myfdelete(char *pathname)
     int get_device_status = get_device(pathname, device);
     if (get_device_status == E_DEVICE_PATH)
     {
-        return E_DEVICE_PATH;
+        return get_device_status;
     }
     int fdelete_status = device->fdelete(pathname);
     if (fdelete_status != E_SUCCESS)

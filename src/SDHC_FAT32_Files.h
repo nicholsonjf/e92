@@ -159,6 +159,10 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen);
 
 /////// ADDED BY JAMES
 
+/**
+ * Cluster number of the current working directory.
+ */
+extern uint32_t cwd;
 
 /**
  * Takes a character and determines if it's a valid FAT32 8_3 filename character

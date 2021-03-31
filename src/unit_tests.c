@@ -33,7 +33,6 @@ void test_create_file(void) {
     if (debug == 1) {
         myprintf("delete_file error code: %d\n", delete_file);
         myprintf("create_file error code: %d\n", create_file);
-        dir_set_cwd_to_root();
         dir_ls();
     }
 }

@@ -88,7 +88,7 @@ int dir_ls(void) {
             __BKPT();
         }
         // FAT entry is in use and points to next cluster
-        // Set cwd to the current directory's FAT entry and continue iteration
+        // Set current_cluster_number to the current directory's FAT entry and continue iteration
         current_cluster_number = current_cluster_FAT_entry;
     }
     myFree(filename_wrapper);
