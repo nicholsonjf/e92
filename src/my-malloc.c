@@ -49,7 +49,8 @@ static int get_pcb(void) {
 
 static void malloc_init(void) {
     pcb_init();
-    uint32_t aspacesize = 5 * (1 << 10);
+    // Totaly memory is 30k bytes
+    uint32_t aspacesize = 30 * (1 << 10);
     void *memory = malloc(aspacesize);
     mymem = (struct mem_region*)memory;
     mymem->free = 1;

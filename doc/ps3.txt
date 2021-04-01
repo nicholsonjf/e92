@@ -46,12 +46,15 @@ Project plan
     - LED f functions
     - PB f functions
     - Book problems
+    - Switch to 112000 baud
+    
     
 
     
 
 
 ~DONE
+    - increase memory to 30k
     - Set stream attributes in fopen
     - myfclose
     - Move global my_card_status variable into functions that need it. Doesn't need to be global.
