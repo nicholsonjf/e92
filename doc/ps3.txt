@@ -46,12 +46,13 @@ Project plan
     - LED f functions
     - PB f functions
     - Book problems
-    - Set stream attributes in fopen
+    
 
     
 
 
 ~DONE
+    - Set stream attributes in fopen
     - myfclose
     - Move global my_card_status variable into functions that need it. Doesn't need to be global.
     - Remove outer while loops that iterate over every cluster. Traverse linked clusters instead.

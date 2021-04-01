@@ -433,6 +433,9 @@ int dir_create_file(char *filename) {
                     // Set the filename
                     strncpy((char *)&dir_entry->DIR_Name[0], (char *)&filename_wrapper->name, 8);
                     strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
+                    // Set first cluster high and low to zero
+                    dir_entry->DIR_FstClusHI = 0;
+                    dir_entry->DIR_FstClusLO = 0;
                     // Write the updated sector data to the microSD
                     int write_status = sdhc_write_single_block(rca, current_sector_number, &my_card_status, sector_data);
                     if (write_status != SDHC_SUCCESS)
@@ -454,6 +457,9 @@ int dir_create_file(char *filename) {
                         // Set the filename
                         strncpy((char *)&dir_entry->DIR_Name[0], (char *)&filename_wrapper->name, 8);
                         strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
+                        // Set first cluster high and low to zero
+                        dir_entry->DIR_FstClusHI = 0;
+                        dir_entry->DIR_FstClusLO = 0;
                         (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
                         // Write the updated sector data to the microSD
                         int write_status = sdhc_write_single_block(rca, current_sector_number, &my_card_status, sector_data);
@@ -499,6 +505,9 @@ int dir_create_file(char *filename) {
                                 // Set the filename
                                 strncpy((char *)&dir_entry->DIR_Name[0], (char *)&filename_wrapper->name, 8);
                                 strncpy((char *)&dir_entry->DIR_Name[8], (char *)&filename_wrapper->ext, 3);
+                                // Set first cluster high and low to zero
+                                dir_entry->DIR_FstClusHI = 0;
+                                dir_entry->DIR_FstClusLO = 0;
                                 (++dir_entry)->DIR_Name[0] = DIR_ENTRY_LAST_AND_UNUSED;
                                 // Write the updated sector data to the microSD
                                 int write_status = sdhc_write_single_block(rca, current_sector_number, &my_card_status, sector_data);
