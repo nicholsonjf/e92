@@ -336,7 +336,7 @@ int cmd_exit(int argc, char *argv[])
     }
     int exit_devices_status = exitDevices();
     if (exit_devices_status != E_SUCCESS) {
-        return E_EXIT_DEVICES;
+        return exit_devices_status;
     }
     exit(E_SUCCESS);
 }

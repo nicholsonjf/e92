@@ -41,6 +41,13 @@ Project plan
 ~TODO
     - Replace E_NOT_ENOUGH_ARGS/E_TOO_MANY_ARGS with E_WRONG_NUM_ARGS
     - Add help text for new commands
+    - myfclose
+    - myfgetc
+    - myfputc
+    - LED f functions
+    - PB f functions
+    - Book problems
+
     
 
 

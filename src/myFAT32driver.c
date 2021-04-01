@@ -31,7 +31,8 @@ int fatfclose(file_descriptor *fd)
 
 int fatfopen(char *pathname, file_descriptor *fd)
 {
-    int fatfopen_status = file_open(pathname, fd);
+    // String the leading '/' off the pathname to get the filename
+    int fatfopen_status = file_open(++pathname, fd);
     if (fatfopen_status != E_SUCCESS) {
         return fatfopen_status;
     }
