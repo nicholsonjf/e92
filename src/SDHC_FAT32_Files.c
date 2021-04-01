@@ -393,9 +393,9 @@ int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3
 int dir_create_file(char *filename) {
     uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
     struct sdhc_card_status my_card_status;
-    uint32_t *fcluster = myMalloc(sizeof(uint32_t));
+    uint32_t fcluster;
     // Check if the filename already exists
-    int ffr = dir_find_file(filename, fcluster);
+    int ffr = dir_find_file(filename, &fcluster);
     if (ffr == E_SUCCESS) {
         return E_FILE_EXISTS;
     }
@@ -526,7 +526,6 @@ int dir_create_file(char *filename) {
         current_cluster_number++;
     }
     myFree(filename_wrapper);
-    myFree(fcluster);
     return E_NO_FREE_CLUSTER;
 }
 
@@ -650,9 +649,8 @@ int dir_delete_file(char *filename) {
 }
 
 int file_open(char *filename, file_descriptor *descrp) {
-    uint32_t *fcluster = myMalloc(sizeof(uint32_t));
-    // TODO Update this to use dir_find_file_x, which will supply a pointer to the found file's dir entry
-    int dir_find_file_status = dir_find_file(filename, fcluster);
+    uint32_t fcluster;
+    int dir_find_file_status = dir_find_file(filename, &fcluster);
     if (dir_find_file_status != E_SUCCESS) {
         return dir_find_file_status;
     }
@@ -661,10 +659,16 @@ int file_open(char *filename, file_descriptor *descrp) {
     if (get_stream_status != E_SUCCESS) {
         return get_stream_status;
     }
-    // Update the Stream
-    // TODO set the stream.status to 1 (stream is in use)
-    // TODO use the dir entry provided above to set the stream.first_cluster and stream.first_Sector
+    // Update the Stream FAT32 members
     (currentPCB->streams)[*descrp].position = 0;
-    myFree(fcluster);
+    (currentPCB->streams)[*descrp].first_cluster = fcluster;
+    return E_SUCCESS;
+}
+
+int file_close(file_descriptor descrp)
+{
+    // Update the Stream
+    (currentPCB->streams)[descrp].position = 0;
+    (currentPCB->streams)[descrp].first_cluster = 0;
     return E_SUCCESS;
 }

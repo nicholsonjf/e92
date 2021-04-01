@@ -41,20 +41,21 @@ Project plan
 ~TODO
     - Replace E_NOT_ENOUGH_ARGS/E_TOO_MANY_ARGS with E_WRONG_NUM_ARGS
     - Add help text for new commands
-    - myfclose
     - myfgetc
     - myfputc
     - LED f functions
     - PB f functions
     - Book problems
+    - Set stream attributes in fopen
 
     
 
 
 ~DONE
+    - myfclose
     - Move global my_card_status variable into functions that need it. Doesn't need to be global.
     - Remove outer while loops that iterate over every cluster. Traverse linked clusters instead.
-    -Refactor "help" shell command
+    - Refactor "help" shell command
         ~Provide it with unformatted strings and use printf rules to format output
 
 ~Ask Jamie about

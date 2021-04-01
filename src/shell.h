@@ -18,5 +18,6 @@ int cmd_read(int argc, char *argv[]);
 int cmd_write(int argc, char *argv[]);
 int cmd_ls(int argc, char *argv[]);
 int cmd_delete(int argc, char *argv[]);
+int cmd_close(int argc, char *argv[]);
 
 #endif /* ifndef _MYSHELL_H */

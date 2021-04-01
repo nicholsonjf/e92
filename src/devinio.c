@@ -15,7 +15,7 @@
 
 int myfopen(char *pathname, file_descriptor *fd)
 {
-    Device *device = malloc(sizeof(Device));
+    Device *device;
     int get_device_status = get_device(pathname, &device);
     if (get_device_status == E_DEVICE_PATH) {
         return E_DEVICE_PATH;
@@ -35,7 +35,7 @@ int myfopen(char *pathname, file_descriptor *fd)
 
 int myfdelete(char *pathname)
 {
-    Device *device = malloc(sizeof(Device));
+    Device *device;
     int get_device_status = get_device(pathname, &device);
     if (get_device_status == E_DEVICE_PATH)
     {
@@ -46,13 +46,12 @@ int myfdelete(char *pathname)
     {
         return fdelete_status;
     }
-    myFree(device);
     return E_SUCCESS;
 }
 
 int myfcreate(char *pathname)
 {
-    Device *device = malloc(sizeof(Device));
+    Device *device;
     int get_device_status = get_device(pathname, &device);
     if (get_device_status == E_DEVICE_PATH)
     {
@@ -63,6 +62,19 @@ int myfcreate(char *pathname)
     {
         return fcreate_status;
     }
-    myFree(device);
+    return E_SUCCESS;
+}
+
+int myfclose(file_descriptor *fd)
+{
+    Device *device = (currentPCB->streams)[*fd].device;
+    int fclose_status = device->fclose(fd);
+    if (fclose_status != E_SUCCESS)
+    {
+        return fclose_status;
+    }
+    (currentPCB->streams)[*fd].device = (Device *)0;
+    (currentPCB->streams)[*fd].pathname = (void *)0;
+    (currentPCB->streams)[*fd].in_use = 0;
     return E_SUCCESS;
 }

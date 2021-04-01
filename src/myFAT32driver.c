@@ -26,13 +26,19 @@ int fatfputc(char c, file_descriptor *fd)
 
 int fatfclose(file_descriptor *fd)
 {
+    int fatfclose_status = file_close(*fd);
+    if (fatfclose_status != E_SUCCESS)
+    {
+        return fatfclose_status;
+    }
     return E_SUCCESS;
 }
 
 int fatfopen(char *pathname, file_descriptor *fd)
 {
-    // String the leading '/' off the pathname to get the filename
-    int fatfopen_status = file_open(++pathname, fd);
+    // remove leading slash to get the filename
+    char *filename = ++pathname;
+    int fatfopen_status = file_open(filename, fd);
     if (fatfopen_status != E_SUCCESS) {
         return fatfopen_status;
     }
@@ -40,7 +46,14 @@ int fatfopen(char *pathname, file_descriptor *fd)
 }
 
 int fatfcreate(char *pathname) {
-    int create_file_status = dir_create_file(pathname);
+    // remove leading slash to get the filename
+    char * filename = ++pathname;
+    size_t pathname_len = strlen(filename);
+    if (pathname_len < 1 || pathname_len > 11)
+    {
+        return E_FILE_NAME_INVALID;
+    }
+    int create_file_status = dir_create_file(filename);
     if (create_file_status != E_SUCCESS)
     {
         return create_file_status;
@@ -50,16 +63,8 @@ int fatfcreate(char *pathname) {
 
 int fatfdelete(char *pathname)
 {
-    if (pathname[0] != '/')
-    {
-        return E_FILE_NAME_INVALID;
-    }
-    size_t pathname_len = strlen(&pathname[1]);
-    if (pathname_len < 1 || pathname_len > 11)
-    {
-        return E_FILE_NAME_TOO_LONG;
-    }
-    int delete_file = dir_delete_file(&pathname[1]);
+    // remove leading slash
+    int delete_file = dir_delete_file(++pathname);
     if (delete_file != E_SUCCESS)
     {
         return delete_file;

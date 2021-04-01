@@ -113,6 +113,7 @@ struct commandEntry
     {"memset", cmd_memset},
     {"memchk", cmd_memchk},
     {"open", cmd_open},
+    {"close", cmd_close},
     {"create", cmd_create},
     {"read", cmd_read},
     {"write", cmd_write},
@@ -392,11 +393,12 @@ int cmd_free(int argc, char *argv[])
     }
     void *p = (void *)addr;
     int free_status = myFreeErrorCode(p);
-    if (free_status == 0)
+    if (free_status != E_SUCCESS)
     {
-        myprintf("Memory address %p successfully freed\n", p);
+        return free_status;
     }
-    return free_status;
+    myprintf("Memory address %p successfully freed\n", p);
+    return E_SUCCESS;
 }
 
 int cmd_memory_map(int argc, char *argv[]) {
@@ -516,14 +518,13 @@ int cmd_open(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-    file_descriptor *fd = myMalloc(sizeof(file_descriptor));
-    int open_status = myfopen(argv[0], fd);
+    file_descriptor fd;
+    int open_status = myfopen(argv[0], &fd);
     if (open_status != E_SUCCESS) {
         return open_status;
     }
-    unsigned long fd_index = (unsigned long)*fd;
+    unsigned long fd_index = (unsigned long)fd;
     myprintf("%lu\n", fd_index);
-    myFree(fd);
     return E_SUCCESS;
 }
 
@@ -535,6 +536,17 @@ int cmd_close(int argc, char *argv[])
     if (argc != 1)
     {
         return E_NOT_ENOUGH_ARGS;
+    }
+    long fd_long = my_strtol(argv[0]);
+    if (fd_long < 0)
+    {
+        return E_STRTOL;
+    }
+    file_descriptor fd = (file_descriptor)fd_long;
+    int close_status = myfclose(&fd);
+    if (close_status != E_SUCCESS)
+    {
+        return close_status;
     }
     return E_SUCCESS;
 }

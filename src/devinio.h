@@ -36,8 +36,9 @@ typedef struct stream
     // FAT32 members
     uint32_t position; // current file position in bytes
     uint32_t first_cluster; // cluster number of the file's first data cluster
-    uint32_t first_sector; // sector number of the first sector in first_cluster
 } Stream;
+
+int myfclose(file_descriptor *fd);
 
 int myfopen(char *pathname, file_descriptor *fd);
 
