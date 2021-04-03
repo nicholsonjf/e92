@@ -1,6 +1,7 @@
 #include "shell.h"
 #include "my-malloc.h"
 #include "uart.h"
+#include "mcg.h"
 #include "delay.h"
 #include "uartNL.h"
 #include "derivative.h"
@@ -159,14 +160,11 @@ void initUART(void){
 	 * (Table 5-2 on page 221 in Rev. 2) indicates that the clock
 	 * used by UART0 and UART1 is the System clock (i.e., MCGOUTCLK)
 	 * and that the clock used by UART2-5 is the Bus clock. */
-	const int IRC = 32000;					/* Internal Reference Clock */
-	const int FLL_Factor = 640;
-	const int moduleClock = FLL_Factor*IRC;
+	const int moduleClock = 60000000;
 	const int KHzInHz = 1000;
-
-	const int baud = 9600;
-	
-	uartInit(UART2_BASE_PTR, moduleClock/KHzInHz, baud);
+    mcgInit();
+    const int baud = 115200;
+    uartInit(UART2_BASE_PTR, moduleClock / KHzInHz, baud);
 }
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256

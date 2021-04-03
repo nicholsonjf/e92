@@ -302,7 +302,7 @@ int dir_find_file(char *filename, uint32_t *firstCluster) {
 }
 
 // Find a file and set *dir_entry to its pointer
-int dir_find_file_x(char *filename, uint32_t *entry_sector, int *entry_number)
+int dir_find_file_x(char *filename, uint32_t *entry_sector_bucket, int *entry_number_bucket)
 {
     uint8_t dir_entries_per_sector = bytes_per_sector / sizeof(struct dir_entry_8_3);
     struct sdhc_card_status my_card_status;
@@ -684,11 +684,11 @@ int file_close(file_descriptor descrp)
 }
 
 int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
-    Stream stream = (currentPCB->streams)[descrp];
+    Stream stream = (currentPCB->streams)[descr];
     // Get the file entry
     uint32_t file_entry_sector;
     int file_entry_number;
-    int get_entry_status = dir_find_file_x(stream.pathname[1], &file_entry_sector, &file_entry_number)
+    int get_entry_status = dir_find_file_x(&stream.pathname[1], &file_entry_sector, &file_entry_number);
     if (get_entry_status != E_SUCCESS) {
         return get_entry_status;
     }

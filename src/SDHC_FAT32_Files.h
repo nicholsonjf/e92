@@ -204,6 +204,10 @@ int create_filename_wrapper(char *filename, Filename_8_3_Wrapper *file_wrapper);
  * Extended dir_find_file
  * The same as dir_find_file except it places a pointer to the dir entry in dir_entry if the file is found
  */
-int dir_find_file_x(char *filename, uint32_t *firstCluster, struct dir_entry_8_3 *dir_entry);
+int dir_find_file_x(
+		char *filename,
+		uint32_t *entry_sector_bucket,
+		int *entry_number_bucket
+		);
 
 #endif /* ifndef _SDHC_FAT32_FILES_H_ */

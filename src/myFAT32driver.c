@@ -14,12 +14,12 @@
 
 Device FAT32;
 
-int fatread(file_descriptor *fd)
+int fatfgetc(file_descriptor *fd)
 {
     return E_SUCCESS;
 }
 
-int fatfwrite(char c, file_descriptor *fd)
+int fatfputc(char c, file_descriptor *fd)
 {
     return E_SUCCESS;
 }
