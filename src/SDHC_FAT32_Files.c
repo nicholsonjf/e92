@@ -748,8 +748,33 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
      * Write data to file
      */
     uint8_t position_sector_data[512];
+    uint32_t current_cluster_number = first_data_cluster;
+    // In my OS data is always appended to the end of a file
+    uint32_t file_num_clusters = dir_entry->DIR_FileSize & ~(bytes_per_sector * sectors_per_cluster);
+    if (file_num_clusters > 0) {
+        uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
+        // Traverse the FAT to take us to the last cluster for this file
+        for (int i=0; i<file_num_clusters; i++) {
+            uint32_t current_cluster_fat_entry = read_FAT_entry(rca, current_cluster_fat_entry);
+        }
+        current_cluster_number = current_cluster_fat_entry;
+    }
+    // Get the first sector of the current cluster
+    uint32_t first_sector_current_cluster = first_sector_of_cluster(current_cluster_number);
+    // Get the cluster sector offset
+    uint32_t cluster_sector_offset = dir_entry->DIR_FileSize & ~bytes_per_sector;
+    // update the position_sector
+    (currentPCB->streams)[descr].position_sector = first_sector_current_cluster + cluster_sector_offset;
+    // Read the current sector data
+    int data_read_status = sdhc_read_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
+    if (data_read_status != SDHC_SUCCESS)
+    {
+        // Fatal error
+        __BKPT();
+    }
+    // Update the current sector data with buffer contents
     strncpy((char*)&(position_sector_data[stream.position_in_sector]), bufp, buflen);
-    int data_write_status = sdhc_write_single_block(rca, stream.position_sector, &my_card_status, position_sector_data);
+    int data_write_status = sdhc_write_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
     if (data_write_status != SDHC_SUCCESS)
     {
         // Fatal error
@@ -757,7 +782,14 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
     }
     // Update the stream position, subtract 1 to account for the null terminator
     (currentPCB->streams)[descr].position_in_sector = (currentPCB->streams)[descr].position_in_sector + (buflen - 1);
-    (currentPCB->streams)[descr].james = 89;
+    dir_entry->DIR_FileSize = dir_entry->DIR_FileSize + buflen - 1;
+    // Write the updated entry sector data to the microSD
+    int filesize_write_status = sdhc_write_single_block(rca, file_entry_sector, &my_card_status, entry_sector_data);
+    if (filesize_write_status != SDHC_SUCCESS)
+    {
+        // Fatal error
+        __BKPT();
+    }
     myprintf("%s\n", position_sector_data);
     myprintf("Sector: %lu, Entry: %lu, Cluster: %d\n", (unsigned long)file_entry_sector, file_entry_number, (unsigned long)stream.first_cluster);
     // Check the fat to make sure file has an entry.

@@ -587,6 +587,7 @@ int cmd_write(int argc, char *argv[])
         // Space in between words, excluding after the last word
         if (i < argc-1) {
             buffer[bufpos] = ' ';
+            bufpos++;
         }
     }
     // Null terminate the buffer

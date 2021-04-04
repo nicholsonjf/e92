@@ -46,7 +46,7 @@ enum error_t
     E_MYPRINTF,
     E_LS,
     E_EXIT_DEVICES,
-        E_COUNT // E_COUNT must be last to calculate the total number of error types
+    E_COUNT // E_COUNT must be last to calculate the total number of error types
 };
 
 #endif /* ifndef _MYUTIL_H */

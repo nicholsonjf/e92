@@ -37,7 +37,6 @@ typedef struct stream
     uint32_t first_cluster; // the first data cluster for this file
     uint32_t position_sector; // the sector number of the open file's position
     uint32_t position_in_sector; // the offset in bytes within the position_sector
-    uint32_t james;
 } Stream;
 
 int myfclose(file_descriptor *fd);
