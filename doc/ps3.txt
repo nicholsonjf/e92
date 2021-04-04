@@ -7,6 +7,7 @@ FAT32
 
 MISCELLANEOUS
 ~There's no stdin, stdout, stderr, just an array of 32 streams at pcb->streams (would like to implement stdin, stdout, stderr later)
+~The maximum buffer size for a single call to the "write" shell command is 256 characters, including spaces.
 
 Project plan
 
@@ -46,7 +47,9 @@ Project plan
     - LED f function
     - PB f functions
     - Book problems
-    - Fixe file not opening bug
+    - Bug: when you close a file descriptor that isn't open
+    - Bug: dir_find_file doesn't set fcluster
+    
     
     
     
@@ -55,6 +58,7 @@ Project plan
 
 
 ~DONE
+    - Fixe file not opening bug
     - Switch to 112000 baud
     - increase memory to 30k
     - Set stream attributes in fopen

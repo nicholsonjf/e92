@@ -16,7 +16,7 @@ int ledfgetc(file_descriptor *fd)
     return E_NOT_SUPPORTED;
 }
 
-int ledfputc(char c, file_descriptor *fd)
+int ledfputc(file_descriptor *fd, char *bufp, int buflen)
 {
     return E_SUCCESS;
 }

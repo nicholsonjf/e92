@@ -566,9 +566,35 @@ int cmd_read(int argc, char *argv[])
  */
 int cmd_write(int argc, char *argv[])
 {
-    if (argc != 1)
-    {
+    if (argc < 2) {
         return E_NOT_ENOUGH_ARGS;
+    }
+    long fd_long = my_strtol(argv[0]);
+    if (fd_long < 0)
+    {
+        return E_STRTOL;
+    }
+    file_descriptor fd = (file_descriptor)fd_long;
+    char buffer[BUFFER_SIZE_FOR_SHELL_INPUT]; // holds the rendered string
+    int bufpos = 0;
+    for (int i=1; i<argc; i++) {
+        int j = 0;
+        while(argv[i][j] != 0) {
+            buffer[bufpos] = argv[i][j];
+            bufpos++;
+            j++;
+        }
+        // Space in between words, excluding after the last word
+        if (i < argc-1) {
+            buffer[bufpos] = ' ';
+        }
+    }
+    // Null terminate the buffer
+    buffer[bufpos] = 0;
+    // bufpos+1 to include the null terminator
+    int write_status = myfputc(&fd, &buffer[0], bufpos+1);
+    if (write_status != E_SUCCESS) {
+    	return write_status;
     }
     return E_SUCCESS;
 }

@@ -518,7 +518,7 @@ int dir_create_file(char *filename) {
                                     __BKPT();
                                 }
                                 // Update the FAT
-                                write_FAT_entry(rca, cluster_search_index, cluster_search_index);
+                                write_FAT_entry(rca, cluster_search_index, FAT_ENTRY_ALLOCATED_AND_END_OF_FILE);
                                 return E_SUCCESS;
                             }
                             cluster_search_index++;
@@ -670,28 +670,96 @@ int file_open(char *filename, file_descriptor *descrp) {
         return get_stream_status;
     }
     // Update the Stream FAT32 members
-    (currentPCB->streams)[*descrp].position = 0;
-    (currentPCB->streams)[*descrp].first_cluster = fcluster;
+    (currentPCB->streams)[*descrp].position_sector = first_sector_of_cluster(fcluster);
+    (currentPCB->streams)[*descrp].position_in_sector = 0;
     return E_SUCCESS;
 }
 
 int file_close(file_descriptor descrp)
 {
     // Update the Stream
-    (currentPCB->streams)[descrp].position = 0;
-    (currentPCB->streams)[descrp].first_cluster = 0;
+    (currentPCB->streams)[descrp].position_in_sector = 0;
+    (currentPCB->streams)[descrp].position_sector = 0;
     return E_SUCCESS;
 }
 
 int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
+    struct sdhc_card_status my_card_status;
     Stream stream = (currentPCB->streams)[descr];
-    // Get the file entry
+    // Get the file entry sector and number
     uint32_t file_entry_sector;
     int file_entry_number;
     int get_entry_status = dir_find_file_x(&stream.pathname[1], &file_entry_sector, &file_entry_number);
     if (get_entry_status != E_SUCCESS) {
         return get_entry_status;
     }
+    /**
+     * Get the file's directory entry
+     */
+    uint8_t entry_sector_data[512];
+    int entry_read_status = sdhc_read_single_block(rca, file_entry_sector, &my_card_status, entry_sector_data);
+    if (entry_read_status != SDHC_SUCCESS)
+    {
+        // Fatal error
+        __BKPT();
+    }
+    struct dir_entry_8_3 *dir_entry = ((struct dir_entry_8_3 *)entry_sector_data) + file_entry_number;
+    uint32_t first_data_cluster = dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+    /**
+     * Allocate the initial cluster if it's a new file
+     * Find a free cluster, or return an error. Unless FSI_Nxt_Free has a valid value, start at cluster 2 per spec
+     */
+    if (first_data_cluster == 0)
+    {
+        uint32_t cluster_search_index = 2;
+        if (FSI_Nxt_Free != FSI_NXT_FREE_UNKNOWN)
+        {
+            cluster_search_index = FSI_Nxt_Free;
+        }
+        // Traverse the FAT and check if there is a free cluster
+        while (cluster_search_index <= total_data_clusters + 1)
+        {
+            uint32_t cluster_fat_entry = read_FAT_entry(rca, cluster_search_index);
+            if (cluster_fat_entry == FAT_ENTRY_FREE)
+            {
+                // Update the FAT
+                write_FAT_entry(rca, cluster_search_index, FAT_ENTRY_ALLOCATED_AND_END_OF_FILE);
+                // Update the stream's cluster number
+                first_data_cluster = cluster_search_index;
+                break;
+            }
+            cluster_search_index++;
+        }
+        if (first_data_cluster == 0) {
+            return E_NO_FREE_CLUSTER;
+        }
+        // Set first cluster high and low
+        dir_entry->DIR_FstClusHI = first_data_cluster >> 16;
+        dir_entry->DIR_FstClusLO = first_data_cluster & 0xFFFF;
+        // Write the updated sector data to the microSD
+        int write_status = sdhc_write_single_block(rca, file_entry_sector, &my_card_status, entry_sector_data);
+        if (write_status != SDHC_SUCCESS)
+        {
+            // Fatal error
+            __BKPT();
+        }
+    }
+    /**
+     * Write data to file
+     */
+    uint8_t position_sector_data[512];
+    strncpy((char*)&(position_sector_data[stream.position_in_sector]), bufp, buflen);
+    int data_write_status = sdhc_write_single_block(rca, stream.position_sector, &my_card_status, position_sector_data);
+    if (data_write_status != SDHC_SUCCESS)
+    {
+        // Fatal error
+        __BKPT();
+    }
+    // Update the stream position, subtract 1 to account for the null terminator
+    (currentPCB->streams)[descr].position_in_sector = (currentPCB->streams)[descr].position_in_sector + (buflen - 1);
+    (currentPCB->streams)[descr].james = 89;
+    myprintf("%s\n", position_sector_data);
+    myprintf("Sector: %lu, Entry: %lu, Cluster: %d\n", (unsigned long)file_entry_sector, file_entry_number, (unsigned long)stream.first_cluster);
     // Check the fat to make sure file has an entry.
     return E_SUCCESS;
 }

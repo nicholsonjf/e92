@@ -16,7 +16,7 @@ int pbfgetc(file_descriptor *fd)
     return E_SUCCESS;
 }
 
-int pbfputc(char c, file_descriptor *fd)
+int pbfputc(file_descriptor *fd, char *bufp, int buflen)
 {
     return E_SUCCESS;
 }

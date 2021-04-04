@@ -27,7 +27,8 @@ int myfopen(char *pathname, file_descriptor *fd)
     // stream was successfully defined and is located at index *fd
     // finish defining the stream members
     (currentPCB->streams)[*fd].device = device;
-    (currentPCB->streams)[*fd].pathname = pathname;
+    // Copy the pathname into the stream
+    strncpy((&(currentPCB->streams)[*fd])->pathname, pathname, strlen(pathname)+1);
     // Stream is in use
     (currentPCB->streams)[*fd].in_use = 1;
     return E_SUCCESS;
@@ -73,8 +74,17 @@ int myfclose(file_descriptor *fd)
     {
         return fclose_status;
     }
-    (currentPCB->streams)[*fd].device = (Device *)0;
-    (currentPCB->streams)[*fd].pathname = (void *)0;
     (currentPCB->streams)[*fd].in_use = 0;
+    return E_SUCCESS;
+}
+
+int myfputc(file_descriptor *fd, char *bufp, int buflen)
+{
+    Device *device = (currentPCB->streams)[*fd].device;
+    int fputc_status = device->fputc(fd, bufp, buflen);
+    if (fputc_status != E_SUCCESS)
+    {
+        return fputc_status;
+    }
     return E_SUCCESS;
 }

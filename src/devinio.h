@@ -21,7 +21,7 @@ typedef uint32_t file_descriptor;
 typedef struct device
 {
     int (*fgetc)(file_descriptor *fd);
-    int (*fputc)(char c, file_descriptor *fd);
+    int (*fputc)(file_descriptor *fd, char *bufp, int buflen);
     int (*fopen)(char *pathname, file_descriptor *fd);
     int (*fdelete)(char *pathname);
     int (*fclose)(file_descriptor *fd);
@@ -32,10 +32,12 @@ typedef struct stream
 {
     Device *device; // pointer to the Device used to operate on the file
     uint8_t in_use; // whether the stream is currently in use (stream.in_use=1) or not (stream.in_use=0)
-    char *pathname; // the pathname of the file
+    char pathname[12]; // the pathname of the file
     // FAT32 members
-    uint32_t position; // current file position in bytes
-    uint32_t first_cluster; // cluster number of the file's first data cluster
+    uint32_t first_cluster; // the first data cluster for this file
+    uint32_t position_sector; // the sector number of the open file's position
+    uint32_t position_in_sector; // the offset in bytes within the position_sector
+    uint32_t james;
 } Stream;
 
 int myfclose(file_descriptor *fd);
@@ -45,5 +47,7 @@ int myfopen(char *pathname, file_descriptor *fd);
 int myfdelete(char *pathname);
 
 int myfcreate(char *pathname);
+
+int myfputc(file_descriptor *fd, char *bufp, int buflen);
 
 #endif /* ifndef _DEVINIO_H */

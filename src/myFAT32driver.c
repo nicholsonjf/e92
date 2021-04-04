@@ -19,8 +19,13 @@ int fatfgetc(file_descriptor *fd)
     return E_SUCCESS;
 }
 
-int fatfputc(char c, file_descriptor *fd)
+int fatfputc(file_descriptor *fd, char *bufp, int buflen)
 {
+    int fatfputc_status = file_putbuf(*fd, bufp, buflen);
+    if (fatfputc_status != E_SUCCESS)
+    {
+        return fatfputc_status;
+    }
     return E_SUCCESS;
 }
 
