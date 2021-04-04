@@ -37,7 +37,7 @@ int fatfclose(file_descriptor *fd)
 int fatfopen(char *pathname, file_descriptor *fd)
 {
     // remove leading slash to get the filename
-    char *filename = ++pathname;
+    char *filename = pathname+1;
     int fatfopen_status = file_open(filename, fd);
     if (fatfopen_status != E_SUCCESS) {
         return fatfopen_status;
@@ -47,7 +47,7 @@ int fatfopen(char *pathname, file_descriptor *fd)
 
 int fatfcreate(char *pathname) {
     // remove leading slash to get the filename
-    char * filename = ++pathname;
+    char *filename = pathname+1;
     size_t pathname_len = strlen(filename);
     if (pathname_len < 1 || pathname_len > 11)
     {
@@ -64,10 +64,11 @@ int fatfcreate(char *pathname) {
 int fatfdelete(char *pathname)
 {
     // remove leading slash
-    int delete_file = dir_delete_file(++pathname);
-    if (delete_file != E_SUCCESS)
+    char *filename = pathname + 1;
+    int delete_file_status = dir_delete_file(filename);
+    if (delete_file_status != E_SUCCESS)
     {
-        return delete_file;
+        return delete_file_status;
     }
     return E_SUCCESS;
 }

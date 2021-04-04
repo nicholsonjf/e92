@@ -43,10 +43,11 @@ Project plan
     - Add help text for new commands
     - myfgetc
     - myfputc
-    - LED f functions
+    - LED f function
     - PB f functions
     - Book problems
-    - Switch to 112000 baud
+    - Fixe file not opening bug
+    
     
     
 
@@ -54,6 +55,7 @@ Project plan
 
 
 ~DONE
+    - Switch to 112000 baud
     - increase memory to 30k
     - Set stream attributes in fopen
     - myfclose

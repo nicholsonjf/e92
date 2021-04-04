@@ -24,9 +24,14 @@ int get_device(char *pathname, Device **device)
         }
 
     }
-    // if not, assume the file is FAT32 and use that driver
-    *device = &FAT32;
-    return E_SUCCESS;
+    // If the first char in pathname is "/" and it's not an exact match with an already
+    // initialized device it is assumed to be referencing a FAT32 file 
+    if (*pathname == '/')
+    {
+        *device = &FAT32;
+        return E_SUCCESS;
+    }
+    return E_DEVICE_PATH;
 }
 
 // Get the first available stream in pcb->streams or return an error
