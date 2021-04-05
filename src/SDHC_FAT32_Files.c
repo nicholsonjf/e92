@@ -903,40 +903,79 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
         __BKPT();
     }
     struct dir_entry_8_3 *dir_entry = ((struct dir_entry_8_3 *)entry_sector_data) + file_entry_number;
-    //uint32_t first_data_cluster = dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
-    uint32_t sector_start_offset = (currentPCB->streams)[descr].position_fgetc + buflen;
-    if (sector_start_offset > bytes_per_sector) {
-        // Get the number of bytes in-use in the last in-use cluster
-        uint32_t bytes_after_cluster_div = dir_entry->DIR_FileSize % (bytes_per_sector * sectors_per_cluster);
-        // Get the sector cluster index to see if we need to check the FAT
-        uint32_t sector_cluster_index = bytes_after_cluster_div / bytes_per_sector;
-        if (sector_cluster_index == sectors_per_cluster - 1)
+    // Get the current cluster based on (currentPCB->streams)[*descrp].position_fgetc
+    uint32_t first_data_cluster = dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+    uint32_t current_cluster_number = first_data_cluster;
+    // In my OS data is always appended to the end of a file
+    // Get the number of clusters in use via the file size
+    uint32_t pos_num_clusters = (currentPCB->streams)[*descrp].position_fgetc / (bytes_per_sector * sectors_per_cluster);
+    if (pos_num_clusters > 0)
+    {
+        uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
+        // Traverse the FAT to take us to the last cluster for this file
+        for (int i = 0; i < pos_num_clusters; i++)
         {
-            // This is the last sector in the cluster. Check if there is data in the next cluster
-            uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_number);
-            if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE)
-            {
-                return E_FILE_NOT_IN_CWD;
-            }
-            if (current_cluster_FAT_entry == FAT_ENTRY_DEFECTIVE_CLUSTER)
-            {
-                // Fatal error
-                __BKPT();
-            }
-            // FAT entry is in use and points to next cluster
-            // Set cluster to the current cluster's FAT entry and continue iteration
-            current_cluster_number = current_cluster_FAT_entry;
+            uint32_t current_cluster_fat_entry = read_FAT_entry(rca, current_cluster_fat_entry);
         }
+        current_cluster_number = current_cluster_fat_entry;
     }
-    /**
-     * Read the requested sector
-     */
-        uint8_t position_sector_data[512];
-    // Read the current sector data
+    uint32_t position_sector_data[512];
+    // Get the number of bytes from the current position until the end of the sector
+    uint32_t remaining_bytes = dir_entry->DIR_FileSize - (currentPCB->streams)[*descrp].position_fgetc;
+    if (remaining_bytes / bytes_per_sector > 0)
+    {
+        remaining_bytes = remaining_bytes % bytes_per_sector;
+    }
+    // Check if the number of bytes requested spills over into the next sector
+    uint32_t sector_start_offset = (currentPCB->streams)[descr].position_fgetc + buflen;
+    // Read the current sector data and send as many bytes possible to caller
     int data_read_status = sdhc_read_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
     if (data_read_status != SDHC_SUCCESS)
     {
         // Fatal error
         __BKPT();
     }
+    int32_t num_spillover_bytes = buflen - remaining_bytes;
+    if (num_spillover_bytes < 0) {
+        num_spillover_bytes = 0;
+    }
+    // Send as many bytes as we can to the callers buffer
+    strncpy(bufp, position_sector_data[bytes_per_sector - remaining_bytes], remaining_bytes);
+    if (num_spillover_bytes > 0) {
+        // Check if the current sector is the last in the cluster
+        // Get the number of bytes in-use in the last in-use cluster
+        uint32_t bytes_after_cluster_div = dir_entry->DIR_FileSize % (bytes_per_sector * sectors_per_cluster);
+        // Get the sector cluster index to see if we're in the last sector and need to check the FAT
+        uint32_t sector_cluster_index = bytes_after_cluster_div / bytes_per_sector;
+        if (sector_cluster_index == sectors_per_cluster - 1)
+        {
+            // This is the last sector in the cluster. 
+            // Check if there is data in the next cluster
+            uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_number);
+            if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE)
+            {
+                // The next cluster isn't in use, return E_EOF
+                return E_EOF;
+            }
+            else if (current_cluster_FAT_entry == FAT_ENTRY_DEFECTIVE_CLUSTER)
+            {
+                // Fatal error
+                __BKPT();
+            }
+            // FAT entry is in use and points to next cluster
+            // Read the first sector, and send the spillover bytes to the caller
+            current_cluster_number = current_cluster_FAT_entry;
+            uint32_t position_sector_number = first_sector_of_cluster(current_cluster_number);
+            // Read the current sector data
+            int data_read_status = sdhc_read_single_block(rca, position_sector_number, &my_card_status, position_sector_data);
+            if (data_read_status != SDHC_SUCCESS)
+            {
+                // Fatal error
+                __BKPT();
+            }
+            // Send the bytes to the callers buffer
+            strncpy(bufp, position_sector_data, num_spillover_bytes);
+        }
+    }
+    return E_SUCCESS;
 }

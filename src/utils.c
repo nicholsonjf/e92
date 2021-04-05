@@ -76,3 +76,24 @@ int myprintf(char *format, ...)
     uartPutsNL(UART2_BASE_PTR, buffer);
     return E_SUCCESS;
 }
+
+int char_wash(uint8_t *dirty_chars, uint8_t *clean_chars)
+{
+    int chars_written = 0;
+    for (int i=0; i<strlen(dirty_chars); i++) {
+        if (c < 36 || c > 126)
+        {
+            char s[5]; // 4 chars + '\0'
+            int x = 4660;
+            sprintf(s, "%0x.2x", x);
+            for (int j=0; j<4; j++) {
+                clean_chars[chars_written] = s[i];
+                chars_written++;
+            }
+
+        }
+        clean_chars[chars_written] = dirty_chars[i];
+        chars_written++;
+    }
+    clean_chars[chars_written] = 0;
+}

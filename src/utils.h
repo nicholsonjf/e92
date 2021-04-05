@@ -13,6 +13,8 @@ long my_strtol(char *str);
 
 int myprintf(char *format, ...);
 
+int sanitize_char(uint8_t c, char *buf);
+
 // Shell error types.
 enum error_t
 {
