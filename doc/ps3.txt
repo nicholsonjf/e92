@@ -127,3 +127,16 @@ Project plan
         Green LED   "/dev/led/green"
         
     -Column two is device description
+
+
+        // Replace any null bytes with a space
+    for (int i=0; i<sizeof(position_sector_data)/sizeof(uint8_t); i++) {
+        if (position_sector_data[i] == 0) {
+            position_sector_data[i] = ' ';
+        }
+    }
+
+    position_sector_data[512] = 0;
+        myprintf("%s\n", position_sector_data);
+    myprintf("Sector: %lu, Entry: %lu, Cluster: %d\n", (unsigned long)file_entry_sector, file_entry_number, (unsigned long)(currentPCB->streams)[descr].first_cluster);
+    // Check the fat to make sure file has an entry.

@@ -685,33 +685,46 @@ int file_open(char *filename, file_descriptor *descrp) {
     }
     struct dir_entry_8_3 *dir_entry = ((struct dir_entry_8_3 *)entry_sector_data) + file_entry_number;
     uint32_t first_data_cluster = dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
-    // Update the Stream
-    uint32_t current_cluster_number = first_data_cluster;
-    // In my OS data is always appended to the end of a file
-    // Get the number of clusters in use via the file size
-    uint32_t file_num_clusters = dir_entry->DIR_FileSize / (bytes_per_sector * sectors_per_cluster);
-    if (file_num_clusters > 0)
-    {
-        uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
-        // Traverse the FAT to take us to the last cluster for this file
-        for (int i = 0; i < file_num_clusters; i++)
+    // If the file is "new" i.e. it has no allocated cluster, skip updating the stream position
+    if (first_data_cluster != 0) {
+        uint32_t current_cluster_number = first_data_cluster;
+        // In my OS data is always appended to the end of a file
+        // Get the number of clusters in use via the file size
+        uint32_t file_num_clusters = dir_entry->DIR_FileSize / (bytes_per_sector * sectors_per_cluster);
+        if (file_num_clusters > 0)
         {
-            uint32_t current_cluster_fat_entry = read_FAT_entry(rca, current_cluster_fat_entry);
+            uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
+            // Traverse the FAT to take us to the last cluster for this file
+            for (int i = 0; i < file_num_clusters; i++)
+            {
+                uint32_t current_cluster_fat_entry = read_FAT_entry(rca, current_cluster_fat_entry);
+            }
+            current_cluster_number = current_cluster_fat_entry;
         }
-        current_cluster_number = current_cluster_fat_entry;
+        // Get the number of bytes in-use in the last in-use cluster
+        uint32_t bytes_after_cluster_div = dir_entry->DIR_FileSize % (bytes_per_sector * sectors_per_cluster);
+        // Get the cluster sector offset
+        uint32_t cluster_sector_offset = bytes_after_cluster_div / bytes_per_sector;
+        // Get the number of bytes in-use in the last in-use sector
+        uint32_t bytes_after_sector_div = bytes_after_cluster_div % bytes_per_sector;
+        // Get the first sector of the current cluster
+        uint32_t first_sector_current_cluster = first_sector_of_cluster(current_cluster_number);
+        // In my OS calling "read" on a newly opened file sets the position to the begining of that file
+        (currentPCB->streams)[*descrp].position_fgetc = 0;
+        // update the position_sector
+        (currentPCB->streams)[*descrp].position_sector = first_sector_current_cluster + cluster_sector_offset;
+        // Update the stream position_in_sector
+        (currentPCB->streams)[*descrp].position_in_sector = (currentPCB->streams)[*descrp].position_in_sector + bytes_after_sector_div;
     }
-    // Get the number of bytes in-use in the last in-use cluster
-    uint32_t bytes_after_cluster_div = dir_entry->DIR_FileSize % (bytes_per_sector * sectors_per_cluster);
-    // Get the cluster sector offset
-    uint32_t cluster_sector_offset = bytes_after_cluster_div / bytes_per_sector;
-    // Get the number of bytes in-use in the last in-use sector
-    uint32_t bytes_after_sector_div = bytes_after_cluster_div % bytes_per_sector;
-    // Get the first sector of the current cluster
-    uint32_t first_sector_current_cluster = first_sector_of_cluster(current_cluster_number);
-    // update the position_sector
-    (currentPCB->streams)[descr].position_sector = first_sector_current_cluster + cluster_sector_offset;
-    // Update the stream position_in_sector
-    (currentPCB->streams)[descr].position_in_sector = (currentPCB->streams)[descr].position_in_sector + bytes_after_sector_div;
+    else {
+        // the file is new
+        // initialize the position_fgetc
+        (currentPCB->streams)[*descrp].position_fgetc = 0;
+        // initialize the position_sector
+        (currentPCB->streams)[*descrp].position_sector = 0;
+        // initialize the stream position_in_sector
+        (currentPCB->streams)[*descrp].position_in_sector = 0;
+    }
     return E_SUCCESS;
 }
 
@@ -782,10 +795,64 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
             // Fatal error
             __BKPT();
         }
+        // Update the stream position_sector
+        (currentPCB->streams)[descr].position_sector = first_sector_of_cluster(first_data_cluster);
+    }
+    // Set the current cluster
+    uint32_t current_cluster_number = first_data_cluster;
+    // In my OS data is always appended to the end of a file
+    // Get the number of clusters in use via the file size
+    uint32_t file_num_clusters = dir_entry->DIR_FileSize / (bytes_per_sector * sectors_per_cluster);
+    if (file_num_clusters > 0)
+    {
+        uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
+        // Traverse the FAT to take us to the last cluster for this file
+        for (int i = 0; i < file_num_clusters; i++)
+        {
+            uint32_t current_cluster_fat_entry = read_FAT_entry(rca, current_cluster_fat_entry);
+        }
+        current_cluster_number = current_cluster_fat_entry;
     }
     /**
      * Write data to file
      */
+    uint32_t write_len = buflen;
+    // First check if the amount of data we need to write will spill over into the next sector
+    uint32_t sector_start_offset = (currentPCB->streams)[descr].position_in_sector + bufflen;
+    if (sector_start_offset > bytes_in_sector) {
+        // If so call this function recursively to handle the spillover
+        // But first check if a new cluster is needed, fml
+        // Get the number of bytes in-use in the last in-use cluster
+        uint32_t bytes_after_cluster_div = dir_entry->DIR_FileSize % (bytes_per_sector * sectors_per_cluster);
+        // Get the sector cluster index to see if we need a new cluster
+        uint32_t sector_cluster_index = bytes_after_cluster_div / bytes_per_sector;
+        if (sector_cluster_index == sectors_per_cluster-1) {
+            // Current sector is the last in the cluster
+            // Find a free cluster, or return an error. Unless FSI_Nxt_Free has a valid value, start at cluster 2 per spec
+            uint32_t cluster_search_index = 2;
+            if (FSI_Nxt_Free != FSI_NXT_FREE_UNKNOWN) {
+                cluster_search_index = FSI_Nxt_Free;
+            }
+            // Traverse the FAT and check if there is a free cluster
+            while (cluster_search_index <= total_data_clusters+1) {
+                uint32_t cluster_fat_entry = read_FAT_entry(rca, cluster_search_index);
+                if (cluster_fat_entry == FAT_ENTRY_FREE) {
+                    // Update the FAT
+                    write_FAT_entry(rca, current_cluster_number, cluster_search_index);
+                    write_FAT_entry(rca, cluster_search_index, FAT_ENTRY_ALLOCATED_AND_END_OF_FILE);
+                    current_cluster_number = cluster_search_index;
+                }
+                else {
+                    // Else return an error
+                    return E_NO_FREE_CLUSTER;
+                }
+            }
+        }
+        write_len = bytes_per_sector - (currentPCB->streams)[descr].position_in_sector;
+        uint8_t spillover[buflen-write_len];
+        strncpy((char *)&spillover, bufp[write_len], buflen - write_len);
+        int file_putbuf_status = file_putbuf(descr, &spillover, buflen - write_len);
+    }
     uint8_t position_sector_data[512];
     // Read the current sector data
     int data_read_status = sdhc_read_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
@@ -812,8 +879,64 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
         // Fatal error
         __BKPT();
     }
-    myprintf("%s\n", position_sector_data);
-    myprintf("Sector: %lu, Entry: %lu, Cluster: %d\n", (unsigned long)file_entry_sector, file_entry_number, (unsigned long)(currentPCB->streams)[descr].first_cluster);
-    // Check the fat to make sure file has an entry.
     return E_SUCCESS;
+}
+
+int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) {
+    struct sdhc_card_status my_card_status;
+    // Get the file entry sector and number
+    uint32_t file_entry_sector;
+    int file_entry_number;
+    int get_entry_status = dir_find_file_x(&(currentPCB->streams)[descr].pathname[1], &file_entry_sector, &file_entry_number);
+    if (get_entry_status != E_SUCCESS)
+    {
+        return get_entry_status;
+    }
+    /**
+     * Get the file's directory entry
+     */
+    uint8_t entry_sector_data[512];
+    int entry_read_status = sdhc_read_single_block(rca, file_entry_sector, &my_card_status, entry_sector_data);
+    if (entry_read_status != SDHC_SUCCESS)
+    {
+        // Fatal error
+        __BKPT();
+    }
+    struct dir_entry_8_3 *dir_entry = ((struct dir_entry_8_3 *)entry_sector_data) + file_entry_number;
+    //uint32_t first_data_cluster = dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+    uint32_t sector_start_offset = (currentPCB->streams)[descr].position_fgetc + buflen;
+    if (sector_start_offset > bytes_per_sector) {
+        // Get the number of bytes in-use in the last in-use cluster
+        uint32_t bytes_after_cluster_div = dir_entry->DIR_FileSize % (bytes_per_sector * sectors_per_cluster);
+        // Get the sector cluster index to see if we need to check the FAT
+        uint32_t sector_cluster_index = bytes_after_cluster_div / bytes_per_sector;
+        if (sector_cluster_index == sectors_per_cluster - 1)
+        {
+            // This is the last sector in the cluster. Check if there is data in the next cluster
+            uint32_t current_cluster_FAT_entry = read_FAT_entry(rca, current_cluster_number);
+            if (current_cluster_FAT_entry >= FAT_ENTRY_ALLOCATED_AND_END_OF_FILE)
+            {
+                return E_FILE_NOT_IN_CWD;
+            }
+            if (current_cluster_FAT_entry == FAT_ENTRY_DEFECTIVE_CLUSTER)
+            {
+                // Fatal error
+                __BKPT();
+            }
+            // FAT entry is in use and points to next cluster
+            // Set cluster to the current cluster's FAT entry and continue iteration
+            current_cluster_number = current_cluster_FAT_entry;
+        }
+    }
+    /**
+     * Read the requested sector
+     */
+        uint8_t position_sector_data[512];
+    // Read the current sector data
+    int data_read_status = sdhc_read_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
+    if (data_read_status != SDHC_SUCCESS)
+    {
+        // Fatal error
+        __BKPT();
+    }
 }

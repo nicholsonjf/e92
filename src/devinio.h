@@ -34,7 +34,7 @@ typedef struct stream
     uint8_t in_use; // whether the stream is currently in use (stream.in_use=1) or not (stream.in_use=0)
     char pathname[12]; // the pathname of the file
     // FAT32 members
-    uint32_t first_cluster; // the first data cluster for this file
+    uint32_t position_fgetc; // the offset in bytes from the start of the file of the current position (only used by fgetc)
     uint32_t position_sector; // the sector number of the open file's position
     uint32_t position_in_sector; // the offset in bytes within the position_sector
 } Stream;
