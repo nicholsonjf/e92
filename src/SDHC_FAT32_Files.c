@@ -659,19 +659,59 @@ int dir_delete_file(char *filename) {
 }
 
 int file_open(char *filename, file_descriptor *descrp) {
-    uint32_t fcluster;
-    int dir_find_file_status = dir_find_file(filename, &fcluster);
-    if (dir_find_file_status != E_SUCCESS) {
-        return dir_find_file_status;
-    }
     // Get an available Stream or return an error
     int get_stream_status = get_available_stream(descrp);
     if (get_stream_status != E_SUCCESS) {
         return get_stream_status;
     }
-    // Update the Stream FAT32 members
-    (currentPCB->streams)[*descrp].position_sector = first_sector_of_cluster(fcluster);
-    (currentPCB->streams)[*descrp].position_in_sector = 0;
+    struct sdhc_card_status my_card_status;
+    // Get the file entry sector and number
+    uint32_t file_entry_sector;
+    int file_entry_number;
+    int get_entry_status = dir_find_file_x(filename, &file_entry_sector, &file_entry_number);
+    if (get_entry_status != E_SUCCESS)
+    {
+        return get_entry_status;
+    }
+    /**
+     * Get the file's directory entry
+     */
+    uint8_t entry_sector_data[512];
+    int entry_read_status = sdhc_read_single_block(rca, file_entry_sector, &my_card_status, entry_sector_data);
+    if (entry_read_status != SDHC_SUCCESS)
+    {
+        // Fatal error
+        __BKPT();
+    }
+    struct dir_entry_8_3 *dir_entry = ((struct dir_entry_8_3 *)entry_sector_data) + file_entry_number;
+    uint32_t first_data_cluster = dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
+    // Update the Stream
+    uint32_t current_cluster_number = first_data_cluster;
+    // In my OS data is always appended to the end of a file
+    // Get the number of clusters in use via the file size
+    uint32_t file_num_clusters = dir_entry->DIR_FileSize / (bytes_per_sector * sectors_per_cluster);
+    if (file_num_clusters > 0)
+    {
+        uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
+        // Traverse the FAT to take us to the last cluster for this file
+        for (int i = 0; i < file_num_clusters; i++)
+        {
+            uint32_t current_cluster_fat_entry = read_FAT_entry(rca, current_cluster_fat_entry);
+        }
+        current_cluster_number = current_cluster_fat_entry;
+    }
+    // Get the number of bytes in-use in the last in-use cluster
+    uint32_t bytes_after_cluster_div = dir_entry->DIR_FileSize % (bytes_per_sector * sectors_per_cluster);
+    // Get the cluster sector offset
+    uint32_t cluster_sector_offset = bytes_after_cluster_div / bytes_per_sector;
+    // Get the number of bytes in-use in the last in-use sector
+    uint32_t bytes_after_sector_div = bytes_after_cluster_div % bytes_per_sector;
+    // Get the first sector of the current cluster
+    uint32_t first_sector_current_cluster = first_sector_of_cluster(current_cluster_number);
+    // update the position_sector
+    (currentPCB->streams)[descr].position_sector = first_sector_current_cluster + cluster_sector_offset;
+    // Update the stream position_in_sector
+    (currentPCB->streams)[descr].position_in_sector = (currentPCB->streams)[descr].position_in_sector + bytes_after_sector_div;
     return E_SUCCESS;
 }
 
@@ -685,11 +725,10 @@ int file_close(file_descriptor descrp)
 
 int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
     struct sdhc_card_status my_card_status;
-    Stream stream = (currentPCB->streams)[descr];
     // Get the file entry sector and number
     uint32_t file_entry_sector;
     int file_entry_number;
-    int get_entry_status = dir_find_file_x(&stream.pathname[1], &file_entry_sector, &file_entry_number);
+    int get_entry_status = dir_find_file_x(&(currentPCB->streams)[descr].pathname[1], &file_entry_sector, &file_entry_number);
     if (get_entry_status != E_SUCCESS) {
         return get_entry_status;
     }
@@ -748,23 +787,6 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
      * Write data to file
      */
     uint8_t position_sector_data[512];
-    uint32_t current_cluster_number = first_data_cluster;
-    // In my OS data is always appended to the end of a file
-    uint32_t file_num_clusters = dir_entry->DIR_FileSize & ~(bytes_per_sector * sectors_per_cluster);
-    if (file_num_clusters > 0) {
-        uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
-        // Traverse the FAT to take us to the last cluster for this file
-        for (int i=0; i<file_num_clusters; i++) {
-            uint32_t current_cluster_fat_entry = read_FAT_entry(rca, current_cluster_fat_entry);
-        }
-        current_cluster_number = current_cluster_fat_entry;
-    }
-    // Get the first sector of the current cluster
-    uint32_t first_sector_current_cluster = first_sector_of_cluster(current_cluster_number);
-    // Get the cluster sector offset
-    uint32_t cluster_sector_offset = dir_entry->DIR_FileSize & ~bytes_per_sector;
-    // update the position_sector
-    (currentPCB->streams)[descr].position_sector = first_sector_current_cluster + cluster_sector_offset;
     // Read the current sector data
     int data_read_status = sdhc_read_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
     if (data_read_status != SDHC_SUCCESS)
@@ -772,8 +794,8 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
         // Fatal error
         __BKPT();
     }
-    // Update the current sector data with buffer contents
-    strncpy((char*)&(position_sector_data[stream.position_in_sector]), bufp, buflen);
+    // Update the current sector data at the sector offset with buffer contents
+    strncpy((char *)&(position_sector_data[(currentPCB->streams)[descr].position_in_sector]), bufp, buflen);
     int data_write_status = sdhc_write_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
     if (data_write_status != SDHC_SUCCESS)
     {
@@ -791,7 +813,7 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
         __BKPT();
     }
     myprintf("%s\n", position_sector_data);
-    myprintf("Sector: %lu, Entry: %lu, Cluster: %d\n", (unsigned long)file_entry_sector, file_entry_number, (unsigned long)stream.first_cluster);
+    myprintf("Sector: %lu, Entry: %lu, Cluster: %d\n", (unsigned long)file_entry_sector, file_entry_number, (unsigned long)(currentPCB->streams)[descr].first_cluster);
     // Check the fat to make sure file has an entry.
     return E_SUCCESS;
 }
