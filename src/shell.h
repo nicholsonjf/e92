@@ -1,3 +1,6 @@
+#ifndef _MYSHELL_H
+#define _MYSHELL_H
+
 // Shell command function prototypes.
 int cmd_date(int argc, char *argv[]);
 int cmd_echo(int argc, char *argv[]);
@@ -9,23 +12,12 @@ int cmd_free(int argc, char *argv[]);
 int cmd_memory_map(int argc, char *argv[]);
 int cmd_memset(int argc, char *argv[]);
 int cmd_memchk(int argc, char *argv[]);
+int cmd_open(int argc, char *argv[]);
+int cmd_create(int argc, char *argv[]);
+int cmd_read(int argc, char *argv[]);
+int cmd_write(int argc, char *argv[]);
+int cmd_ls(int argc, char *argv[]);
+int cmd_delete(int argc, char *argv[]);
+int cmd_close(int argc, char *argv[]);
 
-// Shell helper function prototypes.
-long my_strtol(char *str);
-
-// Shell error types.
-enum error_t
-{
-    E_SUCCESS,
-    E_NOT_ENOUGH_ARGS,
-    E_TOO_MANY_ARGS,
-    E_CMD_NOT_FND,
-    E_ARG_TYPE,
-    E_ADDR_NOT_ALLOCATED,
-    E_WRONG_PID,
-    E_MALLOC,
-    E_STRTOUL,
-    E_BRANGE_EX,
-    E_ADDR_SPC,
-    E_COUNT
-};
+#endif /* ifndef _MYSHELL_H */

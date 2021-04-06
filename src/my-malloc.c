@@ -1,12 +1,11 @@
 #include "my-malloc.h"
-#include "pcb.h"
-#include "shell.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
+#include "utils.h"
+#include "pcb.h"
 
 struct pcb *currentPCB;
 
@@ -33,6 +32,12 @@ static void pcb_init(void) {
     // Check return for all system call
     currentPCB = malloc(sizeof(struct pcb));
     currentPCB->pid = 0;
+    // initialize streams to not in use
+    // Check for the first open Stream in pcb->streams
+    for (int i = 0; i < sizeof(currentPCB->streams) / sizeof(currentPCB->streams[0]); i++)
+    {
+        (currentPCB->streams)[i].in_use = 0;
+    }
 }
 
 struct mem_region *mymem;
@@ -44,7 +49,8 @@ static int get_pcb(void) {
 
 static void malloc_init(void) {
     pcb_init();
-    uint32_t aspacesize = 128 * (1 << 20);
+    // Totaly memory is 30k bytes
+    uint32_t aspacesize = 30 * (1 << 10);
     void *memory = malloc(aspacesize);
     mymem = (struct mem_region*)memory;
     mymem->free = 1;
@@ -145,8 +151,12 @@ int myFreeErrorCode(void *ptr) {
 }
 
 
-void myFree(void *ptr) {
-    int rv = myFreeErrorCode(ptr);
+int myFree(void *ptr) {
+    int myFreeStatus = myFreeErrorCode(ptr);
+    if (myFreeStatus != E_SUCCESS) {
+    	return myFreeStatus;
+    }
+    return E_SUCCESS;
 }
 
 
@@ -156,8 +166,8 @@ void memoryMap(void) {
         malloc_init();
     }
     struct mem_region *current = mymem;
-    fprintf(stdout, "\n");
-    fprintf(stdout, "%14s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
+    myprintf("\n");
+    myprintf("%10s%5s%7s%12s\n", "Address", "PID", "Free", "Size");
     while (current < endmymem)
     {
         char **free;
@@ -168,10 +178,10 @@ void memoryMap(void) {
             char *true = "true";
             free = &true;
         }
-        fprintf(stdout, "%12p%5d%7s%12d\n", current->data, current->pid, *free, current->size);
+        myprintf("%10p%5d%7s%12d\n", current->data, current->pid, *free, current->size);
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
-    fprintf(stdout, "\n");
+    myprintf("\n");
 }
 
 int myMemset(void *p, uint8_t val, long len)
@@ -225,9 +235,9 @@ int myMemchk(void *p, uint8_t val, long len)
         current = (void *)current + current->size + sizeof(struct mem_region);
     }
     if (chkstatus == 0) {
-        fprintf(stdout, "%s\n", "memchk failed");
+        myprintf("%s\n", "memchk failed");
     } else {
-        fprintf(stdout, "%s\n", "memchk succeeded");
+        myprintf("%s\n", "memchk succeeded");
     }
     return E_SUCCESS;
 }

@@ -1,0 +1,147 @@
+Implementation Notes
+
+FAT32
+~FAT32 files can either be open (status=1) or closed(status=0). All I/O system calls are available for any open file.
+~The FAT32 file system is implemented as a single directory. Only files can be created, not directories (for now).
+~Only valid 8_3 filenames are accepted
+
+MISCELLANEOUS
+~There's no stdin, stdout, stderr, just an array of 32 streams at pcb->streams (would like to implement stdin, stdout, stderr later)
+~I didn't have time to implement the cache, but plan on submitting it in a correction PR later.
+~I also don't have the book problems done at this point, I wanted to focus on getting the project in. I will
+submit them later with the correction.
+~ I know I'm quite late with this assignment, but it was such a large undertaking I'm not sure I could have done it any
+faster. I estimate that I spent nearly 100 hours over the last few weeks completing this, and I hope my work reflects that.
+I know it's not perfect but I'm happy with how it turned out.
+
+Project plan
+
+~ Port shell to K70 (done)
+
+~ Implement struct stream
+
+~ Add struct stream *streams[32] to struct PCB
+
+~Implement function to add file pointers to pcb.streams
+    -Returns the position of pointer in the array
+    -If the stream is successfully added, success is set to 1.
+    -[int put_stream(int *success)]
+
+~Implement struct file, a representation of plain file
+    -Will have major_id and minor_id members
+        ~Example: "/dev/led/green" major_id=led, minor_id=green
+        ~Example: "files/notes.txt" major_id=fat32, minor_id=first_cluster_number
+
+~Implement fopen (path, mode) shell command
+    -map it to [int cmd_fopen (path, mode)]
+    -cmd_fopen calls [struct file find_by_name (path)]
+        ~If filename starts with "/dev" handle it differently, look for
+        plain file created during init like "/dev/led/blue"
+    -cmd_fopen uses the return value from find_by_name and
+    calls [struct device find_by_device_id (major_id)]
+    -cmd_fopen calls [int get_mode_id(char *mode)] to convert mode string to an int
+    -cmd_fopen calls [file* device.fopen(char *minor_id, int mode)]
+    -cmd_fopen calls put_stream to add the return value from device.fopen to pcb.streams
+    -cmd_fopen returns the value from put_stream (i.e. the "file descriptor") to the user
+
+~TODO
+    - Replace E_NOT_ENOUGH_ARGS/E_TOO_MANY_ARGS with E_WRONG_NUM_ARGS
+    - Add help text for new commands
+    - myfgetc
+    - myfputc
+    - LED f function
+    - PB f functions
+    - Book problems
+    - Bug: when you close a file descriptor that isn't open
+    - Bug: dir_find_file doesn't set fcluster
+    
+    
+    
+    
+
+    
+
+
+~DONE
+    - Fixe file not opening bug
+    - Switch to 112000 baud
+    - increase memory to 30k
+    - Set stream attributes in fopen
+    - myfclose
+    - Move global my_card_status variable into functions that need it. Doesn't need to be global.
+    - Remove outer while loops that iterate over every cluster. Traverse linked clusters instead.
+    - Refactor "help" shell command
+        ~Provide it with unformatted strings and use printf rules to format output
+
+~Ask Jamie about
+    -How much time to budget to finish
+    -Overview of how to implement cache and how long it will take
+
+~Cache
+    -Implement int cache_read_single_block(uint32_t sector_num, uint8_t *data)
+        -Return error code if card not mountd
+    -Whenever you read, read from cache
+        ~If cache doesn't have valid sector
+            -Read sector from disk into cache buffer
+        ~Else, check current cache sector number
+        ~If sector requested is same in cache
+            -Copy data from cache buffer into user provided pointer
+        ~If not the same sector
+            -Check if cache is modified
+                ~If modified, write sector in cache to disk
+                    -Then read requested sector into cache buffer, copy to user provided pointer address
+                ~If not modified, read sector from disk, save in cache buffer, and copy into user pointer address
+
+    -Whenever you write, write to cache
+        -Implement int cache_write_single_block(uint32_t sector_num, uint8_t *data)
+        ~If cache doesn't have valid sector
+            -Copy caller sector to cache buffer
+            -Set the sector number, mark it as valid, mark it as modified
+        ~Else, check sector number of cache
+        ~If sector number writing to is same as sector in cache
+            -Copy caller sector to cache buffer
+            -Mark it as modified
+        ~Else
+            -Check if cache is modified
+                ~If modified, write cache to disk
+                ~Copy caller sector to cache
+                ~Update sector number
+            -Else
+                ~Copy caller sector to cache buffer
+                ~Update sector number
+                ~Mark as modified
+
+    -Implement flush_cache function
+        ~If cache contains sector that is valid and modified
+            -Write sector to disk
+    
+    -Before unmount:
+        ~Call flush_cache
+
+~Add a command "lsd" that lists devices
+    -Column one of output is mount path
+
+        Device      Mount Path            
+        ---------------------------------
+        FAT32       "/"
+        Button 1    "/dev/pushbutton/sw1"
+        Button 2    "/dev/pushbutton/sw2"
+        Yellow LED  "/dev/led/yellow"
+        Orange LED  "/dev/led/orange"
+        Blue LED    "/dev/led/blue"
+        Green LED   "/dev/led/green"
+        
+    -Column two is device description
+
+
+        // Replace any null bytes with a space
+    for (int i=0; i<sizeof(position_sector_data)/sizeof(uint8_t); i++) {
+        if (position_sector_data[i] == 0) {
+            position_sector_data[i] = ' ';
+        }
+    }
+
+    position_sector_data[512] = 0;
+        myprintf("%s\n", position_sector_data);
+    myprintf("Sector: %lu, Entry: %lu, Cluster: %d\n", (unsigned long)file_entry_sector, file_entry_number, (unsigned long)(currentPCB->streams)[descr].first_cluster);
+    // Check the fat to make sure file has an entry.

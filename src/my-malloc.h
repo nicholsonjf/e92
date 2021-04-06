@@ -1,3 +1,6 @@
+#ifndef _MYMALLOC_H
+#define _MYMALLOC_H
+
 #include <stdlib.h>
 
 extern struct mem_region *mymem;
@@ -12,8 +15,10 @@ struct mem_region
 };
 
 void *myMalloc(uint32_t size);
-void myFree(void *ptr);
+int myFree(void *ptr);
 void memoryMap(void);
 int myFreeErrorCode(void *ptr);
 int myMemset(void *p, uint8_t val, long len);
 int myMemchk(void *p, uint8_t val, long len);
+
+#endif /* ifndef _MYMALLOC_H */ 
