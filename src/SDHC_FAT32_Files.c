@@ -818,8 +818,8 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
      */
     uint32_t write_len = buflen;
     // First check if the amount of data we need to write will spill over into the next sector
-    uint32_t sector_start_offset = (currentPCB->streams)[descr].position_in_sector + bufflen;
-    if (sector_start_offset > bytes_in_sector) {
+    uint32_t sector_start_offset = (currentPCB->streams)[descr].position_in_sector + buflen;
+    if (sector_start_offset > bytes_per_sector) {
         // If so call this function recursively to handle the spillover
         // But first check if a new cluster is needed, fml
         // Get the number of bytes in-use in the last in-use cluster
@@ -849,9 +849,12 @@ int file_putbuf(file_descriptor descr, char *bufp, int buflen) {
             }
         }
         write_len = bytes_per_sector - (currentPCB->streams)[descr].position_in_sector;
-        uint8_t spillover[buflen-write_len];
-        strncpy((char *)&spillover, bufp[write_len], buflen - write_len);
-        int file_putbuf_status = file_putbuf(descr, &spillover, buflen - write_len);
+        char *spillover;
+        strncpy((char *)&spillover, &bufp[write_len], buflen - write_len);
+        int file_putbuf_status = file_putbuf(descr, spillover, buflen - write_len);
+        if (file_putbuf_status != E_SUCCESS) {
+            return file_putbuf_status;
+        }
     }
     uint8_t position_sector_data[512];
     // Read the current sector data
@@ -903,12 +906,12 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
         __BKPT();
     }
     struct dir_entry_8_3 *dir_entry = ((struct dir_entry_8_3 *)entry_sector_data) + file_entry_number;
-    // Get the current cluster based on (currentPCB->streams)[*descrp].position_fgetc
+    // Get the current cluster based on (currentPCB->streams)[*descr].position_fgetc
     uint32_t first_data_cluster = dir_entry->DIR_FstClusHI << 16 | dir_entry->DIR_FstClusLO;
     uint32_t current_cluster_number = first_data_cluster;
     // In my OS data is always appended to the end of a file
     // Get the number of clusters in use via the file size
-    uint32_t pos_num_clusters = (currentPCB->streams)[*descrp].position_fgetc / (bytes_per_sector * sectors_per_cluster);
+    uint32_t pos_num_clusters = (currentPCB->streams)[descr].position_fgetc / (bytes_per_sector * sectors_per_cluster);
     if (pos_num_clusters > 0)
     {
         uint32_t current_cluster_fat_entry = read_FAT_entry(rca, first_data_cluster);
@@ -919,15 +922,14 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
         }
         current_cluster_number = current_cluster_fat_entry;
     }
-    uint32_t position_sector_data[512];
+    int num_chars_read = 0;
+    uint8_t position_sector_data[512];
     // Get the number of bytes from the current position until the end of the sector
-    uint32_t remaining_bytes = dir_entry->DIR_FileSize - (currentPCB->streams)[*descrp].position_fgetc;
+    uint32_t remaining_bytes = dir_entry->DIR_FileSize - (currentPCB->streams)[descr].position_fgetc;
     if (remaining_bytes / bytes_per_sector > 0)
     {
         remaining_bytes = remaining_bytes % bytes_per_sector;
     }
-    // Check if the number of bytes requested spills over into the next sector
-    uint32_t sector_start_offset = (currentPCB->streams)[descr].position_fgetc + buflen;
     // Read the current sector data and send as many bytes possible to caller
     int data_read_status = sdhc_read_single_block(rca, (currentPCB->streams)[descr].position_sector, &my_card_status, position_sector_data);
     if (data_read_status != SDHC_SUCCESS)
@@ -935,12 +937,14 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
         // Fatal error
         __BKPT();
     }
+    // Check if the number of bytes requested spills over into the next sector
     int32_t num_spillover_bytes = buflen - remaining_bytes;
     if (num_spillover_bytes < 0) {
         num_spillover_bytes = 0;
     }
     // Send as many bytes as we can to the callers buffer
-    strncpy(bufp, position_sector_data[bytes_per_sector - remaining_bytes], remaining_bytes);
+    strncpy(bufp, &(position_sector_data[bytes_per_sector - remaining_bytes]), remaining_bytes);
+    num_chars_read += remaining_bytes;
     if (num_spillover_bytes > 0) {
         // Check if the current sector is the last in the cluster
         // Get the number of bytes in-use in the last in-use cluster
@@ -974,8 +978,10 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
                 __BKPT();
             }
             // Send the bytes to the callers buffer
-            strncpy(bufp, position_sector_data, num_spillover_bytes);
+            strncpy(bufp, (char *)&position_sector_data, num_spillover_bytes);
+            num_chars_read += num_spillover_bytes;
         }
     }
+    charsreadp = &num_chars_read;
     return E_SUCCESS;
 }

@@ -174,6 +174,7 @@ int main(int argc, char **argv)
     setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
     initDevices();
+    myprintf("Byes per sector?: %u", bytes_per_sector);
     if (TEST_MODE) {
         run_test_suite();
     }
@@ -554,10 +555,33 @@ int cmd_close(int argc, char *argv[])
  */
 int cmd_read(int argc, char *argv[])
 {
-    if (argc != 1)
+    if (argc < 2)
     {
         return E_NOT_ENOUGH_ARGS;
     }
+    long fd_long = my_strtol(argv[0]);
+    if (fd_long < 0)
+    {
+        return E_STRTOL;
+    }
+    file_descriptor fd = (file_descriptor)fd_long;
+    long num_chars_req = my_strtol(argv[1]);
+    if (num_chars_req > 512) {
+        return E_READ_LIMIT;
+    }
+    int num_chars_act = 0;
+    char raw_file_chars;
+    char clean_file_chars;
+    int get_buf_status = file_getbuf(fd, &raw_file_chars, (int)num_chars_req, &num_chars_act);
+    if (get_buf_status != E_SUCCESS) {
+        return get_buf_status;
+    }
+    // Clean the read characters before printing
+    int char_wash_status = char_wash(&raw_file_chars, &clean_file_chars);
+    if (char_wash_status != E_SUCCESS) {
+        return char_wash_status;
+    }
+    myprintf("\n%s\n", clean_file_chars);
     return E_SUCCESS;
 }
 
@@ -592,6 +616,9 @@ int cmd_write(int argc, char *argv[])
     }
     // Null terminate the buffer
     buffer[bufpos] = 0;
+    if (strlen(&buffer[0]) > 512) {
+        return E_WRITE_LIMIT;
+    }
     // bufpos+1 to include the null terminator
     int write_status = myfputc(&fd, &buffer[0], bufpos+1);
     if (write_status != E_SUCCESS) {

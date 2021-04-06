@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <string.h>
 
 #define BUFFER_SIZE_FOR_FORMATTED_OUTPUT 4096
 
@@ -77,11 +78,11 @@ int myprintf(char *format, ...)
     return E_SUCCESS;
 }
 
-int char_wash(uint8_t *dirty_chars, uint8_t *clean_chars)
+int char_wash(char *dirty_chars, char *clean_chars)
 {
     int chars_written = 0;
     for (int i=0; i<strlen(dirty_chars); i++) {
-        if (c < 36 || c > 126)
+        if (dirty_chars[i] < 36 || dirty_chars[i] > 126)
         {
             char s[5]; // 4 chars + '\0'
             int x = 4660;
@@ -96,4 +97,5 @@ int char_wash(uint8_t *dirty_chars, uint8_t *clean_chars)
         chars_written++;
     }
     clean_chars[chars_written] = 0;
+    return E_SUCCESS;
 }

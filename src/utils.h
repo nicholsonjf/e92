@@ -8,12 +8,13 @@
 #ifndef _MYUTIL_H
 #define _MYUTIL_H
 
+
 // Helper function prototypes.
 long my_strtol(char *str);
 
 int myprintf(char *format, ...);
 
-int sanitize_char(uint8_t c, char *buf);
+int char_wash(char *dirty_chars, char *clean_chars);
 
 // Shell error types.
 enum error_t
@@ -48,6 +49,9 @@ enum error_t
     E_MYPRINTF,
     E_LS,
     E_EXIT_DEVICES,
+    E_EOF,
+    E_READ_LIMIT,
+    E_WRITE_LIMIT,
     E_COUNT // E_COUNT must be last to calculate the total number of error types
 };
 
