@@ -97,7 +97,7 @@ void print_err(int error_c)
             return;
         }
     }
-    myprintf("ERROR: The error code returned (%d) doesn't match an enumerated error type\n", error_c);
+    myprintf("ERROR (%d): see utils.h for enum value that can be used to search source code. Will add error text in a future PR.\n", error_c);
 }
 
 struct commandEntry

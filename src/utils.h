@@ -52,6 +52,7 @@ enum error_t
     E_EOF,
     E_READ_LIMIT,
     E_WRITE_LIMIT,
+    E_FILE_CLOSED,
     E_COUNT // E_COUNT must be last to calculate the total number of error types
 };
 

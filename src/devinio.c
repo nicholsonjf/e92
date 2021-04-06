@@ -68,6 +68,9 @@ int myfcreate(char *pathname)
 
 int myfclose(file_descriptor *fd)
 {
+    if ((currentPCB->streams)[*fd].in_use == 0) {
+        return E_FILE_CLOSED;
+    }
     Device *device = (currentPCB->streams)[*fd].device;
     int fclose_status = device->fclose(fd);
     if (fclose_status != E_SUCCESS)
@@ -80,6 +83,10 @@ int myfclose(file_descriptor *fd)
 
 int myfputc(file_descriptor *fd, char *bufp, int buflen)
 {
+    if ((currentPCB->streams)[*fd].in_use == 0)
+    {
+        return E_FILE_CLOSED;
+    }
     Device *device = (currentPCB->streams)[*fd].device;
     int fputc_status = device->fputc(fd, bufp, buflen);
     if (fputc_status != E_SUCCESS)
@@ -91,6 +98,10 @@ int myfputc(file_descriptor *fd, char *bufp, int buflen)
 
 int myfgetc(file_descriptor fd, char *bufp, int buflen, int *charsreadp)
 {
+    if ((currentPCB->streams)[fd].in_use == 0)
+    {
+        return E_FILE_CLOSED;
+    }
     Device *device = (currentPCB->streams)[fd].device;
     int fgetc_status = device->fgetc(fd, bufp, buflen, charsreadp);
     if (fgetc_status != E_SUCCESS)

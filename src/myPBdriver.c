@@ -7,21 +7,26 @@
 
 #include "myPBdriver.h"
 #include <stdint.h>
+#include <string.h>
 #include "devinio.h"
-#include "pushbutton.h"
+#include "switchcmd.h"
 #include "utils.h"
+#include "devinutils.h"
 
 Device SW1;
 Device SW2;
 
 int pbfgetc(file_descriptor fd, char *bufp, int buflen, int *charsreadp)
 {
+    char pbscan = switchScan() + '0';
+    strncpy(&bufp[0], &pbscan, 1);
+    *charsreadp = 1;
     return E_SUCCESS;
 }
 
 int pbfputc(file_descriptor *fd, char *bufp, int buflen)
 {
-    return E_SUCCESS;
+    return E_NOT_SUPPORTED;
 }
 
 int pbfclose(file_descriptor *fd)
@@ -35,28 +40,37 @@ int pbfdelete(char *pathname) {
 
 int pbfcreate(char *pathname)
 {
-    return E_SUCCESS;
+    return E_NOT_SUPPORTED;
 }
 
 int pbfopen(char *filename, file_descriptor *fd)
 {
+    // Get an available Stream or return an error
+    int get_stream_status = get_available_stream(fd);
+    if (get_stream_status != E_SUCCESS)
+    {
+        return get_stream_status;
+    }
     return E_SUCCESS;
 }
 
 int initPB(void)
 {
     /* Initialize the push buttons */
-    pushbuttonInitAll();
-    // Define the struct Devices
-    Device pbs[2] = {SW1, SW2};
-    for (int i = 0; i < sizeof(pbs) / sizeof(pbs[0]); i++)
-    {
-        pbs[i].fgetc = pbfgetc;
-        pbs[i].fputc = pbfputc;
-        pbs[i].fclose = pbfclose;
-        pbs[i].fdelete = pbfdelete;
-        pbs[i].fcreate = pbfcreate;
-        pbs[i].fopen = pbfopen;
-    }
+    switchcmdInit();
+    // Define functions for SW1
+    SW1.fgetc = pbfgetc;
+    SW1.fputc = pbfputc;
+    SW1.fclose = pbfclose;
+    SW1.fdelete = pbfdelete;
+    SW1.fcreate = pbfcreate;
+    SW1.fopen = pbfopen;
+    // Define functions for SW2
+    SW2.fgetc = pbfgetc;
+    SW2.fputc = pbfputc;
+    SW2.fclose = pbfclose;
+    SW2.fdelete = pbfdelete;
+    SW2.fcreate = pbfcreate;
+    SW2.fopen = pbfopen;
     return E_SUCCESS;
 }
