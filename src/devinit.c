@@ -17,7 +17,6 @@
 #include "utils.h"
 #include <string.h>
 
-device_p devices[NUMBER_OF_DEVICES];
 
 int initDevices(void)
 {
@@ -52,26 +51,6 @@ int initDevices(void)
     if (initFAT_status != E_SUCCESS)
     {
         return initFAT_status;
-    }
-    char *pathnames[] = {
-        "/dev/pushbutton/sw1",
-        "/dev/pushbutton/sw2",
-        "/dev/led/yellow",
-        "/dev/led/orange",
-        "/dev/led/blue",
-        "/dev/led/green"
-    };
-    Device initializedDevices[] = {
-        SW1,
-        SW2,
-        LEDYellow,
-        LEDOrange,
-        LEDBlue,
-        LEDGreen
-    };
-    for (int i=0; i<NUMBER_OF_DEVICES; i++) {
-        devices[i].pathname = pathnames[i];
-        devices[i].device = &(initializedDevices[i]);
     }
     return E_SUCCESS;
 }

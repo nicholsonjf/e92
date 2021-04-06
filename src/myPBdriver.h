@@ -12,7 +12,7 @@
 
 int initPB(void);
 
-Device SW1;
-Device SW2;
+extern Device SW1;
+extern Device SW2;
 
 #endif /* ifndef _MYPBDRIVER_H */

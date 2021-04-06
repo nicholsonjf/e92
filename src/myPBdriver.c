@@ -11,6 +11,9 @@
 #include "pushbutton.h"
 #include "utils.h"
 
+Device SW1;
+Device SW2;
+
 int pbfgetc(file_descriptor *fd)
 {
     return E_SUCCESS;

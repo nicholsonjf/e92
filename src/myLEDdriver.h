@@ -12,9 +12,9 @@
 
 int initLED(void);
 
-Device LEDGreen;
-Device LEDYellow;
-Device LEDBlue;
-Device LEDOrange;
+extern Device LEDGreen;
+extern Device LEDYellow;
+extern Device LEDBlue;
+extern Device LEDOrange;
 
 #endif /* ifndef _MYLEDDRIVER_H */
