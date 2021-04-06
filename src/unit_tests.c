@@ -29,8 +29,8 @@ void test_create_file(void) {
     if (create_file == E_SUCCESS) {
         result = "PASS";
     }
-    myprintf("%s: %s\n\n", test_name, result);
     if (debug == 1) {
+        myprintf("%s: %s\n\n", test_name, result);
         myprintf("delete_file error code: %d\n", delete_file);
         myprintf("create_file error code: %d\n", create_file);
         dir_ls();

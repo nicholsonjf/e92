@@ -7,7 +7,12 @@ FAT32
 
 MISCELLANEOUS
 ~There's no stdin, stdout, stderr, just an array of 32 streams at pcb->streams (would like to implement stdin, stdout, stderr later)
-~The maximum buffer size for a single call to the "write" shell command is 256 characters, including spaces.
+~I didn't have time to implement the cache, but plan on submitting it in a correction PR later.
+~I also don't have the book problems done at this point, I wanted to focus on getting the project in. I will
+submit them later with the correction.
+~ I know I'm quite late with this assignment, but it was such a large undertaking I'm not sure I could have done it any
+faster. I estimate that I spent nearly 100 hours over the last few weeks completing this, and I hope my work reflects that.
+I know it's not perfect but I'm happy with how it turned out.
 
 Project plan
 
