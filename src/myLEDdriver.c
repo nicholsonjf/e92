@@ -19,9 +19,29 @@ Device LEDYellow;
 Device LEDBlue;
 Device LEDOrange;
 
-int ledfgetc(file_descriptor *fd)
+int ledfgetc(file_descriptor fd, char *bufp, int buflen, int *charsreadp)
 {
-    return E_NOT_SUPPORTED;
+    char yellow[] = "/dev/ledy";
+    if (strcmp((char *)&(currentPCB->streams)[fd].pathname, &yellow[0]) == 0)
+    {
+        ledYellowOff();
+    }
+    char orange[] = "/dev/ledo";
+    if (strcmp((char *)&(currentPCB->streams)[fd].pathname, &orange[0]) == 0)
+    {
+        ledOrangeOff();
+    }
+    char blue[] = "/dev/ledb";
+    if (strcmp((char *)&(currentPCB->streams)[fd].pathname, &blue[0]) == 0)
+    {
+        ledBlueOff();
+    }
+    char green[] = "/dev/ledg";
+    if (strcmp((char *)&(currentPCB->streams)[fd].pathname, &green[0]) == 0)
+    {
+        ledGreenOff();
+    }
+    return E_SUCCESS;
 }
 
 int ledfputc(file_descriptor *fd, char *bufp, int buflen)

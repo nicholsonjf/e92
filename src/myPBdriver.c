@@ -14,7 +14,7 @@
 Device SW1;
 Device SW2;
 
-int pbfgetc(file_descriptor *fd)
+int pbfgetc(file_descriptor fd, char *bufp, int buflen, int *charsreadp)
 {
     return E_SUCCESS;
 }

@@ -14,8 +14,13 @@
 
 Device FAT32;
 
-int fatfgetc(file_descriptor *fd)
+int fatfgetc(file_descriptor descr, char *bufp, int buflen, int *charsreadp)
 {
+    int fatfgetc_status = file_getbuf(descr, bufp, buflen, charsreadp);
+    if (fatfgetc_status != E_SUCCESS)
+    {
+        return fatfgetc_status;
+    }
     return E_SUCCESS;
 }
 

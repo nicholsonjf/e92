@@ -571,7 +571,7 @@ int cmd_read(int argc, char *argv[])
     int num_chars_act = 0;
     char raw_file_chars[512];
     char clean_file_chars[512];
-    int get_buf_status = file_getbuf(fd, &raw_file_chars[0], num_chars_req, &num_chars_act);
+    int get_buf_status = myfgetc(fd, &raw_file_chars[0], num_chars_req, &num_chars_act);
     if (get_buf_status != E_SUCCESS) {
         return get_buf_status;
     }

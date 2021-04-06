@@ -88,3 +88,14 @@ int myfputc(file_descriptor *fd, char *bufp, int buflen)
     }
     return E_SUCCESS;
 }
+
+int myfgetc(file_descriptor fd, char *bufp, int buflen, int *charsreadp)
+{
+    Device *device = (currentPCB->streams)[fd].device;
+    int fgetc_status = device->fgetc(fd, bufp, buflen, charsreadp);
+    if (fgetc_status != E_SUCCESS)
+    {
+        return fgetc_status;
+    }
+    return E_SUCCESS;
+}

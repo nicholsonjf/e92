@@ -20,7 +20,7 @@ typedef uint32_t file_descriptor;
 
 typedef struct device
 {
-    int (*fgetc)(file_descriptor *fd);
+    int (*fgetc)(file_descriptor descr, char *bufp, int buflen, int *charsreadp);
     int (*fputc)(file_descriptor *fd, char *bufp, int buflen);
     int (*fopen)(char *pathname, file_descriptor *fd);
     int (*fdelete)(char *pathname);
@@ -48,5 +48,7 @@ int myfdelete(char *pathname);
 int myfcreate(char *pathname);
 
 int myfputc(file_descriptor *fd, char *bufp, int buflen);
+
+int myfgetc(file_descriptor fd, char *bufp, int buflen, int *charsreadp);
 
 #endif /* ifndef _DEVINIO_H */
