@@ -78,24 +78,27 @@ int myprintf(char *format, ...)
     return E_SUCCESS;
 }
 
-int char_wash(char *dirty_chars, char *clean_chars)
+int char_wash(char *dirty_chars, int num_chars, char *clean_chars)
 {
     int chars_written = 0;
-    for (int i=0; i<strlen(dirty_chars); i++) {
-        if (dirty_chars[i] < 36 || dirty_chars[i] > 126)
+    for (int i=0; i<num_chars; i++) {
+        if (dirty_chars[i] < 32 || dirty_chars[i] > 126)
         {
-            char s[5]; // 4 chars + '\0'
+            // non-printing character, convert to hex and add to clean_chars
+            char s[5];
             int x = 4660;
             sprintf(s, "%0x.2x", x);
             for (int j=0; j<4; j++) {
-                clean_chars[chars_written] = s[i];
+                clean_chars[chars_written] = s[j];
                 chars_written++;
             }
 
         }
+        // char is printable, add to clean_chars
         clean_chars[chars_written] = dirty_chars[i];
         chars_written++;
     }
+    // null terminator
     clean_chars[chars_written] = 0;
     return E_SUCCESS;
 }

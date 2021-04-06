@@ -922,9 +922,8 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
         }
         current_cluster_number = current_cluster_fat_entry;
     }
-    int num_chars_read = 0;
     uint8_t position_sector_data[512];
-    // Get the number of bytes from the current position until the end of the sector
+    // Get the number of bytes from the current position until the end of the file
     uint32_t remaining_bytes = dir_entry->DIR_FileSize - (currentPCB->streams)[descr].position_fgetc;
     if (remaining_bytes / bytes_per_sector > 0)
     {
@@ -939,12 +938,13 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
     }
     // Check if the number of bytes requested spills over into the next sector
     int32_t num_spillover_bytes = buflen - remaining_bytes;
-    if (num_spillover_bytes < 0) {
+    if (num_spillover_bytes <= 0) {
         num_spillover_bytes = 0;
     }
-    // Send as many bytes as we can to the callers buffer
-    strncpy(bufp, &(position_sector_data[bytes_per_sector - remaining_bytes]), remaining_bytes);
-    num_chars_read += remaining_bytes;
+    // Send as many bytes as you can without spilling over or exceeding requested amount
+    strncpy(bufp, (char *)&(position_sector_data[(currentPCB->streams)[descr].position_fgetc]), buflen-num_spillover_bytes);
+    *charsreadp = buflen-num_spillover_bytes;
+    (currentPCB->streams)[descr].position_fgetc += buflen-num_spillover_bytes;
     if (num_spillover_bytes > 0) {
         // Check if the current sector is the last in the cluster
         // Get the number of bytes in-use in the last in-use cluster
@@ -979,9 +979,9 @@ int file_getbuf(file_descriptor descr, char *bufp, int buflen, int *charsreadp) 
             }
             // Send the bytes to the callers buffer
             strncpy(bufp, (char *)&position_sector_data, num_spillover_bytes);
-            num_chars_read += num_spillover_bytes;
+            *charsreadp = *charsreadp + num_spillover_bytes;
+            (currentPCB->streams)[descr].position_fgetc += num_spillover_bytes;
         }
     }
-    charsreadp = &num_chars_read;
     return E_SUCCESS;
 }

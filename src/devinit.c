@@ -70,8 +70,8 @@ int initDevices(void)
         LEDGreen
     };
     for (int i=0; i<NUMBER_OF_DEVICES; i++) {
-        (&devices)[i]->pathname = pathnames[i];
-        (&devices)[i]->device = &initializedDevices[i];
+        devices[i].pathname = pathnames[i];
+        devices[i].device = &(initializedDevices[i]);
     }
     return E_SUCCESS;
 }

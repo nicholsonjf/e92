@@ -14,7 +14,7 @@ long my_strtol(char *str);
 
 int myprintf(char *format, ...);
 
-int char_wash(char *dirty_chars, char *clean_chars);
+int char_wash(char *dirty_chars, int num_chars, char *clean_chars);
 
 // Shell error types.
 enum error_t
