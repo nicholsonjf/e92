@@ -15,7 +15,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define BUFFER_SIZE_FOR_FORMATTED_OUTPUT 4096
+#define BUFFER_SIZE_FOR_FORMATTED_OUTPUT 8192
 
 /**
  * Informed by this Stack Overflow post: https://stackoverflow.com/a/26083517

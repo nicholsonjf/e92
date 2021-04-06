@@ -17,7 +17,7 @@
 #include "utils.h"
 
 
-int debug = 1;
+int debug = 0;
 
 void test_create_file(void) {
     char *test_name = "Create File";
