@@ -68,6 +68,7 @@
 #include <derivative.h>
 #include <stdio.h>
 #include "svc.h"
+#include "devinio.h"
 
 #define XPSR_FRAME_ALIGNED_BIT 9
 #define XPSR_FRAME_ALIGNED_MASK (1<<XPSR_FRAME_ALIGNED_BIT)
@@ -100,7 +101,7 @@ struct frame {
 };
 
 /* Issue the SVC (Supervisor Call) instruction (See A7.7.175 on page A7-503 of the
- * ARM®v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3 (ID100710)) */
+ * ARMï¿½v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3 (ID100710)) */
 #ifdef __GNUC__
 void __attribute__((naked)) __attribute__((noinline)) SVCEndive(void) {
 	__asm("svc %0" : : "I" (SVC_ENDIVE));
@@ -140,7 +141,7 @@ int __attribute__((never_inline)) SVCJicama(int arg0) {
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
-int __attribute__((naked)) __attribute__((noinline)) SVCArtichoke(int arg0, int arg1, int arg2, int arg3) {
+int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(int arg0, int arg1, int arg2, int arg3) {
 	__asm("svc %0" : : "I" (SVC_ARTICHOKE));
 	__asm("bx lr");
 }
@@ -169,7 +170,7 @@ int SVCArtichokeImpl(int arg0, int arg1, int arg2, int arg3) {
 
 /* This function sets the priority at which the SVCall handler runs (See
  * B3.2.11, System Handler Priority Register 2, SHPR2 on page B3-723 of
- * the ARM®v7-M Architecture Reference Manual, ARM DDI 0403Derrata
+ * the ARMï¿½v7-M Architecture Reference Manual, ARM DDI 0403Derrata
  * 2010_Q3 (ID100710)).
  * 
  * If priority parameter is invalid, this function performs no action.
@@ -203,7 +204,7 @@ void svcInit_SetSVCPriority(unsigned char priority) {
 void svcHandlerInC(struct frame *framePtr);
 
 /* Exception return behavior is detailed in B1.5.8 on page B1-652 of the
- * ARM®v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3
+ * ARMï¿½v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3
  * (ID100710) */
 
 /* When an SVC instruction is executed, the following steps take place:
@@ -226,7 +227,7 @@ void svcHandlerInC(struct frame *framePtr);
  * 	   stack pointer.
  *     
  * These steps are discussed in detail in the pseudo-code given for
- * processor action ExceptionEntry() on page B1-643 of the ARM®v7-M
+ * processor action ExceptionEntry() on page B1-643 of the ARMï¿½v7-M
  * Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3
  * (ID100710).  ExceptionEntry() invokes PushStack() and
  * ExceptionTaken() on page B1-643. */
@@ -295,9 +296,9 @@ void svcHandlerInC(struct frame *framePtr) {
 		framePtr->returnVal = framePtr->arg0*2;
 		printf("Returning %d\n", framePtr->returnVal);
 		break;
-	case SVC_ARTICHOKE:
-		framePtr->returnVal = SVCArtichokeImpl(framePtr->arg0,
-				framePtr->arg1, framePtr->arg2, framePtr->arg3);
+	case SVC_FGETC:
+		framePtr->returnVal = myfgetc(framePtr->arg0,
+				(char *)framePtr->arg1, framePtr->arg2, (int *)framePtr->arg3);
 		break;
 	default:
 		printf("Unknown SVC has been called\n");

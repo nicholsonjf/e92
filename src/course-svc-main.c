@@ -38,7 +38,7 @@
 #include "svc.h"
 
 /* Issue the SVC (Supervisor Call) instruction (See A7.7.175 on page A7-503 of the
- * ARM®v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3 (ID100710)) */
+ * ARMï¿½v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3 (ID100710)) */
 #ifdef __GNUC__
 void __attribute__((naked)) pushFourBytesThenSVCEndive(void) {
 	__asm("\n\
@@ -71,10 +71,10 @@ int main(void) {
 
 	__asm("ldr r0,=73");
 	/* Issue the SVC (Supervisor Call) instruction (See A7.7.175 on page A7-503 of the
-	 * ARM®v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3 (ID100710)) */
+	 * ARMï¿½v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3 (ID100710)) */
 	__asm("svc #4");
 
-	SVCEndive();
+	SVCMyfgetc();
 	
 	pushFourBytesThenSVCEndive();
 
