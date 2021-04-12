@@ -12,6 +12,7 @@
 #include "devinit.h"
 #include "devinutils.h"
 #include "SDHC_FAT32_Files.h"
+#include "sdram.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -239,7 +240,6 @@ void initUART(void){
 	 * and that the clock used by UART2-5 is the Bus clock. */
 	const int moduleClock = 60000000;
 	const int KHzInHz = 1000;
-    mcgInit();
     const int baud = 115200;
     uartInit(UART2_BASE_PTR, moduleClock / KHzInHz, baud);
 }
@@ -248,8 +248,10 @@ void initUART(void){
 
 int main(int argc, char **argv)
 {
+    mcgInit();
     setvbuf(stdout, NULL, _IONBF, 0);
 	initUART();
+    sdramInit();
     initDevices();
     if (TEST_MODE) {
         run_test_suite();
@@ -648,7 +650,7 @@ int cmd_read(int argc, char *argv[])
     int num_chars_act = 0;
     char raw_file_chars[512];
     char clean_file_chars[512];
-    int get_buf_status = myfgetc(fd, &raw_file_chars[0], num_chars_req, &num_chars_act);
+    int get_buf_status = SVCMyfgetc(fd, &raw_file_chars[0], num_chars_req, &num_chars_act);
     if (get_buf_status != E_SUCCESS) {
         return get_buf_status;
     }
