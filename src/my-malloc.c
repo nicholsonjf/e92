@@ -6,6 +6,7 @@
 #include <errno.h>
 #include "utils.h"
 #include "pcb.h"
+#include "sdram.h"
 
 struct pcb *currentPCB;
 
@@ -49,17 +50,12 @@ static int get_pcb(void) {
 
 static void malloc_init(void) {
     pcb_init();
-    // Totaly memory is 30k bytes
-    uint32_t aspacesize = 30 * (1 << 10);
-    void *memory = malloc(aspacesize);
-    mymem = (struct mem_region*)memory;
+    mymem = SDRAM_START;
     mymem->free = 1;
-    mymem->size = aspacesize - sizeof(struct mem_region);
+    mymem->size = SDRAM_SIZE - sizeof(struct mem_region);
     mymem->pid = get_pcb();
     malloc_initd = 1;
-    // So we we can say "while current < endmymem..."
-    // In pointer arithmatic, "endmymem" is 128 * (1 << 20) addresses ahead of "memory"
-    endmymem = memory + aspacesize;
+    endmymem = SDRAM_END;
 }
 
 static int qword_boundary(int size)
