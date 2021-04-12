@@ -142,13 +142,13 @@ int __attribute__((never_inline)) SVCJicama(int arg0) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
 int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(int arg0, int arg1, int arg2, int arg3) {
-	__asm("svc %0" : : "I" (SVC_ARTICHOKE));
+	__asm("svc %0" : : "I" (SVC_FGETC));
 	__asm("bx lr");
 }
 #pragma GCC diagnostic pop
 #else
 int __attribute__((never_inline)) SVCArtichoke(int arg0, int arg1, int arg2, int arg3) {
-	__asm("svc %0" : : "I" (SVC_ARTICHOKE));
+	__asm("svc %0" : : "I" (SVC_FGETC));
 }
 #endif
 

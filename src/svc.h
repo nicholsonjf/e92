@@ -30,6 +30,6 @@ void svcHandler(void);
 void SVCEndive(void);
 void SVCBroccoliRabe(int arg0);
 int SVCJicama(int arg0);
-int SVCArtichoke(int arg0, int arg1, int arg2, int arg3);
+int SVCMyfgetc(int arg0, int arg1, int arg2, int arg3);
 
 #endif /* ifndef _SVC_H */

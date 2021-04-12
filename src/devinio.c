@@ -98,6 +98,7 @@ int myfputc(file_descriptor *fd, char *bufp, int buflen)
 
 int myfgetc(file_descriptor fd, char *bufp, int buflen, int *charsreadp)
 {
+    myprintf("myfgetc called\n");
     if ((currentPCB->streams)[fd].in_use == 0)
     {
         return E_FILE_CLOSED;
