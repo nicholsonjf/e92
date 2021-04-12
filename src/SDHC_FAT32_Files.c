@@ -709,12 +709,12 @@ int file_open(char *filename, file_descriptor *descrp) {
         uint32_t bytes_after_sector_div = bytes_after_cluster_div % bytes_per_sector;
         // Get the first sector of the current cluster
         uint32_t first_sector_current_cluster = first_sector_of_cluster(current_cluster_number);
-        // In my OS calling "read" on a newly opened file sets the position to the begining of that file
+        // In my OS the "read" position on a newly opened file is always set to the begining of that file
         (currentPCB->streams)[*descrp].position_fgetc = 0;
         // update the position_sector
         (currentPCB->streams)[*descrp].position_sector = first_sector_current_cluster + cluster_sector_offset;
         // Update the stream position_in_sector
-        (currentPCB->streams)[*descrp].position_in_sector = (currentPCB->streams)[*descrp].position_in_sector + bytes_after_sector_div;
+        (currentPCB->streams)[*descrp].position_in_sector = bytes_after_sector_div;
     }
     else {
         // the file is new

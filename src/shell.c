@@ -699,7 +699,7 @@ int cmd_write(int argc, char *argv[])
         return E_WRITE_LIMIT;
     }
     // bufpos+1 to include the null terminator
-    int write_status = myfputc(&fd, &buffer[0], bufpos+1);
+    int write_status = SVCMyfputc(&fd, &buffer[0], bufpos+1);
     if (write_status != E_SUCCESS) {
     	return write_status;
     }

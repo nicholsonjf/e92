@@ -21,17 +21,13 @@
 
 // Implemented SVC numbers
 
-#define SVC_ENDIVE 0
-#define SVC_BROCCOLIRABE 1
-#define SVC_JICAMA 2
-#define SVC_FGETC 3
+#define SVC_FGETC 0
+#define SVC_FPUTC 1
 
 void svcInit_SetSVCPriority(unsigned char priority);
 void svcHandler(void);
 
-void SVCEndive(void);
-void SVCBroccoliRabe(int arg0);
-int SVCJicama(int arg0);
 int SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3);
+int SVCMyfputc(file_descriptor *arg0, char *arg1, int arg2);
 
 #endif /* ifndef _SVC_H */

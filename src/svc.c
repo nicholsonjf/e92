@@ -100,45 +100,23 @@ struct frame {
 	int xPSR;
 };
 
-/* Issue the SVC (Supervisor Call) instruction (See A7.7.175 on page A7-503 of the
- * ARM�v7-M Architecture Reference Manual, ARM DDI 0403Derrata 2010_Q3 (ID100710)) */
-#ifdef __GNUC__
-void __attribute__((naked)) __attribute__((noinline)) SVCEndive(void) {
-	__asm("svc %0" : : "I" (SVC_ENDIVE));
-	__asm("bx lr");
-}
-#else
-void __attribute__((never_inline)) SVCEndive(void) {
-	__asm("svc %0" : : "I" (SVC_ENDIVE));
-}
-#endif
-
-#ifdef __GNUC__
-void __attribute__((naked)) __attribute__((noinline)) SVCBroccoliRabe(int arg0) {
-	__asm("svc %0" : : "I" (SVC_BROCCOLIRABE));
-	__asm("bx lr");
-}
-#else
-void __attribute__((never_inline)) SVCBroccoliRabe(int arg0) {
-	__asm("svc %0" : : "I" (SVC_BROCCOLIRABE));
-}
-#endif
-
-#ifdef __GNUC__
+/**
+ * SVCMyfgetc
+ */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
-int __attribute__((naked)) __attribute__((noinline)) SVCJicama(int arg0) {
-	__asm("svc %0" : : "I" (SVC_JICAMA));
+int __attribute__((naked)) __attribute__((noinline)) SVCMyfputc(file_descriptor *arg0, char *arg1, int arg2)
+{
+	__asm("svc %0"
+		  :
+		  : "I"(SVC_FPUTC));
 	__asm("bx lr");
 }
 #pragma GCC diagnostic pop
-#else
-int __attribute__((never_inline)) SVCJicama(int arg0) {
-	__asm("svc %0" : : "I" (SVC_JICAMA));
-}
-#endif
 
-
+/**
+ * SVCMyfgetc
+ */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
 int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3) {
@@ -148,21 +126,7 @@ int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(file_descriptor 
 #pragma GCC diagnostic pop
 
 
-int SVCArtichokeImpl(int arg0, int arg1, int arg2, int arg3) {
-	int sum;
-	
-	printf("SVC ARTICHOKE has been called\n");
 
-	printf("First parameter is %d\n", arg0);
-	printf("Second parameter is %d\n", arg1);
-	printf("Third parameter is %d\n", arg2);
-	printf("Fourth parameter is %d\n", arg3);
-
-	sum = arg0+arg1+arg2+arg3;
-	printf("Returning %d\n", sum);
-
-	return sum;
-}
 
 /* This function sets the priority at which the SVCall handler runs (See
  * B3.2.11, System Handler Priority Register 2, SHPR2 on page B3-723 of
@@ -265,6 +229,10 @@ void svcHandlerInC(struct frame *framePtr) {
 	 * service routine.  ((unsigned char *)framePtr->returnAddr)[-2]
 	 * is the operand specified for the SVC instruction. */
 	switch(((unsigned char *)framePtr->returnAddr)[-2]) {
+	case SVC_FPUTC:
+		framePtr->returnVal = myfputc((file_descriptor*) framePtr->arg0,
+									  (char *)framePtr->arg1, framePtr->arg2);
+		break;
 	case SVC_FGETC:
 		framePtr->returnVal = myfgetc(framePtr->arg0,
 				(char*)framePtr->arg1, framePtr->arg2, (int*)framePtr->arg3);
