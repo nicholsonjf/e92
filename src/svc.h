@@ -14,6 +14,8 @@
 #ifndef _SVC_H
 #define _SVC_H
 
+#include "devinio.h"
+
 #define SVC_MaxPriority 15
 #define SVC_PriorityShift 4
 
@@ -30,6 +32,6 @@ void svcHandler(void);
 void SVCEndive(void);
 void SVCBroccoliRabe(int arg0);
 int SVCJicama(int arg0);
-int SVCMyfgetc(int arg0, int arg1, int arg2, int arg3);
+int SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3);
 
 #endif /* ifndef _SVC_H */

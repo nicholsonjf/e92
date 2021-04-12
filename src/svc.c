@@ -138,19 +138,15 @@ int __attribute__((never_inline)) SVCJicama(int arg0) {
 }
 #endif
 
-#ifdef __GNUC__
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
-int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(int arg0, int arg1, int arg2, int arg3) {
+int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3) {
 	__asm("svc %0" : : "I" (SVC_FGETC));
 	__asm("bx lr");
 }
 #pragma GCC diagnostic pop
-#else
-int __attribute__((never_inline)) SVCArtichoke(int arg0, int arg1, int arg2, int arg3) {
-	__asm("svc %0" : : "I" (SVC_FGETC));
-}
-#endif
+
 
 int SVCArtichokeImpl(int arg0, int arg1, int arg2, int arg3) {
 	int sum;
@@ -265,44 +261,15 @@ __asm void svcHandler(void) {
 #endif
 
 void svcHandlerInC(struct frame *framePtr) {
-	printf("Entering svcHandlerInC\n");
-
-	printf("framePtr = 0x%08x\n", (unsigned int)framePtr);
-
 	/* framePtr->returnAddr is the return address for the SVC interrupt
 	 * service routine.  ((unsigned char *)framePtr->returnAddr)[-2]
 	 * is the operand specified for the SVC instruction. */
-	printf("SVC operand = %d\n",
-			((unsigned char *)framePtr->returnAddr)[-2]);
-
 	switch(((unsigned char *)framePtr->returnAddr)[-2]) {
-	case SVC_ENDIVE:
-		printf("SVC ENDIVE has been called\n");
-
-		printf("xPSR = 0x%08x\n", framePtr->xPSR);
-		if(framePtr->xPSR & XPSR_FRAME_ALIGNED_MASK) {
-			printf("Padding added to frame\n");
-		} else {
-			printf("No padding added to frame\n");
-		}
-		break;
-	case SVC_BROCCOLIRABE:
-		printf("SVC BROCCOLIRABE has been called\n");
-		printf("Only parameter is %d\n", framePtr->arg0);
-		break;
-	case SVC_JICAMA:
-		printf("SVC JICAMA has been called\n");
-		printf("Only parameter is %d\n", framePtr->arg0);
-		framePtr->returnVal = framePtr->arg0*2;
-		printf("Returning %d\n", framePtr->returnVal);
-		break;
 	case SVC_FGETC:
 		framePtr->returnVal = myfgetc(framePtr->arg0,
-				(char *)framePtr->arg1, framePtr->arg2, (int *)framePtr->arg3);
+				(char*)framePtr->arg1, framePtr->arg2, (int*)framePtr->arg3);
 		break;
 	default:
 		printf("Unknown SVC has been called\n");
 	}
-	
-	printf("Exiting svcHandlerInC\n");
 }

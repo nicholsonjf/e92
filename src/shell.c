@@ -13,6 +13,7 @@
 #include "devinutils.h"
 #include "SDHC_FAT32_Files.h"
 #include "sdram.h"
+#include "svc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
