@@ -101,6 +101,20 @@ struct frame {
 };
 
 /**
+ * SVCMyfcreate
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+int __attribute__((naked)) __attribute__((noinline)) SVCMyfcreate(char *arg0)
+{
+	__asm("svc %0"
+		  :
+		  : "I"(SVC_FCREATE));
+	__asm("bx lr");
+}
+#pragma GCC diagnostic pop
+
+/**
  * SVCMyfclose
  */
 #pragma GCC diagnostic push
@@ -243,6 +257,9 @@ void svcHandlerInC(struct frame *framePtr) {
 	 * service routine.  ((unsigned char *)framePtr->returnAddr)[-2]
 	 * is the operand specified for the SVC instruction. */
 	switch(((unsigned char *)framePtr->returnAddr)[-2]) {
+	case SVC_FCREATE:
+		framePtr->returnVal = myfcreate((char *)framePtr->arg0);
+		break;
 	case SVC_FCLOSE:
 		framePtr->returnVal = myfclose((file_descriptor *)framePtr->arg0);
 		break;
