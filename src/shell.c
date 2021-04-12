@@ -561,7 +561,7 @@ int cmd_create(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-    int create_file_status = myfcreate(argv[0]);
+    int create_file_status = SVCMyfcreate(argv[0]);
     if (create_file_status != E_SUCCESS)
     {
         return create_file_status;
@@ -579,7 +579,7 @@ int cmd_delete(int argc, char *argv[])
         return E_NOT_ENOUGH_ARGS;
     }
 
-    int delete_status = myfdelete(argv[0]);
+    int delete_status = SVCMyfdelete(argv[0]);
     if (delete_status != E_SUCCESS)
     {
         return delete_status;
@@ -597,7 +597,7 @@ int cmd_open(int argc, char *argv[])
         return E_NOT_ENOUGH_ARGS;
     }
     file_descriptor fd;
-    int open_status = myfopen(argv[0], &fd);
+    int open_status = SVCMyfopen(argv[0], &fd);
     if (open_status != E_SUCCESS) {
         return open_status;
     }
@@ -621,7 +621,7 @@ int cmd_close(int argc, char *argv[])
         return E_STRTOL;
     }
     file_descriptor fd = (file_descriptor)fd_long;
-    int close_status = myfclose(&fd);
+    int close_status = SVCMyfclose(&fd);
     if (close_status != E_SUCCESS)
     {
         return close_status;
