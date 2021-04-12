@@ -1,0 +1,57 @@
+Project overview:
+
+I would like to do a slight variation on the below two program ideas from the course website:
+
+    o Add a new output driver for the LEDs that outputs characters in
+      Morse code
+    o Add a new input driver that decodes Morse code characters from
+      key presses of either the pushbuttons or the touch sensors
+
+Instead of outputting the characters to the LEDs, I would like to output them to the RGB-LCD. The basic
+functionality would be, you use one of the pushbuttons to enter the morse code characters. If you enter
+a pattern that matches a morse code character, it will be appended to the list of characters on the screen.
+Then, the user could use the other pushbutton to clear the characters on the screen.
+
+This final project wouldn't solve a problem per se, but would be an interesting way to make use of the
+device independent IO, and explore a compelling way for a user to interact with the OS we created during
+the regular term.
+
+
+Project breakdown:
+
+1. Configure the RGB-LCD and add it as a device in my device independent IO architecture.
+2. Create a "morse.c" driver that uses one of the pushbuttons to receive morse code input.
+    a. Functions in morse.c
+        - init_morse
+            1. Creates the struct that will be used to match a sequence of button pushes to a known character
+            2. Starts listening to the appropriate pushbutton for character input
+            3. Starts listening to the other pushbutton to clear the screen when desired
+        - getmorsec
+            1. A single character buffer for a morse code character
+            2. As soon as a pushbutton press is detected, the input is recorded to a buffer that can later be matched to
+            a morse code character. The button pushes will need to be mapped to integer "push durations" and the 
+            alphabet will also need to be mapped in a similar way in order to translate between the two.
+        - matchmorsec
+            1. The integer "push duration" output from getmorsec could be used to call this function, which would
+            attempt to map it to one of the characters in the alphabet.
+3. There will also need to be a separate driver that accepts characters as input and displays them on the RGB-LCD. When 
+a configured pushbutton is pressed, the buffer of characters will be cleared and the screen will be empty.
+    a. This task will rely on using the RGB-LCD files provided by class, and will require integrating the RGB-LCD with
+    my existing devices (UART) and with the device independed IO in general.
+
+
+Inputs/Outputs:
+
+The only input to the program would be through SW1 and SW2, the two pushbuttons. One would be used to accept user
+morse code input, and the other would be used to clear the RGB-LCD.
+
+The output would be characters on the RGB-LCD, if the user entered a morse code character that matched with one in my system.
+
+
+User Interaction:
+
+A user would approach the K70 and perhaps see a message on the RGB-LCD with instructions that read:
+
+"Enter a valid morse code character using the right side pushbutton and it will be added to the screen as if you typed it."
+
+Users could try typing a while sentence and practice their morse code skills.
