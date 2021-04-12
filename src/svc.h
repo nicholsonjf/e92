@@ -25,10 +25,12 @@
 #define SVC_FPUTC 1
 #define SVC_FCLOSE 2
 #define SVC_FCREATE 3
+#define SVC_FDELETE 4
 
 void svcInit_SetSVCPriority(unsigned char priority);
 void svcHandler(void);
 
+int SVCMyfdelete(char *arg0);
 int SVCMyfcreate(char *arg0);
 int SVCMyfclose(file_descriptor *arg0);
 int SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3);
