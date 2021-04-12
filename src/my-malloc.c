@@ -28,19 +28,6 @@ static int malloc_initd = 0;
 // Create typedef for size of Dword
 typedef uint64_t Dword;
 
-static void pcb_init(void) {
-    // Check malloc returns non-zero
-    // Check return for all system call
-    currentPCB = malloc(sizeof(struct pcb));
-    currentPCB->pid = 0;
-    // initialize streams to not in use
-    // Check for the first open Stream in pcb->streams
-    for (int i = 0; i < sizeof(currentPCB->streams) / sizeof(currentPCB->streams[0]); i++)
-    {
-        (currentPCB->streams)[i].in_use = 0;
-    }
-}
-
 struct mem_region *mymem;
 struct mem_region *endmymem;
 
@@ -111,6 +98,19 @@ void *myMalloc(uint32_t size) {
     return mp;
 }
 
+static void pcb_init(void)
+{
+    // Check malloc returns non-zero
+    // Check return for all system call
+    currentPCB = myMalloc(sizeof(struct pcb));
+    currentPCB->pid = 0;
+    // initialize streams to not in use
+    // Check for the first open Stream in pcb->streams
+    for (int i = 0; i < sizeof(currentPCB->streams) / sizeof(currentPCB->streams[0]); i++)
+    {
+        (currentPCB->streams)[i].in_use = 0;
+    }
+}
 
 int myFreeErrorCode(void *ptr) {
     if (malloc_initd == 0)
