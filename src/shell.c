@@ -440,12 +440,12 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long bytes = my_strtol(argv[0]);
+    long long bytes = my_strtoll(argv[0]);
     if (bytes < 0)
     {
         return E_STRTOL;
     }
-    void *p = myMalloc(bytes);
+    void *p = SVCMymalloc(bytes);
     if (p == NULL)
     {
         return E_MALLOC;
@@ -464,7 +464,7 @@ int cmd_free(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long addr = my_strtol(argv[0]);
+    long long addr = my_strtoll(argv[0]);
     if (addr < 0)
     {
         return E_STRTOL;
@@ -498,20 +498,20 @@ int cmd_memset(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long start_addr = my_strtol(argv[0]);
+    long long start_addr = my_strtoll(argv[0]);
     if (start_addr < 0)
     {
         return E_STRTOL;
     }
     void *start_p = (void *)start_addr;
-    long byte_val = my_strtol(argv[1]);
+    long long byte_val = my_strtoll(argv[1]);
     if (byte_val < 0)
     {
         return E_STRTOL;
     } else if (byte_val > 255) {
         return E_BRANGE_EX;
     }
-    long size = my_strtol(argv[2]);
+    long long size = my_strtoll(argv[2]);
     if (size < 0)
     {
         return E_STRTOL;
@@ -529,13 +529,13 @@ int cmd_memchk(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long start_addr = my_strtol(argv[0]);
+    long long start_addr = my_strtoll(argv[0]);
     if (start_addr < 0)
     {
         return E_STRTOL;
     }
     void *start_p = (void *)start_addr;
-    long byte_val = my_strtol(argv[1]);
+    long long byte_val = my_strtoll(argv[1]);
     if (byte_val < 0)
     {
         return E_STRTOL;
@@ -544,7 +544,7 @@ int cmd_memchk(int argc, char *argv[])
     {
         return E_BRANGE_EX;
     }
-    long size = my_strtol(argv[2]);
+    long long size = my_strtoll(argv[2]);
     if (size < 0)
     {
         return E_STRTOL;
@@ -615,7 +615,7 @@ int cmd_close(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-    long fd_long = my_strtol(argv[0]);
+    long long fd_long = my_strtoll(argv[0]);
     if (fd_long < 0)
     {
         return E_STRTOL;
@@ -638,13 +638,13 @@ int cmd_read(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-    long fd_long = my_strtol(argv[0]);
+    long long fd_long = my_strtoll(argv[0]);
     if (fd_long < 0)
     {
         return E_STRTOL;
     }
     file_descriptor fd = (file_descriptor)fd_long;
-    long num_chars_req = my_strtol(argv[1]);
+    long long num_chars_req = my_strtoll(argv[1]);
     if (num_chars_req > 512) {
         return E_READ_LIMIT;
     }
@@ -672,7 +672,7 @@ int cmd_write(int argc, char *argv[])
     if (argc < 2) {
         return E_NOT_ENOUGH_ARGS;
     }
-    long fd_long = my_strtol(argv[0]);
+    long long fd_long = my_strtoll(argv[0]);
     if (fd_long < 0)
     {
         return E_STRTOL;
