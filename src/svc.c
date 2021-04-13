@@ -67,8 +67,10 @@
 
 #include <derivative.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "svc.h"
 #include "devinio.h"
+#include "my-malloc.h"
 
 #define XPSR_FRAME_ALIGNED_BIT 9
 #define XPSR_FRAME_ALIGNED_MASK (1<<XPSR_FRAME_ALIGNED_BIT)
@@ -175,14 +177,40 @@ int __attribute__((naked)) __attribute__((noinline)) SVCMyfputc(file_descriptor 
  */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"
-int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3) {
+int __attribute__((naked)) __attribute__((noinline)) SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3)
+{
 	__asm("svc %0" : : "I" (SVC_FGETC));
 	__asm("bx lr");
 }
 #pragma GCC diagnostic pop
 
+/**
+ * SVCMymalloc
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+void __attribute__((naked)) __attribute__((noinline)) *SVCMymalloc(uint32_t arg0)
+{
+	__asm("svc %0"
+		  :
+		  : "I"(SVC_MALLOC));
+	__asm("bx lr");
+}
+#pragma GCC diagnostic pop
 
-
+/**
+ * SVCMyfree
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+int __attribute__((naked)) __attribute__((noinline)) SVCMyfree(void *arg0)
+{
+	__asm("svc %0"
+		  :
+		  : "I"(SVC_FREE));
+	__asm("bx lr");
+}
+#pragma GCC diagnostic pop
 
 /* This function sets the priority at which the SVCall handler runs (See
  * B3.2.11, System Handler Priority Register 2, SHPR2 on page B3-723 of
@@ -304,6 +332,12 @@ void svcHandlerInC(struct frame *framePtr) {
 	case SVC_FGETC:
 		framePtr->returnVal = myfgetc(framePtr->arg0,
 				(char*)framePtr->arg1, framePtr->arg2, (int*)framePtr->arg3);
+		break;
+	case SVC_MALLOC:
+		framePtr->returnVal = myMalloc(framePtr->arg0);
+		break;
+	case SVC_FREE:
+		framePtr->returnVal = myFree((void*)framePtr->arg0);
 		break;
 	default:
 		printf("Unknown SVC has been called\n");

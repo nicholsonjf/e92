@@ -14,6 +14,7 @@
 #ifndef _SVC_H
 #define _SVC_H
 
+#include <stdlib.h>
 #include "devinio.h"
 
 #define SVC_MaxPriority 15
@@ -27,6 +28,8 @@
 #define SVC_FCREATE 3
 #define SVC_FDELETE 4
 #define SVC_FOPEN 5
+#define SVC_MALLOC 6
+#define SVC_FREE 7
 
 void svcInit_SetSVCPriority(unsigned char priority);
 void svcHandler(void);
@@ -37,5 +40,7 @@ int SVCMyfcreate(char *arg0);
 int SVCMyfclose(file_descriptor *arg0);
 int SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3);
 int SVCMyfputc(file_descriptor *arg0, char *arg1, int arg2);
+void *SVCMymalloc(uint32_t arg0);
+int SVCMyfree(void *arg0);
 
 #endif /* ifndef _SVC_H */
