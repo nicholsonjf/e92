@@ -10,7 +10,7 @@
 
 
 // Helper function prototypes.
-long my_strtol(char *str);
+long my_strtoul(char *str);
 
 int myprintf(char *format, ...);
 
