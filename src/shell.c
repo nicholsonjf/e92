@@ -470,7 +470,7 @@ int cmd_free(int argc, char *argv[])
         return E_STRTOL;
     }
     void *p = (void *)addr;
-    int free_status = myFreeErrorCode(p);
+    int free_status = SVCMyfree(p);
     if (free_status != E_SUCCESS)
     {
         return free_status;

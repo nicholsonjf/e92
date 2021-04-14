@@ -337,7 +337,7 @@ void svcHandlerInC(struct frame *framePtr) {
 		framePtr->returnVal = myMalloc(framePtr->arg0);
 		break;
 	case SVC_FREE:
-		framePtr->returnVal = myFree((void*)framePtr->arg0);
+		framePtr->returnVal = myFreeErrorCode((void*)framePtr->arg0);
 		break;
 	default:
 		printf("Unknown SVC has been called\n");
