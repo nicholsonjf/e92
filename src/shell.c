@@ -247,16 +247,8 @@ void initUART(void){
 
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
 
-int main(int argc, char **argv)
+int shell(int argc, char **argv)
 {
-    mcgInit();
-    setvbuf(stdout, NULL, _IONBF, 0);
-	initUART();
-    sdramInit();
-    initDevices();
-    if (TEST_MODE) {
-        run_test_suite();
-    }
     while (1)
     {
         char linebuf[BUFFER_SIZE_FOR_SHELL_INPUT];
@@ -720,4 +712,18 @@ int cmd_ls(int argc, char *argv[])
         return E_LS;
     }
     return E_SUCCESS;
+}
+
+int main(int argc, char **argv)
+{
+    mcgInit();
+    setvbuf(stdout, NULL, _IONBF, 0);
+    initUART();
+    sdramInit();
+    initDevices();
+    if (TEST_MODE)
+    {
+        run_test_suite();
+    }
+    shell(argc, argv);
 }
