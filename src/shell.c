@@ -708,7 +708,7 @@ int cmd_ls(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    int ls_status = dir_ls();
+    int ls_status = SVCMydir_ls();
     if (ls_status != E_SUCCESS) {
         return E_LS;
     }

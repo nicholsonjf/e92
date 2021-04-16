@@ -73,6 +73,7 @@
 #include "my-malloc.h"
 #include "uart.h"
 #include "derivative.h"
+#include "SDHC_FAT32_Files.h"
 
 #define XPSR_FRAME_ALIGNED_BIT 9
 #define XPSR_FRAME_ALIGNED_MASK (1<<XPSR_FRAME_ALIGNED_BIT)
@@ -242,6 +243,20 @@ void __attribute__((naked)) __attribute__((noinline)) SVCMyuartPutchar(UART_MemM
 }
 #pragma GCC diagnostic pop
 
+/**
+ * SVCMydir_ls
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+int __attribute__((naked)) __attribute__((noinline)) SVCMydir_ls(void)
+{
+	__asm("svc %0"
+		  :
+		  : "I"(SVC_DIR_LS));
+	__asm("bx lr");
+}
+#pragma GCC diagnostic pop
+
 /* This function sets the priority at which the SVCall handler runs (See
  * B3.2.11, System Handler Priority Register 2, SHPR2 on page B3-723 of
  * the ARM�v7-M Architecture Reference Manual, ARM DDI 0403Derrata
@@ -375,6 +390,9 @@ void svcHandlerInC(struct frame *framePtr) {
 	case SVC_UART_PUTCHAR:
 		uartPutchar((UART_MemMapPtr)framePtr->arg0, (char)framePtr->arg1);
 		framePtr->returnVal = 0;
+		break;
+	case SVC_DIR_LS:
+		framePtr->returnVal = dir_ls();
 		break;
 	default:
 		printf("Unknown SVC has been called\n");
