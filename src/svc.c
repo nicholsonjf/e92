@@ -71,6 +71,8 @@
 #include "svc.h"
 #include "devinio.h"
 #include "my-malloc.h"
+#include "uart.h"
+#include "derivative.h"
 
 #define XPSR_FRAME_ALIGNED_BIT 9
 #define XPSR_FRAME_ALIGNED_MASK (1<<XPSR_FRAME_ALIGNED_BIT)
@@ -212,6 +214,34 @@ int __attribute__((naked)) __attribute__((noinline)) SVCMyfree(void *arg0)
 }
 #pragma GCC diagnostic pop
 
+/**
+ * SVCMyuartGetchar
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+int __attribute__((naked)) __attribute__((noinline)) SVCMyuartGetchar(UART_MemMapPtr arg0)
+{
+	__asm("svc %0"
+		  :
+		  : "I"(SVC_UART_GETCHAR));
+	__asm("bx lr");
+}
+#pragma GCC diagnostic pop
+
+/**
+ * SVCMyuartPutchar
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+void __attribute__((naked)) __attribute__((noinline)) SVCMyuartPutchar(UART_MemMapPtr arg0, char arg1)
+{
+	__asm("svc %0"
+		  :
+		  : "I"(SVC_UART_PUTCHAR));
+	__asm("bx lr");
+}
+#pragma GCC diagnostic pop
+
 /* This function sets the priority at which the SVCall handler runs (See
  * B3.2.11, System Handler Priority Register 2, SHPR2 on page B3-723 of
  * the ARM�v7-M Architecture Reference Manual, ARM DDI 0403Derrata
@@ -338,6 +368,13 @@ void svcHandlerInC(struct frame *framePtr) {
 		break;
 	case SVC_FREE:
 		framePtr->returnVal = myFreeErrorCode((void*)framePtr->arg0);
+		break;
+	case SVC_UART_GETCHAR:
+		framePtr->returnVal = (unsigned char)uartGetchar((UART_MemMapPtr)framePtr->arg0);
+		break;
+	case SVC_UART_PUTCHAR:
+		uartPutchar((UART_MemMapPtr)framePtr->arg0, (char)framePtr->arg1);
+		framePtr->returnVal = 0;
 		break;
 	default:
 		printf("Unknown SVC has been called\n");
