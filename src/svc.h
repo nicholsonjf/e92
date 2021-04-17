@@ -16,7 +16,6 @@
 
 #include <stdlib.h>
 #include "devinio.h"
-#include "derivative.h"
 
 #define SVC_MaxPriority 15
 #define SVC_PriorityShift 4
@@ -31,9 +30,7 @@
 #define SVC_FOPEN 5
 #define SVC_MALLOC 6
 #define SVC_FREE 7
-#define SVC_UART_GETCHAR 8
-#define SVC_UART_PUTCHAR 9
-#define SVC_DIR_LS 10
+#define SVC_DIR_LS 8
 
 void svcInit_SetSVCPriority(unsigned char priority);
 void svcHandler(void);
@@ -46,8 +43,6 @@ int SVCMyfgetc(file_descriptor arg0, char *arg1, int arg2, int *arg3);
 int SVCMyfputc(file_descriptor *arg0, char *arg1, int arg2);
 void *SVCMymalloc(uint32_t arg0);
 int SVCMyfree(void *arg0);
-int SVCMyuartGetchar(UART_MemMapPtr arg0);
-void SVCMyuartPutchar(UART_MemMapPtr arg0, char arg1);
 int SVCMydir_ls(void);
 
 #endif /* ifndef _SVC_H */

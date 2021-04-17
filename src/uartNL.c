@@ -15,7 +15,6 @@
  */
 
 #include "uartNL.h"
-#include "svc.h"
 
 /********************************************************************/
 /*
@@ -48,7 +47,7 @@ void uartGetline(UART_MemMapPtr uartChannel, char *p, int size) {
 
   initialStringp = p;
   for(i = 0; i < size; i++) {
-    c = SVCMyuartGetchar(uartChannel);
+    c = uartGetchar(uartChannel);
     if((c == UARTNL_BACKSPACE_CHAR) | (c == UARTNL_DELETE_CHAR)) {
       /* don't echo the backspace or delete until we determine if it
 	 is the first character on the line */
@@ -59,21 +58,21 @@ void uartGetline(UART_MemMapPtr uartChannel, char *p, int size) {
 	   the previous character and move back that character's
 	   position on the line.  then, make the pointer point back to
 	   the previous character in the string */
-	SVCMyuartPutchar(uartChannel, UARTNL_BACKSPACE_CHAR);
-	SVCMyuartPutchar(uartChannel, ' ');
-	SVCMyuartPutchar(uartChannel, UARTNL_BACKSPACE_CHAR);
+	uartPutchar(uartChannel, UARTNL_BACKSPACE_CHAR);
+	uartPutchar(uartChannel, ' ');
+	uartPutchar(uartChannel, UARTNL_BACKSPACE_CHAR);
 	p--;
       }
     } else if(c == UARTNL_END_OF_INPUT_LINE_CHAR) {
       /* echo the character */
-      SVCMyuartPutchar(uartChannel, c);
+      uartPutchar(uartChannel, c);
       if(c == '\r')
-	SVCMyuartPutchar(uartChannel, '\n');
+	uartPutchar(uartChannel, '\n');
       *p = '\0';
       return;
     } else {
       /* echo the character */
-      SVCMyuartPutchar(uartChannel, c);
+      uartPutchar(uartChannel, c);
       *p++ = c;
     }
   }
@@ -91,7 +90,7 @@ void uartGetline(UART_MemMapPtr uartChannel, char *p, int size) {
 void uartPutsNL(UART_MemMapPtr uartChannel, char *p) {
   while(*p) {
     if(*p == '\n')
-      SVCMyuartPutchar(uartChannel, '\r');
-    SVCMyuartPutchar(uartChannel, *p++);
+      uartPutchar(uartChannel, '\r');
+    uartPutchar(uartChannel, *p++);
   }
 }
