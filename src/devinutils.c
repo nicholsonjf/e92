@@ -22,6 +22,7 @@ int get_device(char *pathname, Device **device)
     char ledg_path[] = "/dev/ledg";
     char ledb_path[] = "/dev/ledb";
     char ledo_path[] = "/dev/ledo";
+    char uart_path[] = "/dev/uart";
     // Check if the pathname matches one of the pre-initialized devices
     if (strcmp(pathname, &sw1_path[0]) == 0)
     {
@@ -51,6 +52,11 @@ int get_device(char *pathname, Device **device)
     if (strcmp(pathname, &ledo_path[0]) == 0)
     {
         *device = &LEDOrange;
+        return E_SUCCESS;
+    }
+    if (strncmp(pathname, &uart_path[0], strlen(const &uart_path[0]) + 1) == 0)
+    {
+        *device = &UART;
         return E_SUCCESS;
     }
     // If the first char in pathname is "/" and it's not an exact match with an already

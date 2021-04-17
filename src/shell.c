@@ -216,35 +216,6 @@ cmd_pntr find_cmd(char *arg)
     return NULL;
 }
 
-
-void initUART(void){
-	/* On reset (i.e., before calling mcgInit), the processor
-	 * clocking starts in FEI (FLL Engaged Internal) mode.  In FEI
-	 * mode and with default settings (DRST_DRS = 00, DMX32 = 0),
-	 * the MCGFLLCLK, the MCGOUTCLK (MCG (Multipurpose Clock
-	 * Generator) clock), and the Bus (peripheral) clock are all set
-	 * to 640 * IRC.  IRC is the Internal Reference Clock which runs
-	 * at 32 KHz. [See K70 Sub-Family Reference Manual, Rev. 4,
-	 * Section 25.4.1.1, Table 25-22 on labeled page 670 (PDF page
-	 * 677) and MCG Control 4 Register (MCG_C4) Section 25.3.4 on
-	 * labeled page 655 (PDF page 662); See K70 Sub-Family Reference
-	 * Manual, Rev. 2, Section 25.4.1.1, Table 25-22 on page 657 and
-	 * MCG Control 4 Register (MCG_C4) Section 25.3.4 on page 641]
-	 */
-	
-	/* After calling mcgInit, MCGOUTCLK is set to 120 MHz and the Bus
-	 * (peripheral) clock is set to 60 MHz.*/
-
-	/* Table 5-2 on labeled page 225 (PDF page 232) in Rev. 4
-	 * (Table 5-2 on page 221 in Rev. 2) indicates that the clock
-	 * used by UART0 and UART1 is the System clock (i.e., MCGOUTCLK)
-	 * and that the clock used by UART2-5 is the Bus clock. */
-	const int moduleClock = 60000000;
-	const int KHzInHz = 1000;
-    const int baud = 115200;
-    uartInit(UART2_BASE_PTR, moduleClock / KHzInHz, baud);
-}
-
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
 
 int shell(int argc, char **argv)
