@@ -20,29 +20,25 @@
 /**
  * Informed by this Stack Overflow post: https://stackoverflow.com/a/26083517
  */
-long my_strtol(char *str)
+long my_strtoul(char *str)
 {
     const char *nptr = str;                 /* string to read               */
     char *endptr = NULL;                        /* pointer to additional chars  */
-    long number = 0;                            /* variable holding return      */
+    unsigned long number = 0;                            /* variable holding return      */
 
     /* reset errno to 0 before call */
     errno = 0;
 
     /* call to strtol assigning return to number */
-    number = strtol(nptr, &endptr, 0);
+    number = strtoul(nptr, &endptr, 0);
 
     /* test return to number and errno values */
     // invalid  (no digits found, 0 returned)
     if (nptr == endptr) {
         return -1;
     }
-    // invalid  (underflow occurred)
-    else if (errno == ERANGE && number == LONG_MIN) {
-        return -1;
-    }
     // invalid  (overflow occurred)
-    else if (errno == ERANGE && number == LONG_MAX) {
+    else if (errno == ERANGE && number == ULONG_MAX) {
         return -1;
     }
     // invalid  (base contains unsupported value)

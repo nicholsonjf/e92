@@ -1,0 +1,8 @@
+To Do
+-Remove uart supervisor function (done)
+    -Integrate uart with device independent io
+    -Add UART0-5 to get_device function mapped as /dev/uart0 etc.
+-Create a new device driver "stdstrm" and use it to create stdin, stdout, stderr
+    -stdin will have a 256 byte malloc'd buffer
+    -stdout will have a 8192 byte malloc'd buffer
+    -stderr will have a 256 byte malloc'd buffer

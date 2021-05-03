@@ -6,8 +6,23 @@
 #include <errno.h>
 #include "utils.h"
 #include "pcb.h"
+#include "sdram.h"
 
 struct pcb *currentPCB;
+
+static void pcb_init(void)
+{
+    // Check malloc returns non-zero
+    // Check return for all system call
+    currentPCB = malloc(sizeof(struct pcb));
+    currentPCB->pid = 0;
+    // initialize streams to not in use
+    // Check for the first open Stream in pcb->streams
+    for (int i = 0; i < sizeof(currentPCB->streams) / sizeof(currentPCB->streams[0]); i++)
+    {
+        (currentPCB->streams)[i].in_use = 0;
+    }
+}
 
 /**
 * Implementation Notes
@@ -27,19 +42,6 @@ static int malloc_initd = 0;
 // Create typedef for size of Dword
 typedef uint64_t Dword;
 
-static void pcb_init(void) {
-    // Check malloc returns non-zero
-    // Check return for all system call
-    currentPCB = malloc(sizeof(struct pcb));
-    currentPCB->pid = 0;
-    // initialize streams to not in use
-    // Check for the first open Stream in pcb->streams
-    for (int i = 0; i < sizeof(currentPCB->streams) / sizeof(currentPCB->streams[0]); i++)
-    {
-        (currentPCB->streams)[i].in_use = 0;
-    }
-}
-
 struct mem_region *mymem;
 struct mem_region *endmymem;
 
@@ -49,17 +51,14 @@ static int get_pcb(void) {
 
 static void malloc_init(void) {
     pcb_init();
-    // Totaly memory is 30k bytes
-    uint32_t aspacesize = 30 * (1 << 10);
-    void *memory = malloc(aspacesize);
-    mymem = (struct mem_region*)memory;
+    const void *memory_start = (const void*)SDRAM_START;
+    mymem = (struct mem_region*)memory_start;
     mymem->free = 1;
-    mymem->size = aspacesize - sizeof(struct mem_region);
+    mymem->size = SDRAM_SIZE - sizeof(struct mem_region);
     mymem->pid = get_pcb();
     malloc_initd = 1;
-    // So we we can say "while current < endmymem..."
-    // In pointer arithmatic, "endmymem" is 128 * (1 << 20) addresses ahead of "memory"
-    endmymem = memory + aspacesize;
+    const void *memory_end = (const void*)SDRAM_END;
+    endmymem = (struct mem_region*)memory_end;
 }
 
 static int qword_boundary(int size)
@@ -114,7 +113,6 @@ void *myMalloc(uint32_t size) {
     }
     return mp;
 }
-
 
 int myFreeErrorCode(void *ptr) {
     if (malloc_initd == 0)

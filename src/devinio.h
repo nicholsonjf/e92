@@ -9,6 +9,7 @@
 #define _DEVINIO_H
 
 #include <stdint.h>
+#include "derivative.h"
 
 /**
  * A file_descriptor is used as an index into an array of structures describing
@@ -31,6 +32,7 @@ typedef struct device
 typedef struct stream
 {
     Device *device; // pointer to the Device used to operate on the file
+    char device_id[]; // a string used to uniquely id the device from other devices of the same type
     uint8_t in_use; // whether the stream is currently in use (stream.in_use=1) or not (stream.in_use=0)
     char pathname[12]; // the pathname of the file
     // FAT32 members

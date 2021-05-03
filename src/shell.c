@@ -12,6 +12,8 @@
 #include "devinit.h"
 #include "devinutils.h"
 #include "SDHC_FAT32_Files.h"
+#include "sdram.h"
+#include "svc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -214,46 +216,10 @@ cmd_pntr find_cmd(char *arg)
     return NULL;
 }
 
-
-void initUART(void){
-	/* On reset (i.e., before calling mcgInit), the processor
-	 * clocking starts in FEI (FLL Engaged Internal) mode.  In FEI
-	 * mode and with default settings (DRST_DRS = 00, DMX32 = 0),
-	 * the MCGFLLCLK, the MCGOUTCLK (MCG (Multipurpose Clock
-	 * Generator) clock), and the Bus (peripheral) clock are all set
-	 * to 640 * IRC.  IRC is the Internal Reference Clock which runs
-	 * at 32 KHz. [See K70 Sub-Family Reference Manual, Rev. 4,
-	 * Section 25.4.1.1, Table 25-22 on labeled page 670 (PDF page
-	 * 677) and MCG Control 4 Register (MCG_C4) Section 25.3.4 on
-	 * labeled page 655 (PDF page 662); See K70 Sub-Family Reference
-	 * Manual, Rev. 2, Section 25.4.1.1, Table 25-22 on page 657 and
-	 * MCG Control 4 Register (MCG_C4) Section 25.3.4 on page 641]
-	 */
-	
-	/* After calling mcgInit, MCGOUTCLK is set to 120 MHz and the Bus
-	 * (peripheral) clock is set to 60 MHz.*/
-
-	/* Table 5-2 on labeled page 225 (PDF page 232) in Rev. 4
-	 * (Table 5-2 on page 221 in Rev. 2) indicates that the clock
-	 * used by UART0 and UART1 is the System clock (i.e., MCGOUTCLK)
-	 * and that the clock used by UART2-5 is the Bus clock. */
-	const int moduleClock = 60000000;
-	const int KHzInHz = 1000;
-    mcgInit();
-    const int baud = 115200;
-    uartInit(UART2_BASE_PTR, moduleClock / KHzInHz, baud);
-}
-
 #define BUFFER_SIZE_FOR_SHELL_INPUT 256
 
-int main(int argc, char **argv)
+int shell(int argc, char **argv)
 {
-    setvbuf(stdout, NULL, _IONBF, 0);
-	initUART();
-    initDevices();
-    if (TEST_MODE) {
-        run_test_suite();
-    }
     while (1)
     {
         char linebuf[BUFFER_SIZE_FOR_SHELL_INPUT];
@@ -437,7 +403,7 @@ int cmd_malloc(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long bytes = my_strtol(argv[0]);
+    unsigned long bytes = my_strtoul(argv[0]);
     if (bytes < 0)
     {
         return E_STRTOL;
@@ -461,13 +427,13 @@ int cmd_free(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long addr = my_strtol(argv[0]);
+    unsigned long addr = my_strtoul(argv[0]);
     if (addr < 0)
     {
         return E_STRTOL;
     }
     void *p = (void *)addr;
-    int free_status = myFreeErrorCode(p);
+    int free_status = SVCMyfree(p);
     if (free_status != E_SUCCESS)
     {
         return free_status;
@@ -495,20 +461,20 @@ int cmd_memset(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long start_addr = my_strtol(argv[0]);
+    unsigned long start_addr = my_strtoul(argv[0]);
     if (start_addr < 0)
     {
         return E_STRTOL;
     }
     void *start_p = (void *)start_addr;
-    long byte_val = my_strtol(argv[1]);
+    unsigned long byte_val = my_strtoul(argv[1]);
     if (byte_val < 0)
     {
         return E_STRTOL;
     } else if (byte_val > 255) {
         return E_BRANGE_EX;
     }
-    long size = my_strtol(argv[2]);
+    unsigned long size = my_strtoul(argv[2]);
     if (size < 0)
     {
         return E_STRTOL;
@@ -526,13 +492,13 @@ int cmd_memchk(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    long start_addr = my_strtol(argv[0]);
+    unsigned long start_addr = my_strtoul(argv[0]);
     if (start_addr < 0)
     {
         return E_STRTOL;
     }
     void *start_p = (void *)start_addr;
-    long byte_val = my_strtol(argv[1]);
+    unsigned long byte_val = my_strtoul(argv[1]);
     if (byte_val < 0)
     {
         return E_STRTOL;
@@ -541,7 +507,7 @@ int cmd_memchk(int argc, char *argv[])
     {
         return E_BRANGE_EX;
     }
-    long size = my_strtol(argv[2]);
+    unsigned long size = my_strtoul(argv[2]);
     if (size < 0)
     {
         return E_STRTOL;
@@ -558,7 +524,7 @@ int cmd_create(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-    int create_file_status = myfcreate(argv[0]);
+    int create_file_status = SVCMyfcreate(argv[0]);
     if (create_file_status != E_SUCCESS)
     {
         return create_file_status;
@@ -576,7 +542,7 @@ int cmd_delete(int argc, char *argv[])
         return E_NOT_ENOUGH_ARGS;
     }
 
-    int delete_status = myfdelete(argv[0]);
+    int delete_status = SVCMyfdelete(argv[0]);
     if (delete_status != E_SUCCESS)
     {
         return delete_status;
@@ -594,7 +560,7 @@ int cmd_open(int argc, char *argv[])
         return E_NOT_ENOUGH_ARGS;
     }
     file_descriptor fd;
-    int open_status = myfopen(argv[0], &fd);
+    int open_status = SVCMyfopen(argv[0], &fd);
     if (open_status != E_SUCCESS) {
         return open_status;
     }
@@ -612,13 +578,13 @@ int cmd_close(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-    long fd_long = my_strtol(argv[0]);
+    unsigned long fd_long = my_strtoul(argv[0]);
     if (fd_long < 0)
     {
         return E_STRTOL;
     }
     file_descriptor fd = (file_descriptor)fd_long;
-    int close_status = myfclose(&fd);
+    int close_status = SVCMyfclose(&fd);
     if (close_status != E_SUCCESS)
     {
         return close_status;
@@ -635,20 +601,20 @@ int cmd_read(int argc, char *argv[])
     {
         return E_NOT_ENOUGH_ARGS;
     }
-    long fd_long = my_strtol(argv[0]);
+    unsigned long fd_long = my_strtoul(argv[0]);
     if (fd_long < 0)
     {
         return E_STRTOL;
     }
     file_descriptor fd = (file_descriptor)fd_long;
-    long num_chars_req = my_strtol(argv[1]);
+    unsigned long num_chars_req = my_strtoul(argv[1]);
     if (num_chars_req > 512) {
         return E_READ_LIMIT;
     }
     int num_chars_act = 0;
     char raw_file_chars[512];
     char clean_file_chars[512];
-    int get_buf_status = myfgetc(fd, &raw_file_chars[0], num_chars_req, &num_chars_act);
+    int get_buf_status = SVCMyfgetc(fd, &raw_file_chars[0], num_chars_req, &num_chars_act);
     if (get_buf_status != E_SUCCESS) {
         return get_buf_status;
     }
@@ -669,7 +635,7 @@ int cmd_write(int argc, char *argv[])
     if (argc < 2) {
         return E_NOT_ENOUGH_ARGS;
     }
-    long fd_long = my_strtol(argv[0]);
+    unsigned long fd_long = my_strtoul(argv[0]);
     if (fd_long < 0)
     {
         return E_STRTOL;
@@ -696,7 +662,7 @@ int cmd_write(int argc, char *argv[])
         return E_WRITE_LIMIT;
     }
     // bufpos+1 to include the null terminator
-    int write_status = myfputc(&fd, &buffer[0], bufpos+1);
+    int write_status = SVCMyfputc(&fd, &buffer[0], bufpos+1);
     if (write_status != E_SUCCESS) {
     	return write_status;
     }
@@ -712,9 +678,23 @@ int cmd_ls(int argc, char *argv[])
     {
         return E_TOO_MANY_ARGS;
     }
-    int ls_status = dir_ls();
+    int ls_status = SVCMydir_ls();
     if (ls_status != E_SUCCESS) {
         return E_LS;
     }
     return E_SUCCESS;
+}
+
+int main(int argc, char **argv)
+{
+    mcgInit();
+    setvbuf(stdout, NULL, _IONBF, 0);
+    initUART();
+    sdramInit();
+    initDevices();
+    if (TEST_MODE)
+    {
+        run_test_suite();
+    }
+    shell(argc, argv);
 }
